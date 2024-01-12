@@ -2,6 +2,8 @@ import type { Player } from '../player/player';
 import { SportsBra } from './chest/sportsBra';
 import { HealthPot } from './consumables/healthPot';
 import { Halo } from './helm/halo';
+import { BrassKnuckles } from './mainHand/brassKnuckles';
+import { Fireball } from './mainHand/fireball';
 import { Lightsaber } from './mainHand/lightsaber';
 import { HylianShield } from './offhand/hylianShield';
 import { Shiv } from './offhand/shiv';
@@ -26,7 +28,9 @@ export interface Item {
 
 const items = {
 	mainhand: {
-		Lightsaber: Lightsaber
+		Lightsaber: Lightsaber,
+		Fireball: Fireball,
+		'Brass Knuckles': BrassKnuckles
 	},
 	offHand: {
 		'Hylian Shield': HylianShield,
