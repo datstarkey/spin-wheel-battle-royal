@@ -6,13 +6,8 @@
 </script>
 
 <script lang="ts">
-	import type { Player } from '$lib/game/player';
-	import {
-		currentGame,
-		getPlayerByName,
-		increasePlayerGold,
-		reducePlayerHp
-	} from '$lib/stores/gameStore';
+	import type { Player } from '$lib/game/player/player';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore';
 	import toast from 'svelte-french-toast';
 	import Button from '../Button.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
@@ -23,8 +18,7 @@
 	$: availableToAttack =
 		$currentGame?.players.filter((p) => p.name !== player.name && player.hp > 0) || [];
 
-	let attackingPlayer: Player | null =
-		$currentGame?.players.filter((p) => p.name !== player.name && player.hp > 0)[0] ?? null;
+	let attackingPlayer: Player | null = null;
 
 	let showWheel = false;
 
@@ -38,6 +32,7 @@
 			name: player.name,
 			close: () => {
 				showWheel = false;
+				player.onAttackEnd(attackingPlayer!);
 			}
 		};
 	}
@@ -53,22 +48,36 @@
 			return;
 		}
 
-		if (player.name == winningPlayer.name) {
+		const won = player.name == winningPlayer.name;
+
+		if (won) {
 			toast.success(`${player.name} beat ${attackingPlayer.name}!`);
-			reducePlayerHp(attackingPlayer.name);
-			increasePlayerGold(player.name);
+			player.onWin(attackingPlayer);
 		} else {
 			toast.error(`${player.name} lost to ${attackingPlayer.name}!`);
-			reducePlayerHp(player.name);
-			increasePlayerGold(attackingPlayer.name);
+			player.onLose(attackingPlayer);
+		}
+	}
+
+	function attackingPlayerChanged(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		const selectedPlayer = target.value;
+		const newAttackingPlayer = getPlayerByName(selectedPlayer);
+		if (newAttackingPlayer) {
+			//End the attack phase for the previous player
+			if (attackingPlayer && attackingPlayer.name !== newAttackingPlayer.name) {
+				player.onAttackEnd(attackingPlayer);
+			}
+			player.onAttackStart(newAttackingPlayer);
+			attackingPlayer = newAttackingPlayer;
 		}
 	}
 </script>
 
 <label class="label">
-	<select class="select" bind:value={attackingPlayer}>
+	<select class="select" value={attackingPlayer?.name} on:change={attackingPlayerChanged}>
 		{#each availableToAttack as item}
-			<option value={item}>{item.name}</option>
+			<option value={item.name}>{item.name}</option>
 		{/each}
 	</select>
 </label>
@@ -80,7 +89,7 @@
 >
 
 <div
-	class="bg-surface-100-800-token fixed bottom-0 right-0 top-0 z-50 w-[550px] rounded border border-white p-4 transition-all {position}"
+	class="bg-surface-100-800-token fixed bottom-0 right-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[550px] {position}"
 >
 	<div class="flex justify-end">
 		<Button icon="mdi:close" on:click={() => (showWheel = false)}></Button>

@@ -1,8 +1,13 @@
-import type { ClassBase } from './classBase';
+import type { ClassBase } from './classType';
 
-export const Magicman = {
+export const Magicman: ClassBase = {
 	hp: 8,
 	attack: 20,
 	defense: 5,
-	name: 'Magic Man'
-} satisfies ClassBase;
+	attackRange: 3,
+	name: 'Magic Man',
+	onWinAbility: 'Can teleport any other player',
+	onWin() {
+		//Need Board to be able to access players
+	}
+};

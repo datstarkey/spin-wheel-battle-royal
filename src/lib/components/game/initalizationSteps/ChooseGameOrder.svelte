@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Player } from '$lib/game/player';
 	import { getPlayerByName, currentGame } from '$lib/stores/gameStore';
 	import SpinWheel from '../../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../../wheel/types';
@@ -7,15 +6,14 @@
 
 	let order: number = 0;
 
-	const currentOrder: Record<number, Player> = $currentGame?.playerOrder || {};
+	const currentOrder: Record<number, string> = $currentGame?.playerOrder || {};
 
 	$: maxPlayers = $currentGame?.players.length || 0;
 
 	function onWinner(item: SpinWheelItem) {
-		console.log(item);
 		const player = getPlayerByName(item.label);
 		if (player) {
-			currentOrder[order] = player;
+			currentOrder[order] = player.name;
 			order++;
 
 			if (Object.keys(currentOrder).length == maxPlayers) {
@@ -42,11 +40,14 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each Object.entries(currentOrder) as [order, player]}
-				<tr>
-					<td>{Number(order) + 1}</td>
-					<td>{player.name}</td>
-				</tr>
+			{#each Object.entries(currentOrder) as [order, name]}
+				{@const player = getPlayerByName(name)}
+				{#if player}
+					<tr>
+						<td>{Number(order) + 1}</td>
+						<td>{player.name}</td>
+					</tr>
+				{/if}
 			{/each}
 		</tbody>
 	</table>

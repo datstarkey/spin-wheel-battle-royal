@@ -18,9 +18,7 @@
 	export let showSpin = true;
 	export let buttonText = 'Spin';
 
-	console.log(items);
 	items = shuffle(items);
-	console.log(items);
 
 	let wheel: Wheel;
 	let hasSpun = false;
@@ -44,6 +42,11 @@
 		wheel.spin(speed);
 	}
 
+	function win(item: SpinWheelItem) {
+		if (item.onWin) item.onWin();
+		onWinner(item);
+	}
+
 	onMount(() => {
 		wheel = new Wheel(wheelEl, {
 			items: items,
@@ -62,12 +65,12 @@
 		wheel.onRest = (event) => {
 			spinning = false;
 			selected = items[event.currentIndex];
-			if (selected) onWinner(selected);
+			if (selected) win(selected);
 			if (removeOnWinner) {
 				items = items.filter((item) => item != selected);
 				if (items.length == 1) {
 					selected = items[0] as SpinWheelItem;
-					onWinner(selected);
+					win(selected);
 				}
 			}
 		};

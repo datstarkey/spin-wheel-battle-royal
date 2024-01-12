@@ -1,11 +1,33 @@
 import { Game } from '$lib/game/game';
-import { Player } from '$lib/game/player';
+import { Player } from '$lib/game/player/player';
 import { get } from 'svelte/store';
 import { localStorageStore } from './localStorageStore';
 import toast from 'svelte-french-toast';
-import { ClassType, classMap } from '$lib/game/classType';
+import type { WheelBase } from '$lib/game/wheels/wheels';
 
 export const currentGame = localStorageStore<Game | null>('currentGame', null);
+
+export function refresh() {
+	currentGame.update((game) => game);
+}
+
+export function getGlobalHpReduction() {
+	return get(currentGame)?.globalHpReduction ?? 0;
+}
+
+export function increaseGlobalHpReduction(amount: number = 0) {
+	currentGame.update((game) => {
+		if (!game) return game;
+		if (amount == 0) {
+			game.globalHpReduction *= 2;
+		} else {
+			game.globalHpReduction += amount;
+		}
+
+		toast.success(`Global HP reduction is now ${game.globalHpReduction}`);
+		return game;
+	});
+}
 
 function gameHasStarted() {
 	if (get(currentGame)?.started) {
@@ -42,7 +64,13 @@ export function removePlayer(player: Player) {
 	});
 }
 
-export function getPlayerByName(name: string): Player | undefined {
+/**
+ * Returns the reference to the player with the given name
+ * @param name The name of the player to get
+ * @returns
+ */
+
+export function getPlayerByName(name?: string): Player | undefined {
 	return get(currentGame)?.players.find((player) => player.name === name);
 }
 
@@ -55,40 +83,23 @@ export function startGame() {
 	});
 }
 
-export function reducePlayerHp(playerName: string) {
+/**
+ * @description Adds a custom wheel to the game, which will have to be spun before the game can continue
+ * @param key The key to use to reference the wheel
+ * @param wheel The wheel to add
+ */
+export function addCustomWheel(key: string, wheel: WheelBase) {
 	currentGame.update((game) => {
 		if (!game) return game;
-		const player = game.players.find((player) => player.name === playerName);
-		if (!player) return game;
-		if (!game.globalHpReduction || game.globalHpReduction < 1) game.globalHpReduction = 1;
-		player.hp = player.hp - game.globalHpReduction;
-		toast.error(`${playerName} lost ${game.globalHpReduction} HP!`);
+		game.customWheels.set(key, wheel);
 		return game;
 	});
 }
 
-export function increasePlayerGold(playerName: string, amount: number = 1) {
+export function removeCustomWheel(key: string) {
 	currentGame.update((game) => {
 		if (!game) return game;
-		const player = game.players.find((player) => player.name === playerName);
-		if (!player) return game;
-		player.gold += amount;
-		toast.success(`${playerName} gained ${amount} gold!`);
-		return game;
-	});
-}
-
-export function assignClassToPlayer(playerName: string, classType: ClassType) {
-	currentGame.update((game) => {
-		if (!game) return game;
-		if (gameHasStarted()) return game;
-		const player = game.players.find((player) => player.name === playerName);
-		if (!player) return game;
-		player.class = classType;
-
-		player.hp = classMap[classType].hp;
-		player.attack = classMap[classType].attack;
-		player.defense = classMap[classType].defense;
+		game.customWheels.delete(key);
 		return game;
 	});
 }

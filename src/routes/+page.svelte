@@ -8,8 +8,9 @@
 	import { Step, Stepper } from '@skeletonlabs/skeleton';
 	import ChooseClasses from '$lib/components/game/initalizationSteps/ChooseClasses.svelte';
 	import Players from '$lib/components/game/Players.svelte';
+	import CustomWheels from '$lib/components/wheel/CustomWheels.svelte';
 
-	let step = $currentGame?.started ? 1 : 0;
+	$: console.log($currentGame);
 </script>
 
 {#if !$currentGame}
@@ -19,7 +20,7 @@
 
 {#if $currentGame && !$currentGame?.started}
 	<div class="w-full max-w-lg">
-		<Stepper bind:Step={step} on:complete={startGame}>
+		<Stepper on:complete={startGame}>
 			<Step locked={$currentGame.players.length < 2}>
 				<div class="mb-5 flex items-center justify-between gap-3">
 					<h2>Players</h2>
@@ -37,11 +38,12 @@
 				<ChooseGameOrder></ChooseGameOrder>
 			</Step>
 
-			<Step locked={$currentGame.players.some((x) => x.class == 'none')}>
+			<Step locked={$currentGame.players.some((x) => x.class.name == 'None')}>
 				<ChooseClasses></ChooseClasses>
 			</Step>
 		</Stepper>
 	</div>
 {:else}
+	<CustomWheels></CustomWheels>
 	<Players></Players>
 {/if}

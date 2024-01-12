@@ -1,6 +1,15 @@
 import { browser } from '$app/environment';
 import { get, writable, type Writable } from 'svelte/store';
-import superjson from 'superjson';
+import superjson, { SuperJSON } from 'superjson';
+import { Player } from '$lib/game/player/player';
+import { Game } from '$lib/game/game';
+import { PlayerGear } from '$lib/game/player/playerGear';
+import { PlayerStatuses } from '$lib/game/player/playerStatuses';
+
+SuperJSON.registerClass(PlayerGear);
+SuperJSON.registerClass(PlayerStatuses);
+SuperJSON.registerClass(Player);
+SuperJSON.registerClass(Game);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stores = new Map<string, Writable<any>>();
@@ -22,7 +31,6 @@ export function localStorageStore<T>(key: string, initialValue: T): Writable<T> 
 		subscribe,
 		set: (value: T) => {
 			if (browser) {
-				console.log(superjson.serialize(value));
 				localStorage.setItem(key, superjson.stringify(value));
 			}
 			set(value);

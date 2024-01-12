@@ -1,0 +1,14 @@
+{
+	"recommendations": [
+		"svelte.svelte-vscode",
+		"fivethree.vscode-svelte-snippets",
+		"bradlc.vscode-tailwindcss",
+		"yoavbls.pretty-ts-errors",
+		"rvest.vs-code-prettier-eslint",
+		"esbenp.prettier-vscode",
+		"antfu.iconify",
+		"dbaeumer.vscode-eslint",
+		"formulahendry.auto-close-tag",
+		"formulahendry.auto-rename-tag"
+	]
+}

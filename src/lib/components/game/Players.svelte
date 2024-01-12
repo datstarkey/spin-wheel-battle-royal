@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { classMap } from '$lib/game/classType';
-	import { currentGame } from '$lib/stores/gameStore';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore';
 	import { onMount } from 'svelte';
 	import AttackPlayer from './AttackPlayer.svelte';
+	import Button from '../Button.svelte';
 
 	// import type { PageData } from './$types';
 
 	// export let data: PageData;
+
+	$: currentTurnPlayer = $currentGame?.currentPlayer;
 
 	onMount(() => {
 		if (!$currentGame?.started) goto('/');
@@ -19,11 +21,24 @@
 		<p>No Players</p>
 	{/if}
 
+	<h2 class="mb-5">Current Turn: {currentTurnPlayer?.name}</h2>
+
+	<h3>Order</h3>
+	<h3 class="mb-5">
+		{#each Object.values($currentGame.playerOrder) as name}
+			{@const player = getPlayerByName(name)}
+			<span class={player?.name == currentTurnPlayer?.name ? 'text-success-500' : 'text-error-500'}>
+				[{player?.name}]
+			</span>
+		{/each}
+	</h3>
+
 	<div class="flex flex-wrap gap-3">
 		{#each $currentGame.players as player}
 			<div
 				class="card variant-soft-secondary min-w-60 p-4 shadow"
 				class:variant-soft-error={player.hp <= 0}
+				class:variant-soft-success={player.hp > 0 && player.name == currentTurnPlayer?.name}
 			>
 				<div class="mb-5 flex flex-col items-center justify-center gap-2">
 					<h3 class="text-center">
@@ -34,7 +49,7 @@
 						{/if}
 					</h3>
 					<div class="variant-filled-primary badge text-center">
-						{classMap[player.class].name}
+						{player.class.name}
 					</div>
 				</div>
 
@@ -72,8 +87,12 @@
 					</table>
 				</div>
 
-				{#if player.hp > 0}
+				{#if player.hp > 0 && player.name == currentTurnPlayer?.name}
 					<AttackPlayer {player}></AttackPlayer>
+
+					<Button class="mt-3 w-full" on:click={() => $currentGame?.finishTurn()}
+						>Finish Turn</Button
+					>
 				{/if}
 			</div>
 		{/each}

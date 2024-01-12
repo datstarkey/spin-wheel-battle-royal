@@ -21,6 +21,7 @@ module.exports = {
     },
     rules: {
         "unused-imports/no-unused-imports": "error",
+        "@typescript-eslint/no-explicit-any": "off"
     },
     overrides: [
         {

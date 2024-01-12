@@ -1,7 +1,7 @@
 import { currentGame } from '$lib/stores/gameStore';
 import { get } from 'svelte/store';
 import type { SpinWheelItem } from './types';
-import { ClassType } from '$lib/game/classType';
+import { classMap } from '$lib/game/classes/classType';
 
 export function playerNameSpinItems(): SpinWheelItem[] {
 	const game = get(currentGame);
@@ -10,7 +10,7 @@ export function playerNameSpinItems(): SpinWheelItem[] {
 }
 
 export function classSpinItems(): SpinWheelItem[] {
-	return Object.keys(ClassType.Values)
+	return Object.keys(classMap)
 		.filter((x) => x != 'none')
 		.map((x) => ({ label: x }));
 }

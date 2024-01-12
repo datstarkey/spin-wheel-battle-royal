@@ -43,14 +43,5 @@
 		/>
 	</label>
 
-	<!-- <label class="label">
-		<span>Class</span>
-		<select class="select {errorClass('class', $errors)}" bind:value={body.class}>
-			{#each Object.keys(classMap) as item}
-				<option value={item}>{item}</option>
-			{/each}
-		</select>
-	</label> -->
-
 	<Button class="variant-filled-success ml-3 mt-6" icon="mdi:plus" on:click={submit}></Button>
 </form>
