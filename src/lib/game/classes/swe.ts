@@ -46,7 +46,6 @@ function increaseSwenergy(player: Player, amount: number) {
 
 	//if we go above 10, set to 10 and add swesupreme status
 	if (player.resources['swenergy'] >= 10) {
-		player.resources['swenergy'] = 10;
 		toast.success(`${player.name} is now the Swe Supreme!`);
 		player.statuses.addStatus('swesupreme');
 	}
