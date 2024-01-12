@@ -1,7 +1,10 @@
 import type { Player } from '../player/player';
 import { SportsBra } from './chest/sportsBra';
 import { HealthPot } from './consumables/healthPot';
+import { ANiceHat } from './helm/aNiceHat';
+import { BeerGoggles } from './helm/beerGoggles';
 import { Halo } from './helm/halo';
+import { Kaibrows } from './helm/kaibrows';
 import { BrassKnuckles } from './mainHand/brassKnuckles';
 import { Fireball } from './mainHand/fireball';
 import { Lightsaber } from './mainHand/lightsaber';
@@ -37,7 +40,11 @@ const items = {
 		Shiv: Shiv
 	},
 	helm: {
-		Halo: Halo
+		Halo: Halo,
+		'A Nice Hat':ANiceHat,
+		Kaibrows: Kaibrows,
+		'Beer Goggles': BeerGoggles
+
 	},
 	chest: {
 		'Sports Bra': SportsBra
