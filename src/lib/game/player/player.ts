@@ -34,13 +34,13 @@ export class Player {
 		}
 
 		this._hp = value;
-		refresh();
 		if (this._hp < 0) this._hp = 0;
 		if (this._hp === 0) {
 			toast.error(`${this.name} is dead!`);
 			increaseGlobalHpReduction();
 			this.dead = true;
 		}
+		refresh();
 	}
 
 	/**

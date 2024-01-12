@@ -54,7 +54,7 @@ export function generateLoseWheel(playerName: string) {
 				generateRandomPlayerWheel(`${playerName} Gives 5 Hp To`, (winner) => {
 					//only give as much hp as the winner can take
 					let hpAmount = 5;
-					if (winner.hp < 5) hpAmount = winner.hp;
+					if (player.hp < 5) hpAmount = player.hp;
 					player.hp -= hpAmount;
 					winner.hp += hpAmount;
 				});

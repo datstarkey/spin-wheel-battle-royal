@@ -32,8 +32,11 @@ export const Swe: ClassBase = {
 	},
 
 	onTurnEnd(player) {
-		//remove 4 swenergy
-		reduceSwenergy(player, -4);
+		if (player.statuses.hasStatus("swesupreme")){
+			reduceSwenergy(player, -4);
+		}
+		
+		
 	}
 };
 
