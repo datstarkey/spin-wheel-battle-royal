@@ -6,7 +6,7 @@ import { classMap } from '$lib/game/classes/classType';
 export function playerNameSpinItems(): SpinWheelItem[] {
 	const game = get(currentGame);
 	if (!game) return [];
-	return game.players.map((player) => ({ label: player.name }));
+	return game.players.filter(player=>!player.dead).map((player) => ({ label: player.name }));
 }
 
 export function classSpinItems(): SpinWheelItem[] {
