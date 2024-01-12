@@ -77,7 +77,19 @@ export class Player {
 	 */
 
 	private _baseAttackRange: number = 1;
+	public get baseAttackRange(): number {
+		return this._baseAttackRange;
+	}
+	public set baseAttackRange(value: number) {
+		this._baseAttackRange = value;
+	}
 	private _bonusAttackRange: number = 0;
+	public get bonusAttackRange(): number {
+		return this._bonusAttackRange;
+	}
+	public set bonusAttackRange(value: number) {
+		this._bonusAttackRange = value;
+	}
 	public get attackRange(): number {
 		return this._baseAttackRange + this._bonusAttackRange;
 	}
