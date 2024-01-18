@@ -197,8 +197,37 @@ export class Player {
 		refresh();
 	}
 
+
 	/**
 	 * --------------------------------------------------------------------------
+	 * Calculations for bonus stats based on percentages of another stat
+	 */
+
+	private _defPercent: number = 0;
+	private _attPercent: number = 0;
+	private _rangePercent: number = 0;
+
+	public get defPercent(): number {
+		return this._defPercent;
+	}
+	public set defPercent(value: number) {
+		this._defPercent = value;
+	}
+	public get attPercent(): number {
+		return this._attPercent;
+	}
+	public set attPercent(value: number) {
+		this._attPercent = value;
+	}
+	public get rangePercent(): number {
+		return this._rangePercent;
+	}
+	public set rangePercent(value: number) {
+		this._rangePercent = value;
+	}
+
+	/**
+	 * ------dfdfdfdf--------------------------------------------------------------------
 	 * Events
 	 */
 
