@@ -1,4 +1,6 @@
 import type { Player } from '../player/player';
+import { jaegerShots } from './jagerShots';
+import { movementPot } from './movmentPot';
 import { sweSupreme } from './swesupreme';
 import { vodkaRedbull } from './vodkaRedbull';
 
@@ -22,7 +24,9 @@ export interface StatusEffect {
 
 const statusEffects = {
 	'Vodka Redbull': vodkaRedbull,
-	swesupreme: sweSupreme
+	swesupreme: sweSupreme,
+	'Movement pot Buff': movementPot,
+	'Jager Shots': jaegerShots
 };
 
 export default statusEffects;
