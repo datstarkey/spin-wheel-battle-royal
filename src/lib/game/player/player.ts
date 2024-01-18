@@ -103,6 +103,15 @@ export class Player {
 	private _baseAttack: number = 0;
 	attackMultipliers: Record<string, number> = {};
 
+	//Brass Knuckles multiplier, increases by your defense value
+	private _brassKnucklesMultiplier: number = 0;
+	public get brassKnucklesMultiplier(): number {
+		return this._brassKnucklesMultiplier * this.defense;
+	}
+	public set brassKnucklesMultiplier(value: number) {
+		this._brassKnucklesMultiplier = value;
+	}
+
 	//Bonus
 	public get bonusAttack(): number {
 		return this._bonusAttack;
@@ -128,7 +137,9 @@ export class Player {
 		//if bonus attack is negative, don't include it
 		const value = this.bonusAttack > 0 ? this.bonusAttack + this.baseAttack : this.baseAttack;
 		const multiplier = Object.values(this.attackMultipliers).reduce((acc, cur) => acc * cur, 1);
-		return value * multiplier;
+
+		//Add brass knuckles multiplier after attack multipliers
+		return value * multiplier + this.brassKnucklesMultiplier;
 	}
 
 	/**
@@ -197,37 +208,8 @@ export class Player {
 		refresh();
 	}
 
-
 	/**
 	 * --------------------------------------------------------------------------
-	 * Calculations for bonus stats based on percentages of another stat
-	 */
-
-	private _defPercent: number = 0;
-	private _attPercent: number = 0;
-	private _rangePercent: number = 0;
-
-	public get defPercent(): number {
-		return this._defPercent;
-	}
-	public set defPercent(value: number) {
-		this._defPercent = value;
-	}
-	public get attPercent(): number {
-		return this._attPercent;
-	}
-	public set attPercent(value: number) {
-		this._attPercent = value;
-	}
-	public get rangePercent(): number {
-		return this._rangePercent;
-	}
-	public set rangePercent(value: number) {
-		this._rangePercent = value;
-	}
-
-	/**
-	 * ------dfdfdfdf--------------------------------------------------------------------
 	 * Events
 	 */
 
