@@ -2,29 +2,44 @@
 	import { Wheel } from 'spin-wheel';
 	import { onDestroy, onMount } from 'svelte';
 	import Button from '../Button.svelte';
-	import type { SpinWheelItem } from './types';
 	import Icon from '../Icon.svelte';
+	import type { SpinWheelItem } from './types';
+
 	import { shuffle } from './utils';
 
-	let wheelEl: HTMLDivElement;
+	let wheelEl = $state<HTMLDivElement>();
 
-	export let items: SpinWheelItem[];
+	interface Props {
+		items: SpinWheelItem[];
+		maxSpeed?: number;
+		minSpeed?: number;
+		rotationResistance?: number;
+		removeOnWinner?: boolean;
+		onWinner?: (item: SpinWheelItem) => void;
+		showSpin?: boolean;
+		buttonText?: string;
+		children?: import('svelte').Snippet<[any]>;
+	}
 
-	export let maxSpeed: number = 2000;
-	export let minSpeed: number = 500;
-	export let rotationResistance: number = (maxSpeed / minSpeed) * 50 * -1;
-	export let removeOnWinner: boolean = false;
-	export let onWinner: (item: SpinWheelItem) => void = () => {};
-	export let showSpin = true;
-	export let buttonText = 'Spin';
+	let {
+		items = $bindable(),
+		maxSpeed = 2000,
+		minSpeed = 500,
+		rotationResistance = (maxSpeed / minSpeed) * 50 * -1,
+		removeOnWinner = false,
+		onWinner = () => {},
+		showSpin = true,
+		buttonText = 'Spin',
+		children
+	}: Props = $props();
 
 	items = shuffle(items);
 
-	let wheel: Wheel;
-	let hasSpun = false;
-	let selected: SpinWheelItem | null = null;
+	let wheel = $state<Wheel>();
+	let hasSpun = $state(false);
+	let selected: SpinWheelItem | null = $state(null);
 
-	let spinning = false;
+	let spinning = $state(false);
 
 	function random(min: number, max: number) {
 		return Math.floor(Math.random() * (max - min + 1) + min);
@@ -32,14 +47,18 @@
 
 	function shuff() {
 		items = shuffle(items);
-		wheel.items = items;
+		if (wheel) {
+			wheel.items = items;
+		}
 	}
 
 	function spin(speed = 0) {
 		if (speed == 0) speed = random(minSpeed, maxSpeed);
-		wheel.items = items;
-		hasSpun = true;
-		wheel.spin(speed);
+		if (wheel) {
+			wheel.items = items;
+			hasSpun = true;
+			wheel.spin(speed);
+		}
 	}
 
 	function win(item: SpinWheelItem) {
@@ -81,7 +100,7 @@
 	});
 
 	onDestroy(() => {
-		wheel.remove();
+		wheel?.remove();
 	});
 </script>
 
@@ -98,17 +117,17 @@
 
 {#if showSpin && wheel && items.length > 1}
 	<div class="flex justify-between">
-		<slot {spin}>
+		{#if children}{@render children({ spin })}{:else}
 			<div class="flex-auto"></div>
-		</slot>
+		{/if}
 
 		<div class="flex-auto">
-			<Button on:click={() => shuff()} class="variant-filled-warning" disabled={spinning}
+			<Button onclick={() => shuff()} class="variant-filled-warning" disabled={spinning}
 				>Shuffle</Button
 			>
 		</div>
 		<div class="flex-auto">
-			<Button on:click={() => spin()} disabled={spinning}>{buttonText}</Button>
+			<Button onclick={() => spin()} disabled={spinning}>{buttonText}</Button>
 		</div>
 	</div>
 {/if}

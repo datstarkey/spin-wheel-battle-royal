@@ -3,14 +3,14 @@
 	import type { SpinWheelItem } from '$lib/components/wheel/types';
 	import { classSpinItems } from '$lib/components/wheel/utils';
 	import { type ClassType } from '$lib/game/classes/classType';
-	import { currentGame, getPlayerByName } from '$lib/stores/gameStore';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import toast from 'svelte-french-toast';
 
-	let order: number = 0;
+	let order = $state(0);
 
-	$: spinningPlayer = $currentGame?.playerOrder[order];
+	let spinningPlayer = $derived(currentGame.value?.playerOrder[order]);
 
-	const results: Record<number, string> = {};
+	let results = $state<Record<number, string>>({});
 
 	function onWinner(item: SpinWheelItem) {
 		if (!spinningPlayer) {
@@ -33,7 +33,7 @@
 	items={classSpinItems()}
 	removeOnWinner
 	{onWinner}
-	showSpin={Object.keys(results).length !== $currentGame?.players.length}
+	showSpin={Object.keys(results).length !== currentGame.value?.players.length}
 >
 	<h3 class="flex-auto">Up next: {spinningPlayer}</h3>
 </SpinWheel>

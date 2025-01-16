@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
-	import { currentGame, removePlayer } from '$lib/stores/gameStore';
+	import { currentGame, removePlayer } from '$lib/stores/gameStore.svelte';
 </script>
 
 <div class="table-container">
@@ -13,8 +13,8 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#if $currentGame}
-				{#each $currentGame.players as player}
+			{#if currentGame.value}
+				{#each currentGame.value.players as player}
 					<tr>
 						<td class="w-full py-2">
 							<h2 class="ml-3">
@@ -26,7 +26,7 @@
 							<Button
 								icon="mdi:delete"
 								class="variant-filled-error"
-								on:click={() => removePlayer(player)}
+								onclick={() => removePlayer(player)}
 							></Button>
 						</td>
 					</tr>

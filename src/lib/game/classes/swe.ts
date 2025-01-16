@@ -1,8 +1,8 @@
 import toast from 'svelte-french-toast';
-import type { Player } from '../player/player';
+import type { Player } from '../player/player.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
-import { addCustomWheel } from '$lib/stores/gameStore';
+import { addCustomWheel } from '$lib/stores/gameStore.svelte';
 
 export const Swe: ClassBase = {
 	hp: 10,

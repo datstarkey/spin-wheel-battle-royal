@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	export let currentAttackWindow: {
 		name: string;
 		close: () => void;
@@ -6,23 +6,28 @@
 </script>
 
 <script lang="ts">
-	import type { Player } from '$lib/game/player/player';
-	import { currentGame, getPlayerByName } from '$lib/stores/gameStore';
+	import type { Player } from '$lib/game/player/player.svelte';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import toast from 'svelte-french-toast';
 	import Button from '../Button.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../wheel/types';
 
-	export let player: Player;
+	interface Props {
+		player: Player;
+	}
 
-	$: availableToAttack =
-		$currentGame?.players.filter((p) => p.name !== player.name && player.hp > 0) || [];
+	let { player }: Props = $props();
 
-	let attackingPlayer: Player | null = null;
+	let availableToAttack = $derived(
+		currentGame.value?.players.filter((p) => p.name !== player.name && player.hp > 0) || []
+	);
 
-	let showWheel = false;
+	let attackingPlayer: Player | null = $state(null);
 
-	$: position = !showWheel ? 'translate-x-full' : 'translate-x-0';
+	let showWheel = $state(false);
+
+	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
 
 	function attackPlayer() {
 		if (currentAttackWindow && currentAttackWindow.name != player.name) currentAttackWindow.close();
@@ -75,7 +80,7 @@
 </script>
 
 <label class="label">
-	<select class="select" value={attackingPlayer?.name} on:change={attackingPlayerChanged}>
+	<select class="select" value={attackingPlayer?.name} onchange={attackingPlayerChanged}>
 		{#each availableToAttack as item}
 			<option value={item.name}>{item.name}</option>
 		{/each}
@@ -83,7 +88,7 @@
 </label>
 
 <Button
-	on:click={attackPlayer}
+	onclick={attackPlayer}
 	disabled={attackingPlayer === null}
 	class="variant-filled-primary mt-3 w-full">Attack</Button
 >
@@ -92,7 +97,7 @@
 	class="bg-surface-100-800-token fixed bottom-0 right-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[550px] {position}"
 >
 	<div class="flex justify-end">
-		<Button icon="mdi:close" on:click={() => (showWheel = false)}></Button>
+		<Button icon="mdi:close" onclick={() => (showWheel = false)}></Button>
 	</div>
 
 	{#if attackingPlayer}

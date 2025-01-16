@@ -1,15 +1,18 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	import 'iconify-icon';
 </script>
 
 <script lang="ts">
-	export let icon: string;
+	interface Props {
+		icon: string;
+		size?: 'sm' | 'md' | 'lg' | 'xl';
+		onclick?: (() => void) | undefined;
+		[key: string]: any;
+	}
 
-	export let size: 'sm' | 'md' | 'lg' | 'xl' = 'md';
+	let { icon, size = 'md', onclick = undefined, ...rest }: Props = $props();
 
-	export let onclick: (() => void) | undefined = undefined;
-
-	$: role = onclick ? 'button' : 'img';
+	let role = $derived(onclick ? 'button' : 'img');
 
 	const map = {
 		sm: 'text-sm',
@@ -19,13 +22,13 @@
 	};
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <iconify-icon
 	{role}
 	tabindex="0"
 	{icon}
-	class="{map[size]} {$$restProps.class}"
-	on:click={() => {
+	class="{map[size]} {rest.class}"
+	onclick={() => {
 		if (onclick) {
 			onclick();
 		}

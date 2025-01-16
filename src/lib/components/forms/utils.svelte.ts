@@ -1,32 +1,39 @@
-import { get, writable } from 'svelte/store';
 import { z } from 'zod';
 export function createForm<T>(type: z.ZodType<T>, initialValue: T, onValid: (value: T) => void) {
-	const errors = writable<Record<string, string>>({});
-	const body = initialValue;
+	let errors = $state<Record<string, string>>({});
+	let body = $state(initialValue);
 
 	function submit() {
-		const result = type.safeParse(initialValue);
+		const result = type.safeParse(body);
 		if (!result.success) {
-			errors.set({
+			errors = {
 				hasRan: 'true'
-			});
+			};
 			for (const issue of result.error.issues) {
-				errors.update((updater) => {
-					updater[issue.path.join('.')] = issue.message;
-					return updater;
-				});
-
-				console.log(get(errors));
+				errors[issue.path.join('.')] = issue.message;
+				// errors[issue.path.join('.')] = issue.message;
+				// 	updater[issue.path.join('.')] = issue.message;
+				// 	return updater;
+				// });
+				// console.log(errors);
 			}
+			console.log(errors);
 		} else {
 			onValid(body);
 		}
 	}
 
 	return {
-		body,
+		get body() {
+			return body;
+		},
+		set body(value) {
+			body = value;
+		},
 		submit,
-		errors
+		get errors() {
+			return errors;
+		}
 	};
 }
 

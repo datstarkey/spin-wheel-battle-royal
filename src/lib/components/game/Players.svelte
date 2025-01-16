@@ -1,23 +1,17 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { currentGame, getPlayerByName } from '$lib/stores/gameStore';
-	import { onMount } from 'svelte';
-	import AttackPlayer from './AttackPlayer.svelte';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import Button from '../Button.svelte';
+	import AttackPlayer from './AttackPlayer.svelte';
 
 	// import type { PageData } from './$types';
 
 	// export let data: PageData;
 
-	$: currentTurnPlayer = $currentGame?.currentPlayer;
-
-	onMount(() => {
-		if (!$currentGame?.started) goto('/');
-	});
+	let currentTurnPlayer = $derived(currentGame.value?.currentPlayer);
 </script>
 
-{#if $currentGame}
-	{#if !$currentGame.players}
+{#if currentGame.value}
+	{#if !currentGame.value.players}
 		<p>No Players</p>
 	{/if}
 
@@ -25,7 +19,7 @@
 
 	<h3>Order</h3>
 	<h3 class="mb-5">
-		{#each Object.values($currentGame.playerOrder) as name}
+		{#each Object.values(currentGame.value.playerOrder) as name}
 			{@const player = getPlayerByName(name)}
 			<span class={player?.name == currentTurnPlayer?.name ? 'text-success-500' : 'text-error-500'}>
 				[{player?.name}]
@@ -34,7 +28,7 @@
 	</h3>
 
 	<div class="flex flex-wrap gap-3">
-		{#each $currentGame.players as player}
+		{#each currentGame.value.players as player}
 			<div
 				class="card variant-soft-secondary min-w-60 p-4 shadow"
 				class:variant-soft-error={player.hp <= 0}
@@ -90,9 +84,9 @@
 				{#if player.hp > 0 && player.name == currentTurnPlayer?.name}
 					<AttackPlayer {player}></AttackPlayer>
 
-					<Button class="mt-3 w-full" on:click={() => $currentGame?.finishTurn()}
-						>Finish Turn</Button
-					>
+					<Button class="mt-3 w-full" onclick={() => currentGame.value?.finishTurn()}>
+						Finish Turn
+					</Button>
 				{/if}
 			</div>
 		{/each}

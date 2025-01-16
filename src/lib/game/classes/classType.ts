@@ -1,10 +1,10 @@
-import { Swe } from './swe';
-import { Stoner } from './stoner';
-import { Poopmaster } from './poopmaster';
+import type { Player } from '../player/player.svelte';
 import { Gorf } from './gorf';
 import { Magicman } from './magicman';
 import { None } from './none';
-import type { Player } from '../player/player';
+import { Poopmaster } from './poopmaster';
+import { Stoner } from './stoner';
+import { Swe } from './swe';
 
 export interface ClassBase {
 	hp: number;

@@ -1,4 +1,4 @@
-import { getGlobalHpReduction } from '$lib/stores/gameStore';
+import { getGlobalHpReduction } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import type { ClassBase } from './classType';
 

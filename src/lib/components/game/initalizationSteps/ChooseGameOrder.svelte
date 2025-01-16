@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { getPlayerByName, currentGame } from '$lib/stores/gameStore';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import SpinWheel from '../../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../../wheel/types';
 	import { playerNameSpinItems } from '../../wheel/utils';
 
-	let order: number = 0;
+	let order = $state(0);
 
-	const currentOrder: Record<number, string> = $currentGame?.playerOrder || {};
+	let currentOrder = $state<Record<number, string>>(currentGame.value?.playerOrder || {});
 
-	$: maxPlayers = $currentGame?.players.length || 0;
+	let maxPlayers = $derived(currentGame.value?.players.length || 0);
 
 	function onWinner(item: SpinWheelItem) {
 		const player = getPlayerByName(item.label);
@@ -23,7 +23,7 @@
 	}
 
 	function save(): void {
-		if ($currentGame) $currentGame.playerOrder = currentOrder;
+		if (currentGame.value) currentGame.value.playerOrder = currentOrder;
 	}
 </script>
 

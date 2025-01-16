@@ -1,21 +1,20 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 </script>
 
 <script lang="ts">
 	import type { WheelBase } from '$lib/game/wheels/wheels';
-	import { currentGame, removeCustomWheel } from '$lib/stores/gameStore';
-	import { onMount } from 'svelte';
+	import { currentGame, removeCustomWheel } from '$lib/stores/gameStore.svelte';
 	import CustomWheel from './CustomWheel.svelte';
 
-	$: showWheel = ($currentGame?.customWheels.size ?? 0) > 0;
-	$: position = !showWheel ? '-translate-x-full' : 'translate-x-0';
+	let showWheel = $derived((currentGame.value?.customWheels.size ?? 0) > 0);
+	let position = $derived(!showWheel ? '-translate-x-full' : 'translate-x-0');
 
-	let currentWheel = $currentGame?.customWheels.entries().next().value as
-		| [string, WheelBase]
-		| undefined;
+	let currentWheel = $state(
+		currentGame.value?.customWheels.entries().next().value as [string, WheelBase] | undefined
+	);
 
 	function getWheel() {
-		currentWheel ??= $currentGame?.customWheels.entries().next().value as [string, WheelBase];
+		currentWheel ??= currentGame.value?.customWheels.entries().next().value as [string, WheelBase];
 	}
 
 	function wheelComplete(key?: [string, WheelBase]) {
@@ -26,14 +25,9 @@
 		getWheel();
 	}
 
-	onMount(() => {
-		const sub = currentGame.subscribe(() => {
-			getWheel();
-		});
-
-		return () => {
-			sub();
-		};
+	$effect(() => {
+		if (!currentGame.value) return;
+		getWheel();
 	});
 </script>
 

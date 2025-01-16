@@ -1,8 +1,8 @@
-import { getPlayerByName } from '$lib/stores/gameStore';
+import { getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
-import type { Player } from './player';
+import type { Player } from './player.svelte';
 
 export class PlayerStatuses {
 	private _playerName: string;
@@ -72,12 +72,37 @@ export class PlayerStatuses {
 			s.status.onLose?.(this.player, attackingPlayer);
 		});
 	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Serialization
+	 */
+
+	serialize(): Record<string, any> {
+		return {
+			playerName: this._playerName,
+			statuses: this._statuses.map((status) => ({
+				statusName: status.statusName,
+				duration: status.duration
+			}))
+		};
+	}
+
+	static deserialize(data: Record<string, any>): PlayerStatuses {
+		const statuses = new PlayerStatuses(data.playerName);
+		data.statuses?.forEach((statusData: { statusName: StatusType; duration: number }) => {
+			statuses.addStatus(statusData.statusName);
+			const status = statuses._statuses[statuses._statuses.length - 1];
+			status.duration = statusData.duration;
+		});
+		return statuses;
+	}
 }
 
 export class PlayerStatusEffect {
 	private _statusName: StatusType;
 
-	duration?: number;
+	duration: number | undefined;
 
 	constructor(status: StatusType) {
 		this._statusName = status;
@@ -85,5 +110,9 @@ export class PlayerStatusEffect {
 
 	get status(): StatusEffect {
 		return statusEffects[this._statusName];
+	}
+
+	get statusName(): StatusType {
+		return this._statusName;
 	}
 }

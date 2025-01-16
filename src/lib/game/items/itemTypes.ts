@@ -1,4 +1,4 @@
-import type { Player } from '../player/player';
+import type { Player } from '../player/player.svelte';
 import { SportsBra } from './chest/sportsBra';
 import { HealthPot } from './consumables/healthPot';
 import { ANiceHat } from './helm/aNiceHat';

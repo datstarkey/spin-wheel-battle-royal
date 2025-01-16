@@ -1,7 +1,8 @@
-import { getPlayerByName, refresh } from '$lib/stores/gameStore';
+import { getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
-import type { Player } from './player';
 import type { Item, ItemType } from '../items/itemTypes';
+import items, { type Chests, type Helms, type MainHands, type OffHands } from '../items/itemTypes';
+import type { Player } from './player.svelte';
 
 export class PlayerGear {
 	private _playerName: string;
@@ -90,7 +91,7 @@ export class PlayerGear {
 	 * Consumables
 	 */
 
-	private _consumables: Item[] = [];
+	private _consumables = $state<Item[]>([]);
 	public get consumables(): Item[] {
 		return this._consumables;
 	}
@@ -104,14 +105,13 @@ export class PlayerGear {
 			return;
 		}
 		this._consumables.push(item);
-		refresh();
 	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Main Hand
 	 */
-	private _mainHand: Item | null = null;
+	private _mainHand = $state<Item | null>(null);
 	public get mainHand(): Item | null {
 		return this._mainHand;
 	}
@@ -126,7 +126,6 @@ export class PlayerGear {
 		}
 		this._mainHand = item;
 		item.onEquip?.(this.player, 'mainhand');
-		refresh();
 	}
 
 	/**
@@ -148,7 +147,6 @@ export class PlayerGear {
 		}
 		this._offHand = item;
 		item.onEquip?.(this.player, 'offHand');
-		refresh();
 	}
 
 	/**
@@ -170,7 +168,6 @@ export class PlayerGear {
 		}
 		this._helm = item;
 		item.onEquip?.(this.player, 'helm');
-		refresh();
 	}
 
 	/**
@@ -192,6 +189,33 @@ export class PlayerGear {
 		}
 		this._chest = item;
 		item.onEquip?.(this.player, 'chest');
-		refresh();
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Serialization
+	 */
+
+	serialize(): Record<string, any> {
+		return {
+			playerName: this._playerName,
+			mainHand: this._mainHand?.name,
+			offHand: this._offHand?.name,
+			helm: this._helm?.name,
+			chest: this._chest?.name,
+			consumables: this._consumables.map((item) => item.name)
+		};
+	}
+
+	static deserialize(data: Record<string, any>): PlayerGear {
+		const gear = new PlayerGear(data.playerName);
+		if (data.mainHand) gear.addMainHand(items.mainhand[data.mainHand as MainHands]);
+		if (data.offHand) gear.addOffHand(items.offHand[data.offHand as OffHands]);
+		if (data.helm) gear.addHelm(items.helm[data.helm as Helms]);
+		if (data.chest) gear.addChest(items.chest[data.chest as Chests]);
+		data.consumables?.forEach((name: string) => {
+			gear.addConsumable(items.consumables[name as keyof typeof items.consumables]);
+		});
+		return gear;
 	}
 }

@@ -1,4 +1,4 @@
-import { addCustomWheel } from '$lib/stores/gameStore';
+import { addCustomWheel } from '$lib/stores/gameStore.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 

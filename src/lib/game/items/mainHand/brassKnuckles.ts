@@ -1,4 +1,4 @@
-import type { Player } from '../../player/player';
+import type { Player } from '../../player/player.svelte';
 import type { Item, ItemType } from '../itemTypes';
 
 export const BrassKnuckles: Item = {

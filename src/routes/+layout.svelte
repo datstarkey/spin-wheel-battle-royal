@@ -1,11 +1,22 @@
-<script>
-	import { AppBar, AppShell, Drawer, LightSwitch, initializeStores } from '@skeletonlabs/skeleton';
-	import '../app.css';
-	import { onMount } from 'svelte';
-	import { autoModeWatcher } from '@skeletonlabs/skeleton';
-	import { Toaster } from 'svelte-french-toast';
-	import { currentGame, resetGame } from '$lib/stores/gameStore';
+<script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import { currentGame, resetGame } from '$lib/stores/gameStore.svelte';
+	import {
+		AppBar,
+		AppShell,
+		Drawer,
+		LightSwitch,
+		autoModeWatcher,
+		initializeStores
+	} from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
+	import { Toaster } from 'svelte-french-toast';
+	import '../app.css';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	initializeStores();
 
@@ -18,17 +29,19 @@
 <Drawer />
 
 <AppShell>
-	<svelte:fragment slot="header">
+	{#snippet header()}
 		<AppBar>
-			<h3 slot="lead" class="ml-5">Spin-Wheel Battle Royal</h3>
-			<svelte:fragment slot="trail">
-				{#if $currentGame}
-					<Button class="variant-filled-error" on:click={resetGame}>Reset Game</Button>
+			{#snippet lead()}
+				<h3 class="ml-5">Spin-Wheel Battle Royal</h3>
+			{/snippet}
+			{#snippet trail()}
+				{#if currentGame.value}
+					<Button class="variant-filled-error" onclick={resetGame}>Reset Game</Button>
 				{/if}
-				<LightSwitch></LightSwitch></svelte:fragment
-			>
+				<LightSwitch></LightSwitch>
+			{/snippet}
 		</AppBar>
-	</svelte:fragment>
+	{/snippet}
 
 	<!-- <svelte:fragment slot="sidebarLeft">
 		<AppRail>
@@ -38,6 +51,6 @@
 	</svelte:fragment> -->
 
 	<div class="flex w-full flex-col items-center p-4">
-		<slot />
+		{@render children?.()}
 	</div>
 </AppShell>

@@ -1,14 +1,21 @@
 <script lang="ts">
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import Icon from './Icon.svelte';
 
-	export let icon: string | undefined = undefined;
+	interface Props extends HTMLButtonAttributes {
+		icon?: string | undefined;
+		children?: import('svelte').Snippet;
+		[key: string]: any;
+	}
 
-	$: type = !icon ? 'btn' : 'btn-icon';
+	let { icon = undefined, children, ...rest }: Props = $props();
+
+	let type = $derived(!icon ? 'btn' : 'btn-icon');
 </script>
 
-<button on:click type="button" {...$$restProps} class="{type} variant-filled {$$restProps.class}">
+<button type="button" {...rest} class="{type} variant-filled {rest.class}">
 	{#if icon}
 		<Icon {icon} size="xl" />
 	{/if}
-	<slot />
+	{@render children?.()}
 </button>

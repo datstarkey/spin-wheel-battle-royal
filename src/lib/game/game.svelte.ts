@@ -1,23 +1,23 @@
 import toast from 'svelte-french-toast';
-import { Player } from './player/player';
+import { SvelteMap } from 'svelte/reactivity';
+import { Player } from './player/player.svelte';
 import type { WheelBase } from './wheels/wheels';
-import { refresh } from '$lib/stores/gameStore';
 
 export class Game {
-	players: Player[] = [];
-	started: boolean = false;
+	players: Player[] = $state([]);
+	started = $state(false);
 
-	globalHpReduction: number = 1;
+	globalHpReduction = $state(1);
 
-	customWheels: Map<string, WheelBase> = new Map();
+	customWheels = new SvelteMap<string, WheelBase>();
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Turns
 	 */
 
-	playerOrder: Record<number, string> = {};
-	private _currentTurn: number = 0;
+	playerOrder: Record<number, string> = $state({});
+	private _currentTurn = $state(0);
 	public get currentTurn(): number {
 		return this._currentTurn;
 	}
@@ -59,17 +59,11 @@ export class Game {
 	}
 
 	startTurn() {
-		const player = this.currentPlayer;
-		if (!player) return;
-		player.onTurnStart();
-		refresh();
+		this.currentPlayer?.onTurnStart();
 	}
 
 	finishTurn() {
-		const player = this.currentPlayer;
-		if (!player) return;
-
-		player.onTurnEnd();
+		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
 		this.startTurn();
 	}
@@ -78,7 +72,7 @@ export class Game {
 	 * --------------------------------------------------------------------------
 	 * Shadow Realm
 	 */
-	private _shadowRealm: Player[] = [];
+	private _shadowRealm: Player[] = $state([]);
 	public get shadowRealm(): Player[] {
 		this._shadowRealm ??= [];
 		return this._shadowRealm;
@@ -116,5 +110,32 @@ export class Game {
 	 */
 	getPlayerByName(name: string): Player | undefined {
 		return this.players.find((player) => player.name === name);
+	}
+
+	// Serialize the Game instance to a JSON string
+	public serialize(): string {
+		return JSON.stringify({
+			players: this.players.map((player) => player.serialize()),
+			started: this.started,
+			globalHpReduction: this.globalHpReduction,
+			customWheels: Array.from(this.customWheels.entries()), // Convert SvelteMap to array
+			playerOrder: this.playerOrder,
+			_currentTurn: this._currentTurn,
+			_shadowRealm: this._shadowRealm
+		});
+	}
+
+	// Deserialize a JSON string to create a Game instance
+	public static deserialize(json: string): Game {
+		const data = JSON.parse(json);
+		const game = new Game();
+		game.players = data.players.map((p: any) => Player.deserialize(p));
+		game.started = data.started;
+		game.globalHpReduction = data.globalHpReduction;
+		game.customWheels = new SvelteMap(data.customWheels); // Convert array back to SvelteMap
+		game.playerOrder = data.playerOrder;
+		game._currentTurn = data._currentTurn;
+		game._shadowRealm = data._shadowRealm;
+		return game;
 	}
 }

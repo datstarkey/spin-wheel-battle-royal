@@ -1,4 +1,4 @@
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore';
+import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { generateLootWheel } from './lootWheel';
 
@@ -32,7 +32,8 @@ export function generateWinWheel(playerName: string) {
 		//Todo - add when turn system is implemented
 		{
 			//5
-			label: 'Take another turn'
+			label: 'Take another turn',
+			onWin: () => currentGame.value?.startTurn()
 		},
 		{
 			//6

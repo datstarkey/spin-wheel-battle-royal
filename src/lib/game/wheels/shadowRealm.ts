@@ -1,5 +1,5 @@
 import toast from 'svelte-french-toast';
-import type { Player } from '../player/player';
+import type { Player } from '../player/player.svelte';
 import type { WheelBase } from './wheels';
 
 export const shadowRealmWheel: WheelBase = [

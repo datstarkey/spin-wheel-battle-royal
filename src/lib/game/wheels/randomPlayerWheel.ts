@@ -1,6 +1,6 @@
 import { playerNameSpinItems } from '$lib/components/wheel/utils';
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore';
-import type { Player } from '../player/player';
+import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import type { Player } from '../player/player.svelte';
 
 export function generateRandomPlayerWheel(key: string, onPlayer: (winner: Player) => void) {
 	const playerNames = playerNameSpinItems();

@@ -1,12 +1,13 @@
-import { currentGame } from '$lib/stores/gameStore';
-import { get } from 'svelte/store';
-import type { SpinWheelItem } from './types';
 import { classMap } from '$lib/game/classes/classType';
+import { currentGame } from '$lib/stores/gameStore.svelte';
+import type { SpinWheelItem } from './types';
 
 export function playerNameSpinItems(): SpinWheelItem[] {
-	const game = get(currentGame);
-	if (!game) return [];
-	return game.players.filter(player=>!player.dead).map((player) => ({ label: player.name }));
+	return (
+		currentGame.value?.players
+			.filter((player) => !player.dead)
+			.map((player) => ({ label: player.name })) ?? []
+	);
 }
 
 export function classSpinItems(): SpinWheelItem[] {

@@ -1,4 +1,4 @@
-import type { Player } from '../player/player';
+import type { Player } from '../player/player.svelte';
 import { jaegerShots } from './jagerShots';
 import { movementPot } from './movmentPot';
 import { sweSupreme } from './swesupreme';

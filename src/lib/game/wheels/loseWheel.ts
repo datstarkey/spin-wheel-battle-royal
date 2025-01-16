@@ -1,4 +1,4 @@
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore';
+import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
