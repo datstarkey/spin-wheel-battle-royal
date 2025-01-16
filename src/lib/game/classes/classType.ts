@@ -15,12 +15,16 @@ export interface ClassBase {
 	onWinAbility: string;
 	attackRange: number;
 
-	onWin: (player: Player, attackingPlayer: Player) => void;
-	onLose?: (player: Player, attackingPlayer: Player) => void;
+	onAttackWin: (player: Player, defendingPlayer: Player) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
+	onDefendWin?: (player: Player, attackingPlayer: Player) => void;
+	onDefendLose?: (player: Player, attackingPlayer: Player) => void;
 	onTurnStart?: (player: Player) => void;
 	onTurnEnd?: (player: Player) => void;
-	onAttackStart?: (player: Player, attackingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, attackingPlayer: Player) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
+	onDefenseStart?: (player: Player, attackingPlayer: Player) => void;
+	onDefenseEnd?: (player: Player, attackingPlayer: Player) => void;
 }
 
 export const classMap = {

@@ -30,20 +30,36 @@ export class PlayerGear {
 	 * Events
 	 */
 
-	onWin(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onWin?.(this.player, attackingPlayer));
+	onAttackWin(defendingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onAttackWin?.(this.player, defendingPlayer));
 	}
 
-	onLose(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onLose?.(this.player, attackingPlayer));
+	onAttackLose(defendingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onAttackLose?.(this.player, defendingPlayer));
 	}
 
-	onAttackStart(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, attackingPlayer));
+	onDefendWin(attackingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onDefendWin?.(this.player, attackingPlayer));
 	}
 
-	onAttackEnd(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, attackingPlayer));
+	onDefendLose(attackingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onDefendLose?.(this.player, attackingPlayer));
+	}
+
+	onAttackStart(defendingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, defendingPlayer));
+	}
+
+	onAttackEnd(defendingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onAttackEnd?.(this.player, defendingPlayer));
+	}
+
+	onDefenseStart(attackingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onDefenseStart?.(this.player, attackingPlayer));
+	}
+
+	onDefenseEnd(attackingPlayer: Player) {
+		this.gearItems.forEach((x) => x.onDefenseEnd?.(this.player, attackingPlayer));
 	}
 
 	onTurnStart() {

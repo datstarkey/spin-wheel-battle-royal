@@ -23,7 +23,7 @@
 		currentGame.value?.players.filter((p) => p.name !== player.name && player.hp > 0) || []
 	);
 
-	let attackingPlayer: Player | null = $state(null);
+	let defendingPlayer: Player | null = $state(null);
 
 	let showWheel = $state(false);
 
@@ -37,7 +37,7 @@
 			name: player.name,
 			close: () => {
 				showWheel = false;
-				player.onAttackEnd(attackingPlayer!);
+				player.onAttackEnd(defendingPlayer!);
 			}
 		};
 	}
@@ -48,39 +48,43 @@
 			toast.error('Something went wrong could not find player ' + item.label);
 			return;
 		}
-		if (!attackingPlayer) {
-			toast.error('Something went wrong could not find attacking player');
+		if (!defendingPlayer) {
+			toast.error('Something went wrong could not find defending player');
 			return;
 		}
 
 		const won = player.name == winningPlayer.name;
 
 		if (won) {
-			toast.success(`${player.name} beat ${attackingPlayer.name}!`);
-			player.onWin(attackingPlayer);
+			toast.success(`${player.name} beat ${defendingPlayer.name}!`);
+			player.onAttackWin(defendingPlayer);
+			defendingPlayer.onDefendWin(player);
 		} else {
-			toast.error(`${player.name} lost to ${attackingPlayer.name}!`);
-			player.onLose(attackingPlayer);
+			toast.error(`${player.name} lost to ${defendingPlayer.name}!`);
+			player.onAttackLose(defendingPlayer);
+			defendingPlayer.onDefendLose(player);
 		}
 	}
 
-	function attackingPlayerChanged(event: Event) {
+	function defendingPlayerChanged(event: Event) {
 		const target = event.target as HTMLSelectElement;
 		const selectedPlayer = target.value;
-		const newAttackingPlayer = getPlayerByName(selectedPlayer);
-		if (newAttackingPlayer) {
+		const newDefendingPlayer = getPlayerByName(selectedPlayer);
+		if (newDefendingPlayer) {
 			//End the attack phase for the previous player
-			if (attackingPlayer && attackingPlayer.name !== newAttackingPlayer.name) {
-				player.onAttackEnd(attackingPlayer);
+			if (defendingPlayer && defendingPlayer.name !== newDefendingPlayer.name) {
+				player.onAttackEnd(defendingPlayer);
+				defendingPlayer.onDefenseEnd(player);
 			}
-			player.onAttackStart(newAttackingPlayer);
-			attackingPlayer = newAttackingPlayer;
+			player.onAttackStart(newDefendingPlayer);
+			newDefendingPlayer.onDefenseStart(player);
+			defendingPlayer = newDefendingPlayer;
 		}
 	}
 </script>
 
 <label class="label">
-	<select class="select" value={attackingPlayer?.name} onchange={attackingPlayerChanged}>
+	<select class="select" value={defendingPlayer?.name} onchange={defendingPlayerChanged}>
 		{#each availableToAttack as item}
 			<option value={item.name}>{item.name}</option>
 		{/each}
@@ -89,7 +93,7 @@
 
 <Button
 	onclick={attackPlayer}
-	disabled={attackingPlayer === null}
+	disabled={defendingPlayer === null}
 	class="variant-filled-primary mt-3 w-full">Attack</Button
 >
 
@@ -100,16 +104,16 @@
 		<Button icon="mdi:close" onclick={() => (showWheel = false)}></Button>
 	</div>
 
-	{#if attackingPlayer}
-		{#key attackingPlayer}
+	{#if defendingPlayer}
+		{#key defendingPlayer}
 			{#key showWheel}
 				<div>
-					<h1 class="mb-5 text-center">{player.name} vs {attackingPlayer.name}</h1>
+					<h1 class="mb-5 text-center">{player.name} vs {defendingPlayer.name}</h1>
 
 					<SpinWheel
 						items={[
 							{ label: player.name, weight: player.attack },
-							{ label: attackingPlayer.name, weight: attackingPlayer.defense }
+							{ label: defendingPlayer.name, weight: defendingPlayer.defense }
 						]}
 						buttonText="Attack"
 						{onWinner}
@@ -121,7 +125,7 @@
 						<p class="text-primary-500">{player.name} | Attack | {player.attack}</p>
 						<p class="text-tertiary-500">VS</p>
 						<p class="text-secondary-500">
-							{attackingPlayer.name} | Defense | {attackingPlayer.defense}
+							{defendingPlayer.name} | Defense | {defendingPlayer.defense}
 						</p>
 					</div>
 				</div>

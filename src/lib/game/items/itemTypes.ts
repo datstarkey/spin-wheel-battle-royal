@@ -21,10 +21,14 @@ export interface Item {
 	onUse?: (player: Player) => void;
 	onEquip?: (player: Player, type: ItemType) => void;
 	onUnequip?: (player: Player, type: ItemType) => void;
-	onWin?: (player: Player, attackingPlayer: Player) => void;
-	onLose?: (player: Player, attackingPlayer: Player) => void;
-	onAttackStart?: (player: Player, attackingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, attackingPlayer: Player) => void;
+	onAttackWin?: (player: Player, defendingPlayer: Player) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
+	onDefendWin?: (player: Player, playerAttackingYou: Player) => void;
+	onDefendLose?: (player: Player, playerAttackingYou: Player) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
+	onDefenseStart?: (player: Player, playerAttackingYou: Player) => void;
+	onDefenseEnd?: (player: Player, playerAttackingYou: Player) => void;
 	onTurnStart?: (player: Player) => void;
 	onTurnEnd?: (player: Player) => void;
 }
@@ -41,10 +45,9 @@ const items = {
 	},
 	helm: {
 		Halo: Halo,
-		'A Nice Hat':ANiceHat,
+		'A Nice Hat': ANiceHat,
 		Kaibrows: Kaibrows,
 		'Beer Goggles': BeerGoggles
-
 	},
 	chest: {
 		'Sports Bra': SportsBra

@@ -1,8 +1,8 @@
+import { addCustomWheel } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import type { Player } from '../player/player.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
-import { addCustomWheel } from '$lib/stores/gameStore.svelte';
 
 export const Swe: ClassBase = {
 	hp: 10,
@@ -11,7 +11,7 @@ export const Swe: ClassBase = {
 	attackRange: 1,
 	name: 'Swe',
 	onWinAbility: 'Generate Swesupreme energy (spin swheel)',
-	onWin(player) {
+	onAttackWin(player) {
 		const wheel: WheelBase = [];
 		for (let index = 1; index < 10; index++) {
 			wheel.push({
@@ -32,11 +32,9 @@ export const Swe: ClassBase = {
 	},
 
 	onTurnEnd(player) {
-		if (player.statuses.hasStatus("swesupreme")){
+		if (player.statuses.hasStatus('swesupreme')) {
 			reduceSwenergy(player, -4);
 		}
-		
-		
 	}
 };
 

@@ -1,13 +1,7 @@
 import { browser } from '$app/environment';
 import { Game } from '$lib/game/game.svelte';
-import { Player } from '$lib/game/player/player.svelte';
-import { PlayerGear } from '$lib/game/player/playerGear.svelte';
-import { PlayerStatuses } from '$lib/game/player/playerStatuses.svelte';
 import superjson, { SuperJSON } from 'superjson';
 
-SuperJSON.registerClass(PlayerGear);
-SuperJSON.registerClass(PlayerStatuses);
-SuperJSON.registerClass(Player);
 SuperJSON.registerCustom<Game, string>(
 	{
 		isApplicable: (value) => value instanceof Game,

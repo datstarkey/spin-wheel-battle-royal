@@ -11,7 +11,7 @@ export const Poopmaster: ClassBase = {
 	attackRange: 1,
 
 	//Refactor this at some point when im not lazy
-	onWin(player, attackingPlayer) {
+	onAttackWin(player, attackingPlayer) {
 		const wheelItems: WheelBase = [];
 		if (attackingPlayer.gear.mainHand) {
 			wheelItems.push({

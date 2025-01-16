@@ -7,7 +7,7 @@ export const None: ClassBase = {
 	attackRange: 0,
 	name: 'None',
 	onWinAbility: 'None',
-	onWin() {
+	onAttackWin() {
 		//Do nothing
 	}
 };

@@ -61,15 +61,39 @@ export class PlayerStatuses {
 		});
 	}
 
-	onWin(attackingPlayer: Player) {
+	onAttackWin(defendingPlayer: Player) {
 		this._statuses.forEach((s) => {
-			s.status.onWin?.(this.player, attackingPlayer);
+			s.status.onAttackWin?.(this.player, defendingPlayer);
 		});
 	}
 
-	onLose(attackingPlayer: Player) {
+	onAttackLose(defendingPlayer: Player) {
 		this._statuses.forEach((s) => {
-			s.status.onLose?.(this.player, attackingPlayer);
+			s.status.onAttackLose?.(this.player, defendingPlayer);
+		});
+	}
+
+	onDefendWin(playerAttackingYou: Player) {
+		this._statuses.forEach((s) => {
+			s.status.onDefendWin?.(this.player, playerAttackingYou);
+		});
+	}
+
+	onDefendLose(defendingPlayer: Player) {
+		this._statuses.forEach((s) => {
+			s.status.onDefendLose?.(this.player, defendingPlayer);
+		});
+	}
+
+	onDefenseStart(defendingPlayer: Player) {
+		this._statuses.forEach((s) => {
+			s.status.onDefenseStart?.(this.player, defendingPlayer);
+		});
+	}
+
+	onDefenseEnd(defendingPlayer: Player) {
+		this._statuses.forEach((s) => {
+			s.status.onDefenseEnd?.(this.player, defendingPlayer);
 		});
 	}
 

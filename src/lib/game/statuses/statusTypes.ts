@@ -14,12 +14,14 @@ export interface StatusEffect {
 	onRemove?: (player: Player) => void;
 	onTurnStart?: (player: Player) => void;
 	onTurnEnd?: (player: Player) => void;
-	onWin?: (player: Player, attackingPlayer: Player) => void;
-	onLose?: (player: Player, attackingPlayer: Player) => void;
-	onAttackStart?: (player: Player, attackingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, attackingPlayer: Player) => void;
-	onBeingAttackedStart?: (player: Player, playerAttackingYou: Player) => void;
-	onBeingAttackedEnd?: (player: Player, playerAttackingYou: Player) => void;
+	onAttackWin?: (player: Player, defendingPlayer: Player) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
+	onDefendWin?: (player: Player, playerAttackingYou: Player) => void;
+	onDefendLose?: (player: Player, playerAttackingYou: Player) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
+	onDefenseStart?: (player: Player, playerAttackingYou: Player) => void;
+	onDefenseEnd?: (player: Player, playerAttackingYou: Player) => void;
 }
 
 const statusEffects = {

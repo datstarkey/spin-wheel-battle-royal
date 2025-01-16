@@ -7,7 +7,7 @@ export const Magicman: ClassBase = {
 	attackRange: 3,
 	name: 'Magic Man',
 	onWinAbility: 'Can teleport any other player',
-	onWin() {
+	onAttackWin() {
 		//Need Board to be able to access players
 	}
 };

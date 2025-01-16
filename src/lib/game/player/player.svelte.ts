@@ -205,23 +205,46 @@ export class Player {
 	 * Events
 	 */
 
-	onWin(attackingPlayer: Player) {
+	onAttackWin(defendingPlayer: Player) {
 		this.gold += 1;
-		attackingPlayer.hp -= getGlobalHpReduction();
-		this.statuses.onWin(attackingPlayer);
-		this.gear.onWin(attackingPlayer);
-		this.class.onWin(this, attackingPlayer);
-
+		defendingPlayer.hp -= getGlobalHpReduction();
+		this.statuses.onAttackWin(defendingPlayer);
+		this.gear.onAttackWin(defendingPlayer);
+		this.class.onAttackWin(this, defendingPlayer);
 		generateWinWheel(this.name);
 	}
 
-	onLose(attackingPlayer: Player) {
-		attackingPlayer.gold += 1;
+	onAttackLose(defendingPlayer: Player) {
+		defendingPlayer.gold += 1;
 		this.hp -= getGlobalHpReduction();
-		this.statuses.onLose(attackingPlayer);
-		this.gear.onLose(attackingPlayer);
-		this.class.onLose?.(this, attackingPlayer);
+		this.statuses.onAttackLose(defendingPlayer);
+		this.gear.onAttackLose(defendingPlayer);
+		this.class.onAttackLose?.(this, defendingPlayer);
 		generateLoseWheel(this.name);
+	}
+
+	onDefendWin(playerAttackingYou: Player) {
+		this.statuses.onDefendWin(playerAttackingYou);
+		this.gear.onDefendWin(playerAttackingYou);
+		this.class.onDefendWin?.(this, playerAttackingYou);
+	}
+
+	onDefendLose(playerAttackingYou: Player) {
+		this.statuses.onDefendLose(playerAttackingYou);
+		this.gear.onDefendLose(playerAttackingYou);
+		this.class.onDefendLose?.(this, playerAttackingYou);
+	}
+
+	onDefenseStart(playerAttackingYou: Player) {
+		this.statuses.onDefenseStart(playerAttackingYou);
+		this.gear.onDefenseStart(playerAttackingYou);
+		this.class.onDefenseStart?.(this, playerAttackingYou);
+	}
+
+	onDefenseEnd(playerAttackingYou: Player) {
+		this.statuses.onDefenseEnd(playerAttackingYou);
+		this.gear.onDefenseEnd(playerAttackingYou);
+		this.class.onDefenseEnd?.(this, playerAttackingYou);
 	}
 
 	onTurnStart() {

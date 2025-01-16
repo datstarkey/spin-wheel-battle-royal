@@ -7,7 +7,7 @@ export const Stoner: ClassBase = {
 	attackRange: 1,
 	name: 'Stoner',
 	onWinAbility: 'Extend buff duration',
-	onWin() {
+	onAttackWin() {
 		//Todo implement stoner board
 	}
 };
