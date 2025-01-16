@@ -30,14 +30,24 @@
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
 
 	function attackPlayer() {
+		if (!defendingPlayer) {
+			toast.error('Something went wrong could not find defending player');
+			return;
+		}
 		if (currentAttackWindow && currentAttackWindow.name != player.name) currentAttackWindow.close();
 		showWheel = true;
+		console.log('opening attack window');
+		player.onAttackStart(defendingPlayer);
+		defendingPlayer.onDefenseStart(player);
 
 		currentAttackWindow = {
 			name: player.name,
+
 			close: () => {
 				showWheel = false;
+				console.log('closing attack window');
 				player.onAttackEnd(defendingPlayer!);
+				defendingPlayer!.onDefenseEnd(player);
 			}
 		};
 	}
@@ -71,13 +81,6 @@
 		const selectedPlayer = target.value;
 		const newDefendingPlayer = getPlayerByName(selectedPlayer);
 		if (newDefendingPlayer) {
-			//End the attack phase for the previous player
-			if (defendingPlayer && defendingPlayer.name !== newDefendingPlayer.name) {
-				player.onAttackEnd(defendingPlayer);
-				defendingPlayer.onDefenseEnd(player);
-			}
-			player.onAttackStart(newDefendingPlayer);
-			newDefendingPlayer.onDefenseStart(player);
 			defendingPlayer = newDefendingPlayer;
 		}
 	}
