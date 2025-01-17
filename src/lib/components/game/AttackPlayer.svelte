@@ -126,7 +126,7 @@
 		>
 		<button
 			onclick={() => (shopOpen = true)}
-			disabled={showWheel || shopOpen || player.classType == 'gambler'}
+			disabled={showWheel || shopOpen || player.classType == 'gambler' || player.inShadowRealm}
 		>
 			Shop</button
 		>
