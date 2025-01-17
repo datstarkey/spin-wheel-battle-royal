@@ -25,7 +25,6 @@ export class Player {
 		return this._name;
 	}
 
-	dead = $state(false);
 	gear: PlayerGear;
 	statuses: PlayerStatuses;
 
@@ -53,6 +52,12 @@ export class Player {
 			return;
 		}
 
+		// if (this.classType == 'gambler') {
+		// 	this.gold = value;
+		// 	this._hp = this.gold;
+		// } else {
+		// 	this._hp = value;
+		// }
 		this._hp = value;
 		if (this._hp < 0) this._hp = 0;
 		if (this._hp === 0) {
@@ -63,6 +68,8 @@ export class Player {
 			addAuditTrail(`${this.name} has ${this.hp} HP!`);
 		}
 	}
+
+	dead = $state(false);
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -237,6 +244,9 @@ export class Player {
 	public set gold(value: number) {
 		this._gold = value;
 		if (this._gold < 0) this._gold = 0;
+		// if (this.classType == 'gambler') {
+		// 	this.hp = this.gold;
+		// }
 		addAuditTrail(`${this.name} now has ${this.gold} gold!`);
 	}
 
@@ -384,9 +394,9 @@ export class Player {
 	serialize(): Record<string, any> {
 		return {
 			name: this.name,
-			dead: this.dead,
 			hp: this._hp,
 			class: this._class,
+			dead: this.dead,
 			movement: this._baseMovement,
 			bonusMovement: this._bonusMovement,
 			baseAttackRange: this._baseAttackRange,
@@ -408,9 +418,9 @@ export class Player {
 
 	static deserialize(data: Record<string, any>): Player {
 		const player = new Player(data.name);
-		player.dead = data.dead;
 		player._hp = data.hp;
 		player._class = data.class;
+		player.dead = data.dead;
 		player._baseMovement = data.movement;
 		player._bonusMovement = data.bonusMovement;
 		player._baseAttackRange = data.baseAttackRange;

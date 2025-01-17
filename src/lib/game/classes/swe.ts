@@ -6,9 +6,9 @@ import type { ClassBase } from './classType';
 export const Swenergy = 'Swenergy';
 
 export const Swe: ClassBase = {
-	hp: 10,
-	attack: 10,
-	defense: 10,
+	hp: 100,
+	attack: 15,
+	defense: 15,
 	attackRange: 1,
 	name: 'Swe',
 	onWinAbility: 'Generate Swesupreme energy (spin swheel)',

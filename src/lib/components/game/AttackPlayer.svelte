@@ -3,6 +3,10 @@
 		name: string;
 		close: () => void;
 	} | null = null;
+
+	export const hasPlayerAttacked = $state({
+		value: false
+	});
 </script>
 
 <script lang="ts">
@@ -30,7 +34,6 @@
 	let defendingPlayer: Player | null = $state(null);
 
 	let winningPlayer = $state<Player | null>();
-	let hasAttacked = $state(false);
 
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
 
@@ -54,7 +57,7 @@
 		showWheel = true;
 		player.onAttackStart(defendingPlayer);
 		defendingPlayer.onDefenseStart(player);
-		hasAttacked = false;
+		hasPlayerAttacked.value = false;
 		currentAttackWindow = {
 			name: player.name,
 			close: () => {
@@ -68,7 +71,7 @@
 
 	function onWinner(item: SpinWheelItem): void {
 		winningPlayer = getPlayerByName(item.label);
-		hasAttacked = true;
+		hasPlayerAttacked.value = true;
 		if (!winningPlayer) {
 			toast.error('Something went wrong could not find player ' + item.label);
 			return;
@@ -119,8 +122,9 @@
 
 <div class="flex w-full justify-center">
 	<div class="variant-filled-primary btn-group mx-auto mt-4">
-		<button onclick={attackPlayer} disabled={defendingPlayer === null || showWheel || hasAttacked}
-			>Attack</button
+		<button
+			onclick={attackPlayer}
+			disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value}>Attack</button
 		>
 		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
 		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>

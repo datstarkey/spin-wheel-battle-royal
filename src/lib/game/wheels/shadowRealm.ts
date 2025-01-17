@@ -15,6 +15,8 @@ export function generateShadowRealmWheel(playerName: string) {
 		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
 		return;
 	}
+	if (player.dead) return;
+
 	const wheel: WheelBase = [
 		{
 			label: 'Return to spawn',
@@ -25,7 +27,9 @@ export function generateShadowRealmWheel(playerName: string) {
 		},
 		{
 			label: 'Lose 5 gold',
-			onWin: (player: Player) => (player.gold -= 5)
+			onWin: (player: Player) => {
+				player.gold -= 5;
+			}
 		},
 		{
 			label: 'Give 5 gold to someone',

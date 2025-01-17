@@ -55,7 +55,7 @@
 								<img
 									src={item.image}
 									alt={item.name}
-									class="mx-auto my-1 h-10 w-10 object-contain"
+									class="mx-auto my-1 h-16 w-16 object-contain"
 								/>
 							{/if}
 
@@ -64,7 +64,7 @@
 							<Button
 								disabled={!player.canBuyItem(itemName as AllItems)}
 								onclick={() => player.buyItem(itemName as AllItems)}
-								class="w-full py-1 text-sm"
+								class="w-full py-0.5 text-xs"
 							>
 								<Icon icon="mdi:cart" />
 								Buy

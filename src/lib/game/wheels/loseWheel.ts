@@ -1,5 +1,6 @@
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
+import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
@@ -9,6 +10,10 @@ export function generateLoseWheel(playerName: string) {
 		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
 		return;
 	}
+
+	if(player.dead) return;
+
+	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 2;
 	const wheel = [
 		{
 			//1
@@ -51,12 +56,12 @@ export function generateLoseWheel(playerName: string) {
 		},
 		{
 			//6
-			label: 'Give someone 5 HP',
+			label: 'Give someone HP',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Gives 5 Hp To`, (winner) => {
 					//only give as much hp as the winner can take
-					let hpAmount = 5;
+					let hpAmount = globalHpValue;
 					if (player.hp < 5) hpAmount = player.hp;
 					player.hp -= hpAmount;
 					winner.hp += hpAmount;
@@ -95,6 +100,6 @@ export function generateLoseWheel(playerName: string) {
 			}
 		}
 	];
-
-	addCustomWheel(`Lose Wheel - ${player.name}`, wheel);
+	if (player.classType == 'gambler') generateGamblerWheel(player.name);
+	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel);
 }

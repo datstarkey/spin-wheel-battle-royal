@@ -9,6 +9,9 @@ export function generateLootWheel(playerName: string) {
 		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
 		return;
 	}
+
+	if (player.dead) return;
+
 	const wheel = [
 		{
 			label: 'Get a random Consumable',

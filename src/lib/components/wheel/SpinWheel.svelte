@@ -1,3 +1,9 @@
+<script module lang="ts">
+	export const quickMode = $state({
+		value: true
+	});
+</script>
+
 <script lang="ts">
 	import { Wheel } from 'spin-wheel';
 	import { onDestroy, onMount } from 'svelte';
@@ -55,6 +61,7 @@
 	}
 
 	function spin(speed = 0) {
+		if (quickMode.value) maxSpeed = 100;
 		if (speed == 0) speed = random(minSpeed, maxSpeed);
 		if (wheel) {
 			wheel.items = items;
@@ -77,7 +84,7 @@
 			rotationSpeedMax: maxSpeed,
 			rotationResistance: rotationResistance,
 			itemLabelFont:
-				" Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+				"Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
 		});
 
 		wheel.onSpin = () => {

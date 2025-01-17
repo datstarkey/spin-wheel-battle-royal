@@ -1,3 +1,4 @@
+import { hasPlayerAttacked } from '$lib/components/game/AttackPlayer.svelte';
 import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { SvelteMap } from 'svelte/reactivity';
@@ -7,13 +8,21 @@ import type { WheelBase } from './wheels/wheels';
 
 export class Game {
 	players: Player[] = $state([]);
+
+	alivePlayers = $derived(this.players.filter((player) => !player.dead));
 	started = $state(false);
+
+	winner = $state<Player | undefined>(undefined);
 
 	globalHpReduction = $state(1);
 
 	customWheels = new SvelteMap<string, WheelBase>();
 
 	itemCostModifiers = new SvelteMap<AllItems, number>();
+
+	//playerNames
+	skippedNextTurns = $state<string[]>([]);
+
 	shopCostModifier = $state(0);
 
 	auditTrail = $state<string[]>([]);
@@ -38,6 +47,8 @@ export class Game {
 
 	playerOrder: Record<number, string> = $state({});
 	private _currentTurn = $state(0);
+
+	private hasTurnStarted = $state(false);
 	public get currentTurn(): number {
 		return this._currentTurn;
 	}
@@ -59,7 +70,7 @@ export class Game {
 			return;
 		}
 		if (alivePlayers.length === 1) {
-			addAuditTrail(`${alivePlayers[0].name} has won the game!`);
+			// addAuditTrail(`${alivePlayers[0].name} has won the game!`);
 			return alivePlayers[0];
 		}
 
@@ -71,23 +82,53 @@ export class Game {
 			return;
 		}
 
-		if (player.dead) {
-			this.incrementTurn();
-			return this.currentPlayer;
-		}
+		// if (player.dead) {
+
+		// 	this.incrementTurn();
+		// 	return this.currentPlayer;
+		// }
 		return player;
 	}
 
 	startTurn() {
-		this.currentPlayer?.onTurnStart();
-		this.addAuditTrail(`${this.currentPlayer?.name} starts their turn!`);
+		if (!this.hasTurnStarted) {
+			this.currentPlayer?.onTurnStart();
+			this.addAuditTrail(`${this.currentPlayer?.name} starts their turn!`);
+			this.hasTurnStarted = true;
+
+			//skip the turn if the player has skipped the next turn
+			if (this.skippedNextTurns.includes(this.currentPlayer?.name ?? '')) {
+				this.skippedNextTurns = this.skippedNextTurns.filter(
+					(name) => name !== this.currentPlayer?.name
+				);
+				this.startTurn();
+			}
+
+			if (this.currentPlayer?.dead) {
+				toast.success('player is dead');
+				this.finishTurn();
+			} else {
+				toast.success('player is not dead');
+			}
+		}
+	}
+
+	gainAnotherTurn() {
+		this.addAuditTrail(`${this.currentPlayer?.name} gets another turn`);
+		this.hasTurnStarted = true;
+		hasPlayerAttacked.value = false;
 	}
 
 	finishTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
+		this.hasTurnStarted = false;
 		this.startTurn();
+	}
+
+	skipNextTurn(player: Player) {
+		this.skippedNextTurns.push(player.name);
 	}
 
 	/**
@@ -146,7 +187,9 @@ export class Game {
 			_shadowRealm: this._shadowRealm,
 			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
 			auditTrail: this.auditTrail,
-			shopCostModifier: this.shopCostModifier
+			shopCostModifier: this.shopCostModifier,
+			hasTurnStarted: this.hasTurnStarted,
+			skippedNextTurns: this.skippedNextTurns
 		});
 	}
 
@@ -164,6 +207,8 @@ export class Game {
 		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
 		game.auditTrail = data.auditTrail;
 		game.shopCostModifier = data.shopCostModifier;
+		game.hasTurnStarted = data.hasTurnStarted;
+		game.skippedNextTurns = data.skippedNextTurns;
 		return game;
 	}
 }
