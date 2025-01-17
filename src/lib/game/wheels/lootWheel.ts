@@ -17,8 +17,8 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Consumable',
 			onWin() {
 				//Select all consumables that are not class locked or are locked to the players class
-				const consumables = Object.values(items.consumables).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.classType)
+				const consumables = Object.entries(items.consumables).filter(
+					(x) => !x[1].classLocks || x[1].classLocks.includes(player.classType)
 				);
 
 				player.assignItem(randomFromArray(consumables));
@@ -28,9 +28,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Helm',
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
-				const list = Object.values(items.helm).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.classType)
-				);
+				const list = Object.entries(items.helm)
+					.filter((x) => !x[1].classLocks || x[1].classLocks.includes(player.classType))
+					.map((x) => x[0]);
 				player.assignItem(randomFromArray(list));
 			}
 		},
@@ -38,9 +38,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Chest',
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
-				const list = Object.values(items.chest).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.classType)
-				);
+				const list = Object.entries(items.chest)
+					.filter((x) => !x[1].classLocks || x[1].classLocks.includes(player.classType))
+					.map((x) => x[0]);
 
 				player.assignItem(randomFromArray(list));
 			}
@@ -49,9 +49,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Main Hand',
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
-				const list = Object.values(items.mainhand).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.classType)
-				);
+				const list = Object.entries(items.mainhand)
+					.filter((x) => !x[1].classLocks || x[1].classLocks.includes(player.classType))
+					.map((x) => x[0]);
 				player.assignItem(randomFromArray(list));
 			}
 		},
@@ -59,9 +59,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Off Hand',
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
-				const list = Object.values(items.offHand).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.classType)
-				);
+				const list = Object.entries(items.offHand)
+					.filter((x) => !x[1].classLocks || x[1].classLocks.includes(player.classType))
+					.map((x) => x[0]);
 				player.assignItem(randomFromArray(list));
 			}
 		},
