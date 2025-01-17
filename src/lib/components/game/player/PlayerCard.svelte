@@ -121,6 +121,15 @@
 			</span>
 			<span class="ml-2 truncate">{player.gear.offHand ?? 'None'}</span>
 		</div>
+
+		<div class="flex items-center justify-between rounded bg-surface-500/10 p-1">
+			<span class="flex items-center gap-1">
+				<Icon icon="game-icons:crested-helmet" class="text-xs" />
+				Helm
+			</span>
+			<span class="ml-2 truncate">{player.gear.helm ?? 'None'}</span>
+		</div>
+
 		<div class="flex items-center justify-between rounded bg-surface-500/10 p-1">
 			<span class="flex items-center gap-1">
 				<Icon icon="mdi:tshirt-crew" class="text-xs" />

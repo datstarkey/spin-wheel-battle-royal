@@ -1,3 +1,4 @@
+import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Item } from '../itemTypes';
 
 export const Shiv: Item = {
@@ -10,5 +11,7 @@ export const Shiv: Item = {
 	onAttackWin(player, attackingPlayer) {
 		player.gold += 1;
 		attackingPlayer.gold -= 1;
+
+		addAuditTrail(`${player.name} shivved ${attackingPlayer.name} and stole 1 gold!`);
 	}
 };

@@ -27,6 +27,8 @@
 
 	let defendingPlayer: Player | null = $state(null);
 
+	let winningPlayer = $state<Player | null>();
+
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
 
 	$effect(() => {
@@ -53,6 +55,7 @@
 			close: () => {
 				showWheel = false;
 
+				winningPlayer = null;
 				player.onAttackEnd(defendingPlayer!);
 				defendingPlayer!.onDefenseEnd(player);
 			}
@@ -60,7 +63,7 @@
 	}
 
 	function onWinner(item: SpinWheelItem): void {
-		const winningPlayer = getPlayerByName(item.label);
+		winningPlayer = getPlayerByName(item.label);
 		if (!winningPlayer) {
 			toast.error('Something went wrong could not find player ' + item.label);
 			return;
@@ -146,6 +149,16 @@
 							{defendingPlayer.name} | Defense | {defendingPlayer.defense}
 						</p>
 					</div>
+
+					{#if winningPlayer}
+						<div
+							class="card variant-soft-surface mt-5 flex items-center justify-center gap-3 p-4 text-lg font-bold"
+						>
+							<p class="text-primary-500">{winningPlayer?.name} wins!</p>
+						</div>
+
+						<Button class="mt-4 w-full" onclick={() => currentAttackWindow?.close()}>Close</Button>
+					{/if}
 				</div>
 			{/key}
 		{/key}

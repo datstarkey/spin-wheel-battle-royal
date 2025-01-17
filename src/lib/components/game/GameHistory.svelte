@@ -16,13 +16,13 @@
 		<div class="variant-glass-surface overflow-hidden rounded-b-lg shadow-lg">
 			<div class="max-h-[60vh] space-y-2 overflow-y-auto p-4">
 				{#each currentGame.value?.auditTrail.toReversed() ?? [] as item}
-					<div class="variant-soft-primary rounded-lg p-3 text-sm">
-						<p>{item}</p>
-					</div>
-
 					{#if item.includes('finishes their turn!')}
 						<div class="h-8"></div>
 					{/if}
+
+					<div class="variant-soft-primary rounded-lg p-3 text-sm">
+						<p>{item}</p>
+					</div>
 				{/each}
 			</div>
 		</div>

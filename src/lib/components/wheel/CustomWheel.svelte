@@ -18,5 +18,5 @@
 <SpinWheel items={wheel} buttonText="Spin" onWinner={() => (hasWon = true)}></SpinWheel>
 
 {#if hasWon}
-	<Button onclick={() => onComplete()}>Continue</Button>
+	<Button class=" mt-6 w-full" onclick={() => onComplete()}>Continue</Button>
 {/if}

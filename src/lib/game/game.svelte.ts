@@ -83,10 +83,10 @@ export class Game {
 	}
 
 	finishTurn() {
+		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
 		this.startTurn();
-		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 	}
 
 	/**

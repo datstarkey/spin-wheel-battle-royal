@@ -25,7 +25,7 @@
 	});
 </script>
 
-<Toaster position="bottom-center"></Toaster>
+<Toaster position="top-center"></Toaster>
 <Drawer />
 
 <AppShell>
