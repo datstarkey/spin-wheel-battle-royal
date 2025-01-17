@@ -20,6 +20,14 @@ export function generateGamblerWheel(playerName: string) {
 			onWin: () => (player.baseAttack += 15)
 		},
 		{
+			//9
+			label: `Spin Loot Wheel Twice`,
+			onWin: () => {
+				generateLootWheel(player.name, 1);
+				generateLootWheel(player.name, 2);
+			}
+		},
+		{
 			//2
 			label: 'Lose 7 Base Defense',
 			onWin: () => (player.baseDefense -= 7)
@@ -44,11 +52,7 @@ export function generateGamblerWheel(playerName: string) {
 			label: `Lose ${globalHpValue * 15} Hp`,
 			onWin: () => (player.hp -= globalHpValue * 15)
 		},
-		{
-			//7
-			label: 'Take another turn',
-			onWin: () => currentGame?.value?.gainAnotherTurn()
-		},
+
 		{
 			//8
 			label: 'Skip Next Turn',
