@@ -40,6 +40,8 @@
 			<Input label="Attack" bind:value={player.baseAttack} />
 			<Input label="Defense" bind:value={player.baseDefense} />
 			<Input label="Gold" bind:value={player.gold} />
+			<Input label="Movement" bind:value={player.baseMovement} />
+			<Input label="Attack Range" bind:value={player.baseAttackRange} />
 		</div>
 
 		<hr class="my-8" />

@@ -77,13 +77,19 @@ export class Player {
 	 * Movement
 	 */
 
-	private _movement = $state(0);
+	private _baseMovement = $state(1);
 	private _bonusMovement = $state(0);
 	public get movement(): number {
-		if (this._bonusMovement < 0) return this._movement;
-		return this._movement + this._bonusMovement;
+		if (this._bonusMovement < 0) return this._baseMovement;
+		return this._baseMovement + this._bonusMovement;
 	}
-
+	public get baseMovement(): number {
+		return this._baseMovement;
+	}
+	public set baseMovement(value: number) {
+		this._baseMovement = value;
+		addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
+	}
 	public set bonusMovement(value: number) {
 		this._bonusMovement = value;
 		addAuditTrail(`${this.name} movement is now ${this.movement}!`);
@@ -95,18 +101,21 @@ export class Player {
 	 */
 
 	private _baseAttackRange = $state(1);
+	private _bonusAttackRange = $state(0);
+
 	public get baseAttackRange(): number {
 		return this._baseAttackRange;
 	}
 	public set baseAttackRange(value: number) {
 		this._baseAttackRange = value;
+		addAuditTrail(`${this.name} base attack range is now ${this.attackRange}!`);
 	}
-	private _bonusAttackRange = $state(0);
 	public get bonusAttackRange(): number {
 		return this._bonusAttackRange;
 	}
 	public set bonusAttackRange(value: number) {
 		this._bonusAttackRange = value;
+		addAuditTrail(`${this.name} bonus attack range is now ${this.attackRange}!`);
 	}
 	public get attackRange(): number {
 		return this._baseAttackRange + this._bonusAttackRange;
@@ -357,7 +366,7 @@ export class Player {
 			dead: this.dead,
 			hp: this._hp,
 			class: this._class,
-			movement: this._movement,
+			movement: this._baseMovement,
 			bonusMovement: this._bonusMovement,
 			baseAttackRange: this._baseAttackRange,
 			bonusAttackRange: this._bonusAttackRange,
@@ -380,7 +389,7 @@ export class Player {
 		player.dead = data.dead;
 		player._hp = data.hp;
 		player._class = data.class;
-		player._movement = data.movement;
+		player._baseMovement = data.movement;
 		player._bonusMovement = data.bonusMovement;
 		player._baseAttackRange = data.baseAttackRange;
 		player._bonusAttackRange = data.bonusAttackRange;

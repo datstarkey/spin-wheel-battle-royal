@@ -43,6 +43,16 @@
 		</div>
 
 		<div class="flex items-center gap-1">
+			<Icon icon="ion:footsteps" class="text-warning-500" />
+			<span>{player.movement}</span>
+		</div>
+
+		<div class="flex items-center gap-1">
+			<Icon icon="material-symbols:social-distance" class="text-warning-500" />
+			<span>{player.attackRange}</span>
+		</div>
+
+		<div class="flex items-center gap-1">
 			<Icon icon="mdi:sword" class="text-primary-500" />
 			<span>
 				{player.baseAttack}
