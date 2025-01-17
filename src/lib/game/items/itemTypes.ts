@@ -1,6 +1,9 @@
 import type { ClassType } from '../classes/classType';
 import type { Player } from '../player/player.svelte';
 import { SportsBra } from './chest/sportsBra';
+import { BarbarianHarness } from './chest/barbarianHarness';
+import { GoFasterStripes } from './chest/goFasterStripes';
+import { Kevlar } from './chest/kevlar';
 import { HealthPot } from './consumables/healthPot';
 import { ANiceHat } from './helm/aNiceHat';
 import { BeerGoggles } from './helm/beerGoggles';
@@ -56,7 +59,10 @@ export const helms = {
 };
 
 export const chests = {
-	SportsBra: SportsBra
+	SportsBra: SportsBra,
+	BarbarianHarness: BarbarianHarness,
+	Kevlar: Kevlar,
+	GoFasterStripes: GoFasterStripes
 };
 
 export const consumables = {
