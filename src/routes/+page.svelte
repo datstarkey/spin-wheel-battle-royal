@@ -16,7 +16,7 @@
 	<Button onclick={() => resetGame()}>Start New Game</Button>
 {/if}
 
-{#if currentGame.value && !currentGame.value.started}
+{#if currentGame.value && !currentGame.value.started && currentGame.value.players}
 	<div class="w-full max-w-lg">
 		<Stepper on:complete={startGame}>
 			<Step locked={currentGame.value.players.length < 2}>
