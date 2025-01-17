@@ -38,6 +38,9 @@
 		if (availableToAttack.length > 0 && !defendingPlayer) {
 			defendingPlayer = availableToAttack[0];
 		}
+		if (availableToAttack.length == 0) {
+			defendingPlayer = null;
+		}
 	});
 
 	let shopOpen = $state(false);
@@ -102,7 +105,12 @@
 
 <label class="label mt-4">
 	<span>Player To Attack</span>
-	<select class="select" value={defendingPlayer?.name} onchange={defendingPlayerChanged}>
+	<select
+		class="select"
+		value={defendingPlayer?.name}
+		onchange={defendingPlayerChanged}
+		placeholder="None"
+	>
 		{#each availableToAttack as item}
 			<option value={item.name}>{item.name}</option>
 		{/each}
