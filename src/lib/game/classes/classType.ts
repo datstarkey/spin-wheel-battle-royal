@@ -1,4 +1,5 @@
 import type { Player } from '../player/player.svelte';
+import { AbsoluteUnit } from './absoluteUnit';
 import { Gambler } from './gambler';
 import { GigaChad } from './gigaChad';
 import { None } from './none';
@@ -33,7 +34,8 @@ export const classMap = {
 	swe: Swe,
 	poopmaster: Poopmaster,
 	gambler: Gambler,
-	gigachad: GigaChad
+	gigachad: GigaChad,
+	absoluteUnit: AbsoluteUnit
 	// stoner: Stoner,
 	// gorf: Gorf,
 	// magicman: Magicman
