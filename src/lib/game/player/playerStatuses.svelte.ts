@@ -1,4 +1,4 @@
-import { getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
@@ -34,10 +34,9 @@ export class PlayerStatuses {
 			return;
 		}
 
+		addAuditTrail(`${this.player.name} now has ${statusEffect.status.name}!`);
 		this._statuses.push(statusEffect);
 		statusEffect.status.onApply?.(this.player);
-
-		toast.success(`${this.player.name} now has ${statusEffect.status.name}!`);
 	}
 
 	canHaveStatus(status: StatusType) {
@@ -59,10 +58,9 @@ export class PlayerStatuses {
 	removeStatus(status: StatusType) {
 		const statusEffect = this._statuses.find((s) => s.statusName === status);
 		if (!statusEffect) return;
+		addAuditTrail(`${this.player.name} no longer has ${statusEffect.status.name}!`);
 		statusEffect.status.onRemove?.(this.player);
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
-
-		toast.success(`${this.player.name} no longer has ${statusEffect.status.name}!`);
 	}
 
 	onTurnStart() {

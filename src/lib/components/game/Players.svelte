@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
 
 	// import type { PageData } from './$types';
@@ -11,6 +12,7 @@
 	let isAttackWindowOpen = $state(false);
 </script>
 
+<GameHistory></GameHistory>
 {#if currentGame.value}
 	{#if !currentGame.value.players}
 		<p>No Players</p>

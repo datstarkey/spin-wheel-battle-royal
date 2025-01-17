@@ -1,4 +1,4 @@
-import { getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
 import items, {
@@ -174,6 +174,8 @@ export class PlayerGear {
 	useConsumable(item: Consumables) {
 		const actualItem = getItemByType(item);
 		actualItem?.onUse?.(this.player);
+
+		addAuditTrail(`${this.player.name} uses ${item}!`);
 		this.deleteItem('consumables', this._consumables.indexOf(item));
 	}
 

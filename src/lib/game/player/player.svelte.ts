@@ -1,4 +1,5 @@
 import {
+	addAuditTrail,
 	getGlobalHpReduction,
 	getItemCost,
 	increaseGlobalHpReduction,
@@ -85,7 +86,7 @@ export class Player {
 
 	public set bonusMovement(value: number) {
 		this._bonusMovement = value;
-		toast.success(`${this.name} movement is now ${this.movement}!`);
+		addAuditTrail(`${this.name} movement is now ${this.movement}!`);
 	}
 
 	/**
@@ -135,7 +136,7 @@ export class Player {
 	}
 	public set bonusAttack(value: number) {
 		this._bonusAttack = value;
-		toast.success(`${this.name} bonus attack is now ${this.bonusAttack}!`);
+		addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
 	}
 
 	//Base
@@ -144,7 +145,7 @@ export class Player {
 	}
 	public set baseAttack(value: number) {
 		this._baseAttack = value;
-		toast.success(`${this.name} base attack is now ${this.baseAttack}!`);
+		addAuditTrail(`${this.name} base attack is now ${this.baseAttack}!`);
 	}
 
 	public get attackMultiplier(): number {
@@ -176,7 +177,7 @@ export class Player {
 	}
 	public set baseDefense(value: number) {
 		this._baseDefense = value;
-		toast.success(`${this.name} base defense is now ${this.baseDefense}!`);
+		addAuditTrail(`${this.name} base defense is now ${this.baseDefense}!`);
 	}
 
 	//Bonus
@@ -185,7 +186,7 @@ export class Player {
 	}
 	public set bonusDefense(value: number) {
 		this._bonusDefense = value;
-		toast.success(`${this.name} bonus defense is now ${this.bonusDefense}!`);
+		addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
 	}
 
 	public get defenseMultiplier(): number {
@@ -211,7 +212,7 @@ export class Player {
 	public set gold(value: number) {
 		this._gold = value;
 		if (this._gold < 0) this._gold = 0;
-		toast.success(`${this.name} now has ${this.gold} gold!`);
+		addAuditTrail(`${this.name} now has ${this.gold} gold!`);
 	}
 
 	/**
@@ -273,9 +274,9 @@ export class Player {
 
 		const cost = getItemCost(item);
 
+		addAuditTrail(`${this.name} buys ${item}!`);
 		this.gear.addItem(item);
 		this.gold -= cost;
-
 		increaseItemCostModifier(item);
 	}
 

@@ -1,4 +1,4 @@
-import { addCustomWheel } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, addCustomWheel } from '$lib/stores/gameStore.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
@@ -18,6 +18,9 @@ export const Poopmaster: ClassBase = {
 				label: attackingPlayer.gear.mainHand,
 				onWin() {
 					attackingPlayer.gear.deleteItem('mainhand');
+					addAuditTrail(
+						`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.mainHand}!`
+					);
 				}
 			});
 		}
@@ -27,6 +30,9 @@ export const Poopmaster: ClassBase = {
 				label: attackingPlayer.gear.offHand,
 				onWin() {
 					attackingPlayer.gear.deleteItem('offHand');
+					addAuditTrail(
+						`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.offHand}!`
+					);
 				}
 			});
 		}
@@ -36,6 +42,7 @@ export const Poopmaster: ClassBase = {
 				label: attackingPlayer.gear.chest,
 				onWin() {
 					attackingPlayer.gear.deleteItem('chest');
+					addAuditTrail(`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.chest}!`);
 				}
 			});
 		}
@@ -45,6 +52,7 @@ export const Poopmaster: ClassBase = {
 				label: attackingPlayer.gear.helm,
 				onWin() {
 					attackingPlayer.gear.deleteItem('helm');
+					addAuditTrail(`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.helm}!`);
 				}
 			});
 		}
@@ -55,6 +63,9 @@ export const Poopmaster: ClassBase = {
 					label: x,
 					onWin() {
 						attackingPlayer.gear.deleteItem('consumables', index);
+						addAuditTrail(
+							`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.helm}!`
+						);
 					}
 				};
 			})

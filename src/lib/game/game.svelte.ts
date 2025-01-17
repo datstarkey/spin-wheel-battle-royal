@@ -1,3 +1,4 @@
+import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { SvelteMap } from 'svelte/reactivity';
 import type { AllItems } from './items/itemTypes';
@@ -14,12 +15,19 @@ export class Game {
 
 	itemCostModifiers = new SvelteMap<AllItems, number>();
 
+	auditTrail = $state<string[]>([]);
+
 	getItemCostModifier(item: AllItems): number {
 		return this.itemCostModifiers.get(item) ?? 1;
 	}
 
 	increaseItemCostModifier(item: AllItems, amount: number = 1) {
 		this.itemCostModifiers.set(item, this.getItemCostModifier(item) + amount);
+	}
+
+	addAuditTrail(message: string) {
+		this.auditTrail.push(message);
+		toast.success(message);
 	}
 
 	/**
@@ -50,7 +58,7 @@ export class Game {
 			return;
 		}
 		if (alivePlayers.length === 1) {
-			toast.success(`${alivePlayers[0].name} has won the game!`);
+			addAuditTrail(`${alivePlayers[0].name} has won the game!`);
 			return alivePlayers[0];
 		}
 
@@ -71,12 +79,14 @@ export class Game {
 
 	startTurn() {
 		this.currentPlayer?.onTurnStart();
+		this.addAuditTrail(`${this.currentPlayer?.name} starts their turn!`);
 	}
 
 	finishTurn() {
 		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
 		this.startTurn();
+		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 	}
 
 	/**
@@ -103,7 +113,7 @@ export class Game {
 			toast.error(`${player.name} is already in the Shadow Realm!`);
 			return;
 		}
-		toast.success(`${player.name} has been sent to the Shadow Realm!`);
+		addAuditTrail(`${player.name} has been sent to the Shadow Realm!`);
 		this.shadowRealm.push(player);
 	}
 
@@ -111,7 +121,7 @@ export class Game {
 	removePlayerFromShadowRealm(player: Player) {
 		if (this._shadowRealm.includes(player)) {
 			this._shadowRealm = this._shadowRealm.filter((p) => p !== player);
-			toast.success(`${player.name} has been removed from the Shadow Realm!`);
+			addAuditTrail(`${player.name} has been removed from the Shadow Realm!`);
 		}
 	}
 
@@ -133,7 +143,8 @@ export class Game {
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
 			_shadowRealm: this._shadowRealm,
-			itemCostModifiers: Array.from(this.itemCostModifiers.entries())
+			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
+			auditTrail: this.auditTrail
 		});
 	}
 
@@ -149,6 +160,7 @@ export class Game {
 		game._currentTurn = data._currentTurn;
 		game._shadowRealm = data._shadowRealm;
 		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
+		game.auditTrail = data.auditTrail;
 		return game;
 	}
 }

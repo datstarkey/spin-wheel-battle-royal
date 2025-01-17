@@ -7,7 +7,7 @@
 
 <script lang="ts">
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+	import { addAuditTrail, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import toast from 'svelte-french-toast';
 	import Button from '../Button.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
@@ -44,7 +44,6 @@
 		}
 		if (currentAttackWindow && currentAttackWindow.name != player.name) currentAttackWindow.close();
 		showWheel = true;
-		console.log('opening attack window');
 		player.onAttackStart(defendingPlayer);
 		defendingPlayer.onDefenseStart(player);
 
@@ -53,7 +52,7 @@
 
 			close: () => {
 				showWheel = false;
-				console.log('closing attack window');
+
 				player.onAttackEnd(defendingPlayer!);
 				defendingPlayer!.onDefenseEnd(player);
 			}
@@ -74,11 +73,11 @@
 		const won = player.name == winningPlayer.name;
 
 		if (won) {
-			toast.success(`${player.name} beat ${defendingPlayer.name}!`);
+			addAuditTrail(`${player.name} beat ${defendingPlayer.name}!`);
 			player.onAttackWin(defendingPlayer);
 			defendingPlayer.onDefendWin(player);
 		} else {
-			toast.error(`${player.name} lost to ${defendingPlayer.name}!`);
+			addAuditTrail(`${player.name} lost to ${defendingPlayer.name}!`);
 			player.onAttackLose(defendingPlayer);
 			defendingPlayer.onDefendLose(player);
 		}
@@ -133,6 +132,9 @@
 						]}
 						buttonText="Attack"
 						{onWinner}
+						onSpin={() => {
+							addAuditTrail(`${player.name} attacks ${defendingPlayer?.name}!`);
+						}}
 					></SpinWheel>
 
 					<div

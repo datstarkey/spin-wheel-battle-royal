@@ -16,6 +16,7 @@
 		rotationResistance?: number;
 		removeOnWinner?: boolean;
 		onWinner?: (item: SpinWheelItem) => void;
+		onSpin?: () => void;
 		showSpin?: boolean;
 		buttonText?: string;
 		children?: import('svelte').Snippet<[any]>;
@@ -27,6 +28,7 @@
 		minSpeed = 500,
 		rotationResistance = (maxSpeed / minSpeed) * 50 * -1,
 		removeOnWinner = false,
+		onSpin = () => {},
 		onWinner = () => {},
 		showSpin = true,
 		buttonText = 'Spin',
@@ -57,6 +59,7 @@
 		if (wheel) {
 			wheel.items = items;
 			hasSpun = true;
+			onSpin?.();
 			wheel.spin(speed);
 		}
 	}

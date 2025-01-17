@@ -19,7 +19,7 @@ export function increaseGlobalHpReduction(amount: number = 0) {
 		currentGame.value.globalHpReduction += amount;
 	}
 
-	toast.success(`Global HP reduction is now ${currentGame.value.globalHpReduction}`);
+	addAuditTrail(`Global HP reduction is now ${currentGame.value.globalHpReduction}`);
 }
 
 function gameHasStarted() {
@@ -63,7 +63,7 @@ export function getPlayerByName(name?: string): Player | undefined {
 export function startGame() {
 	if (!currentGame.value) return;
 	currentGame.value.started = true;
-	toast.success('Game started!');
+	addAuditTrail('Game started!');
 }
 
 /**
@@ -94,4 +94,9 @@ export function getItemCost(item: AllItems): number {
 	const modifier = getItemCostModifier(item);
 	let baseCost = getItemByType(item)?.baseCost ?? 0;
 	return baseCost + modifier;
+}
+
+export function addAuditTrail(message: string) {
+	if (!currentGame.value) return;
+	currentGame.value.addAuditTrail(message);
 }
