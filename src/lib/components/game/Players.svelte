@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
-	import Button from '../Button.svelte';
-	import AttackPlayer from './AttackPlayer.svelte';
+	import PlayerCard from './player/PlayerCard.svelte';
 
 	// import type { PageData } from './$types';
 
 	// export let data: PageData;
 
 	let currentTurnPlayer = $derived(currentGame.value?.currentPlayer);
+
+	let isAttackWindowOpen = $state(false);
 </script>
 
 {#if currentGame.value}
@@ -29,66 +30,7 @@
 
 	<div class="flex flex-wrap gap-3">
 		{#each currentGame.value.players as player}
-			<div
-				class="card variant-soft-secondary min-w-60 p-4 shadow"
-				class:variant-soft-error={player.hp <= 0}
-				class:variant-soft-success={player.hp > 0 && player.name == currentTurnPlayer?.name}
-			>
-				<div class="mb-5 flex flex-col items-center justify-center gap-2">
-					<h3 class="text-center">
-						{player.name}
-
-						{#if player.hp <= 0}
-							<span class="text-error-500">(DEAD)</span>
-						{/if}
-					</h3>
-					<div class="variant-filled-primary badge text-center">
-						{player.class.name}
-					</div>
-				</div>
-
-				<div class="table-container mb-5" class:opacity-50={player.hp <= 0}>
-					<table class="table font-bold">
-						<tbody>
-							<tr>
-								<td class="text-center"
-									><span class="variant-filled-success badge w-full">HP</span></td
-								>
-								<td>{player.hp}</td>
-							</tr>
-
-							<tr>
-								<td class="text-center"
-									><span class="variant-filled-primary badge w-full">Attack</span></td
-								>
-								<td>{player.attack}</td>
-							</tr>
-
-							<tr>
-								<td class="text-center"
-									><span class="variant-filled-secondary badge w-full">Defense</span></td
-								>
-								<td>{player.defense}</td>
-							</tr>
-
-							<tr>
-								<td class="text-center"
-									><span class="variant-filled-warning badge w-full">Gold</span></td
-								>
-								<td>{player.gold}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-
-				{#if player.hp > 0 && player.name == currentTurnPlayer?.name}
-					<AttackPlayer {player}></AttackPlayer>
-
-					<Button class="mt-3 w-full" onclick={() => currentGame.value?.finishTurn()}>
-						Finish Turn
-					</Button>
-				{/if}
-			</div>
+			<PlayerCard {player} {currentTurnPlayer} bind:isAttackWindowOpen />
 		{/each}
 	</div>
 {/if}

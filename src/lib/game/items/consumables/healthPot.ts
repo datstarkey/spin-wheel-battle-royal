@@ -6,7 +6,7 @@ export const HealthPot: Item = {
 	image: '',
 	name: 'Health Potion',
 	type: 'consumables',
-
+	maxAmount: 5,
 	onUse(player) {
 		player.hp += 10;
 	}

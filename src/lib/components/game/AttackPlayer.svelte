@@ -12,12 +12,14 @@
 	import Button from '../Button.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../wheel/types';
+	import PlayerShop from './player/PlayerShop.svelte';
 
 	interface Props {
 		player: Player;
+		showWheel: boolean;
 	}
 
-	let { player }: Props = $props();
+	let { player, showWheel = $bindable(false) }: Props = $props();
 
 	let availableToAttack = $derived(
 		currentGame.value?.players.filter((p) => p.name !== player.name && player.hp > 0) || []
@@ -25,9 +27,15 @@
 
 	let defendingPlayer: Player | null = $state(null);
 
-	let showWheel = $state(false);
-
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
+
+	$effect(() => {
+		if (availableToAttack.length > 0 && !defendingPlayer) {
+			defendingPlayer = availableToAttack[0];
+		}
+	});
+
+	let shopOpen = $state(false);
 
 	function attackPlayer() {
 		if (!defendingPlayer) {
@@ -86,6 +94,8 @@
 	}
 </script>
 
+<PlayerShop {player} bind:open={shopOpen} />
+
 <label class="label">
 	<select class="select" value={defendingPlayer?.name} onchange={defendingPlayerChanged}>
 		{#each availableToAttack as item}
@@ -94,17 +104,19 @@
 	</select>
 </label>
 
-<Button
-	onclick={attackPlayer}
-	disabled={defendingPlayer === null}
-	class="variant-filled-primary mt-3 w-full">Attack</Button
->
+<div class="flex w-full justify-center">
+	<div class="variant-filled-primary btn-group mx-auto mt-8">
+		<button onclick={attackPlayer} disabled={defendingPlayer === null || showWheel}>Attack</button>
+		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
+		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>
+	</div>
+</div>
 
 <div
 	class="bg-surface-100-800-token fixed bottom-0 right-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[550px] {position}"
 >
 	<div class="flex justify-end">
-		<Button icon="mdi:close" onclick={() => (showWheel = false)}></Button>
+		<Button icon="mdi:close" onclick={() => currentAttackWindow?.close()}></Button>
 	</div>
 
 	{#if defendingPlayer}

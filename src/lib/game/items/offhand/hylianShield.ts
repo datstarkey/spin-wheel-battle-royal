@@ -6,8 +6,7 @@ export const HylianShield: Item = {
 	description: 'Gain +20 Defense',
 	type: 'offHand',
 	baseCost: 3,
-	image:
-		'static/Items/OffHandEquipables/HylianShield.svg',
+	image: '/Items/OffHandEquipables/HylianShield.svg',
 
 	onEquip: (player: Player) => {
 		player.bonusDefense += 20;

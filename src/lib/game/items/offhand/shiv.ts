@@ -5,7 +5,7 @@ export const Shiv: Item = {
 	description: 'Steal one gold on win',
 	type: 'offHand',
 	baseCost: 3,
-	image: 'static/Items/OffHandEquipables/Shiv.svg',
+	image: '/Items/OffHandEquipables/Shiv.svg',
 
 	onAttackWin(player, attackingPlayer) {
 		player.gold += 1;

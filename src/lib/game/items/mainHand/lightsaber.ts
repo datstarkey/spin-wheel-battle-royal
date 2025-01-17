@@ -6,8 +6,8 @@ export const Lightsaber: Item = {
 	description: 'Base Attack + 15',
 	type: 'mainhand',
 	baseCost: 3,
-	image:
-		'static/Items/MainHandEquipables/Lightsaber.svg',
+	maxAmount: 1,
+	image: 'static/Items/MainHandEquipables/Lightsaber.svg',
 
 	onEquip: (player: Player) => {
 		player.bonusAttack += 15;
@@ -15,4 +15,4 @@ export const Lightsaber: Item = {
 	onUnequip: (player: Player) => {
 		player.bonusAttack -= 15;
 	}
-};
+} as const;

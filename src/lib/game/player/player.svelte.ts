@@ -1,6 +1,7 @@
 import { getGlobalHpReduction, increaseGlobalHpReduction } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
+import items, { getItemByType, type AllItems } from '../items/itemTypes';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateWinWheel } from '../wheels/winWheel';
 import { PlayerGear } from './playerGear.svelte';
@@ -8,11 +9,15 @@ import { PlayerStatuses } from './playerStatuses.svelte';
 
 export class Player {
 	constructor(name: string) {
-		this.name = name;
+		this._name = name;
 		this.gear = new PlayerGear(name);
 		this.statuses = new PlayerStatuses(name);
 	}
-	name: string = $state<string>()!;
+	private _name = $state<string>('');
+	public get name() {
+		return this._name;
+	}
+
 	dead = $state(false);
 	gear: PlayerGear;
 	statuses: PlayerStatuses;
@@ -48,8 +53,17 @@ export class Player {
 	 */
 
 	private _class: ClassType = $state('none');
+
+	public get classType(): ClassType {
+		return this._class;
+	}
 	public get class(): ClassBase {
 		return classMap[this._class];
+	}
+
+	public set class(value: ClassBase) {
+		const classType = Object.keys(classMap).find((key) => classMap[key as ClassType] === value);
+		this._class = classType as ClassType;
 	}
 
 	/**
@@ -112,7 +126,7 @@ export class Player {
 
 	//Bonus
 	public get bonusAttack(): number {
-		return this._bonusAttack;
+		return this._bonusAttack + this.brassKnucklesMultiplier;
 	}
 	public set bonusAttack(value: number) {
 		this._bonusAttack = value;
@@ -128,14 +142,18 @@ export class Player {
 		toast.success(`${this.name} base attack is now ${this.baseAttack}!`);
 	}
 
+	public get attackMultiplier(): number {
+		return Object.values(this.attackMultipliers).reduce((acc, cur) => acc * cur, 1);
+	}
+
 	//Combine both as basic attack
 	public get attack(): number {
 		//if bonus attack is negative, don't include it
 		const value = this.bonusAttack > 0 ? this.bonusAttack + this.baseAttack : this.baseAttack;
-		const multiplier = Object.values(this.attackMultipliers).reduce((acc, cur) => acc * cur, 1);
+		const multiplier = this.attackMultiplier;
 
 		//Add brass knuckles multiplier after attack multipliers
-		return value * multiplier + this.brassKnucklesMultiplier;
+		return value * multiplier;
 	}
 
 	/**
@@ -198,6 +216,34 @@ export class Player {
 		this._baseAttack = this.class.attack;
 		this._baseDefense = this.class.defense;
 		this._baseAttackRange = this.class.attackRange;
+	}
+
+	inventoryCount(itemName: string): number {
+		return this.gear.allItems.filter((i) => i.name === itemName).length;
+	}
+
+	assignItem(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error(`${items} is not a valid item!`);
+			return;
+		}
+
+		this.gear.addItem(item);
+	}
+	buyItem(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error(`${items} is not a valid item!`);
+			return;
+		}
+
+		if (this.gold < actualItem.baseCost) {
+			toast.error(`${this.name} doesn't have enough gold to buy ${actualItem.name}!`);
+			return;
+		}
+		this.gear.addItem(item);
+		this.gold -= actualItem.baseCost;
 	}
 
 	/**

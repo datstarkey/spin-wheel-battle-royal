@@ -5,16 +5,16 @@ export const BeerGoggles: Item = {
 	description: 'Opponents have -3 Attack and Defense',
 	type: 'helm',
 	baseCost: 3,
-	image:
-		'/Items/HelmEquipables/BeerGoggles.svg',
+	maxAmount: 1,
+	image: '/Items/HelmEquipables/BeerGoggles.svg',
 
 	onAttackStart(player, attackingPlayer) {
 		attackingPlayer.bonusAttack -= 3;
-        attackingPlayer.bonusDefense -=3;
+		attackingPlayer.bonusDefense -= 3;
 	},
 
 	onAttackEnd(player, attackingPlayer) {
 		attackingPlayer.bonusAttack += 3;
-        attackingPlayer.bonusDefense +=3;
+		attackingPlayer.bonusDefense += 3;
 	}
 };

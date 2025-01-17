@@ -15,46 +15,46 @@ export const Poopmaster: ClassBase = {
 		const wheelItems: WheelBase = [];
 		if (attackingPlayer.gear.mainHand) {
 			wheelItems.push({
-				label: attackingPlayer.gear.mainHand.name,
+				label: attackingPlayer.gear.mainHand,
 				onWin() {
-					attackingPlayer.gear.deleteItem(attackingPlayer.gear.mainHand!, 'mainhand');
+					attackingPlayer.gear.deleteItem('mainhand');
 				}
 			});
 		}
 
 		if (attackingPlayer.gear.offHand) {
 			wheelItems.push({
-				label: attackingPlayer.gear.offHand.name,
+				label: attackingPlayer.gear.offHand,
 				onWin() {
-					attackingPlayer.gear.deleteItem(attackingPlayer.gear.offHand!, 'offHand');
+					attackingPlayer.gear.deleteItem('offHand');
 				}
 			});
 		}
 
 		if (attackingPlayer.gear.chest) {
 			wheelItems.push({
-				label: attackingPlayer.gear.chest.name,
+				label: attackingPlayer.gear.chest,
 				onWin() {
-					attackingPlayer.gear.deleteItem(attackingPlayer.gear.chest!, 'chest');
+					attackingPlayer.gear.deleteItem('chest');
 				}
 			});
 		}
 
 		if (attackingPlayer.gear.helm) {
 			wheelItems.push({
-				label: attackingPlayer.gear.helm.name,
+				label: attackingPlayer.gear.helm,
 				onWin() {
-					attackingPlayer.gear.deleteItem(attackingPlayer.gear.helm!, 'helm');
+					attackingPlayer.gear.deleteItem('helm');
 				}
 			});
 		}
 
 		const wheel = wheelItems.concat(
-			attackingPlayer.gear.consumables.map((x) => {
+			attackingPlayer.gear.consumables.map((x, index) => {
 				return {
-					label: x.name,
+					label: x,
 					onWin() {
-						attackingPlayer.gear.deleteItem(x, 'consumables');
+						attackingPlayer.gear.deleteItem('consumables', index);
 					}
 				};
 			})

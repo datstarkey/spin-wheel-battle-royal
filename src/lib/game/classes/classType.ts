@@ -35,4 +35,5 @@ export const classMap = {
 	gorf: Gorf,
 	magicman: Magicman
 };
+
 export type ClassType = keyof typeof classMap;

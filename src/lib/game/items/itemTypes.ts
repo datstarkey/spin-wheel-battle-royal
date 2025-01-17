@@ -1,3 +1,4 @@
+import type { ClassType } from '../classes/classType';
 import type { Player } from '../player/player.svelte';
 import { SportsBra } from './chest/sportsBra';
 import { HealthPot } from './consumables/healthPot';
@@ -5,7 +6,8 @@ import { ANiceHat } from './helm/aNiceHat';
 import { BeerGoggles } from './helm/beerGoggles';
 import { Halo } from './helm/halo';
 import { Kaibrows } from './helm/kaibrows';
-import { BrassKnuckles } from './mainHand/brassKnuckles';
+import { BrassKnucklesMH } from './mainHand/brassKnucklesMH';
+import { BrassKnucklesOH } from './mainHand/brassKnucklesOH';
 import { Fireball } from './mainHand/fireball';
 import { Lightsaber } from './mainHand/lightsaber';
 import { HylianShield } from './offhand/hylianShield';
@@ -16,7 +18,8 @@ export interface Item {
 	description: string;
 	image: string;
 	baseCost: number;
-	classLocks?: string[];
+	classLocks?: ClassType[];
+	maxAmount?: number;
 
 	onUse?: (player: Player) => void;
 	onEquip?: (player: Player, type: ItemType) => void;
@@ -33,28 +36,39 @@ export interface Item {
 	onTurnEnd?: (player: Player) => void;
 }
 
+export const mainhands = {
+	Lightsaber: Lightsaber,
+	Fireball: Fireball,
+	BrassKnuckles: BrassKnucklesMH
+};
+
+export const offhands = {
+	HylianShield: HylianShield,
+	Shiv: Shiv,
+	BrassKnucklesOH: BrassKnucklesOH
+};
+
+export const helms = {
+	Halo: Halo,
+	ANiceHat: ANiceHat,
+	Kaibrows: Kaibrows,
+	BeerGoggles: BeerGoggles
+};
+
+export const chests = {
+	SportsBra: SportsBra
+};
+
+export const consumables = {
+	HealthPot: HealthPot
+};
+
 const items = {
-	mainhand: {
-		Lightsaber: Lightsaber,
-		Fireball: Fireball,
-		'Brass Knuckles': BrassKnuckles
-	},
-	offHand: {
-		'Hylian Shield': HylianShield,
-		Shiv: Shiv
-	},
-	helm: {
-		Halo: Halo,
-		'A Nice Hat': ANiceHat,
-		Kaibrows: Kaibrows,
-		'Beer Goggles': BeerGoggles
-	},
-	chest: {
-		'Sports Bra': SportsBra
-	},
-	consumables: {
-		'Health Pot': HealthPot
-	}
+	mainhand: mainhands,
+	offHand: offhands,
+	helm: helms,
+	chest: chests,
+	consumables: consumables
 };
 
 export default items;
@@ -64,3 +78,25 @@ export type MainHands = keyof typeof items.mainhand;
 export type OffHands = keyof typeof items.offHand;
 export type Helms = keyof typeof items.helm;
 export type Chests = keyof typeof items.chest;
+export type Consumables = keyof typeof items.consumables;
+
+export type AllItems = MainHands | OffHands | Helms | Chests | Consumables;
+
+export function getItemByType(type: AllItems) {
+	if (type in items.mainhand) {
+		return items.mainhand[type as MainHands] as Item;
+	}
+	if (type in items.offHand) {
+		return items.offHand[type as OffHands] as Item;
+	}
+	if (type in items.helm) {
+		return items.helm[type as Helms] as Item;
+	}
+	if (type in items.chest) {
+		return items.chest[type as Chests] as Item;
+	}
+	if (type in items.consumables) {
+		return items.consumables[type as Consumables] as Item;
+	}
+	return null;
+}

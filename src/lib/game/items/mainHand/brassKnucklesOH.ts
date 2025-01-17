@@ -1,24 +1,25 @@
 import type { Player } from '../../player/player.svelte';
 import type { Item, ItemType } from '../itemTypes';
 
-export const BrassKnuckles: Item = {
-	name: 'Brass Knuckles',
+const name = 'Brass Knuckles';
+export const BrassKnucklesOH: Item = {
+	name: name + '(Off Hand)',
 	description:
 		'Gain Attack equal to 50% (If Dual Wielding, gain attack equal to 75% of your Defense',
-	type: 'mainhand',
+	type: 'offHand',
 	baseCost: 3,
 	image: '/Items/MainHandEquipables/BrassKnuckles.svg',
-
+	maxAmount: 1,
 	onEquip: (player: Player, type: ItemType) => {
 		const dualwield =
-			(player.gear.mainHand?.name == name && type == 'offHand') ||
-			(player.gear.offHand?.name == name && type == 'mainhand');
+			(player.gear.mainHandItem?.name.startsWith(name) && type == 'offHand') ||
+			(player.gear.offHandItem?.name.startsWith(name) && type == 'mainhand');
 		player.brassKnucklesMultiplier = dualwield ? 0.75 : 0.5;
 	},
 	onUnequip: (player: Player, type: ItemType) => {
 		const hasAnotherOneEquipped =
-			(player.gear.mainHand?.name == name && type == 'offHand') ||
-			(player.gear.offHand?.name == name && type == 'mainhand');
+			(player.gear.mainHandItem?.name.startsWith(name) && type == 'offHand') ||
+			(player.gear.offHandItem?.name.startsWith(name) && type == 'mainhand');
 
 		player.brassKnucklesMultiplier = hasAnotherOneEquipped ? 0.5 : 0;
 	}

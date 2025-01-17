@@ -6,8 +6,8 @@ export const Halo: Item = {
 	description: 'Gain +1 Movement',
 	type: 'helm',
 	baseCost: 3,
-	image:
-		'static/Items/HelmEquipables/Halo.svg',
+	maxAmount: 1,
+	image: '/Items/HelmEquipables/Halo.svg',
 
 	onEquip: (player: Player) => {
 		player.bonusMovement += 1;

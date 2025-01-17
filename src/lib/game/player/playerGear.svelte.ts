@@ -1,7 +1,13 @@
 import { getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
-import type { Item, ItemType } from '../items/itemTypes';
-import items, { type Chests, type Helms, type MainHands, type OffHands } from '../items/itemTypes';
+import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
+import items, {
+	getItemByType,
+	type Chests,
+	type Helms,
+	type MainHands,
+	type OffHands
+} from '../items/itemTypes';
 import type { Player } from './player.svelte';
 
 export class PlayerGear {
@@ -16,13 +22,15 @@ export class PlayerGear {
 	}
 
 	private get gearItems(): Item[] {
-		return [this._mainHand, this._offHand, this._helm, this._chest].filter(
+		const items = [this._mainHand, this._offHand, this._helm, this._chest].filter(
 			(x) => x !== null
-		) as Item[];
+		) as AllItems[];
+		return items.map((x) => getItemByType(x)).filter((x) => x !== null);
 	}
 
 	get allItems(): Item[] {
-		return this.gearItems.concat(this._consumables);
+		const consumables = this._consumables.map((x) => getItemByType(x)).filter((x) => x !== null);
+		return this.gearItems.concat(consumables);
 	}
 
 	/**
@@ -75,28 +83,93 @@ export class PlayerGear {
 	 * Functions
 	 */
 
-	unequipItem(key: ItemType) {
-		let prop: any = '';
-		switch (key) {
+	canBuyItem(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return false;
+		}
+		if (this.player.gold < actualItem.baseCost) {
+			return false;
+		}
+		if (
+			actualItem.maxAmount &&
+			this.player.inventoryCount(actualItem.name) >= actualItem.maxAmount
+		) {
+			return false;
+		}
+		if (actualItem.classLocks && !actualItem.classLocks.includes(this.player.classType)) {
+			return false;
+		}
+		return true;
+	}
+
+	addItem(item: AllItems) {
+		if (!this.canBuyItem(item)) {
+			return;
+		}
+
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return;
+		}
+
+		switch (actualItem.type) {
+			case 'consumables':
+				this.addConsumable(item);
+				break;
 			case 'mainhand':
-				prop = '_mainHand';
+				this.addMainHand(item);
 				break;
 			case 'offHand':
-				prop = '_offHand';
+				this.addOffHand(item);
 				break;
 			case 'helm':
-				prop = '_helm';
+				this.addHelm(item);
 				break;
-		}
-		if ((this as any)[prop]) {
-			(this as any)[prop].onUnequip?.(this.player);
-			(this as any)[prop] = null;
+			case 'chest':
+				this.addChest(item);
+				break;
+			default:
+				toast.error('Item is not a valid type');
+				break;
 		}
 	}
 
-	deleteItem(item: Item, key: ItemType) {
+	unequipItem(key: ItemType) {
+		switch (key) {
+			case 'mainhand':
+				if (this._mainHand) {
+					const actualItem = getItemByType(this._mainHand);
+					actualItem?.onUnequip?.(this.player, 'mainhand');
+					this._mainHand = null;
+				}
+				break;
+			case 'offHand':
+				if (this._offHand) {
+					const actualItem = getItemByType(this._offHand);
+					actualItem?.onUnequip?.(this.player, 'offHand');
+					this._offHand = null;
+				}
+				break;
+			case 'helm':
+				if (this._helm) {
+					const actualItem = getItemByType(this._helm);
+					actualItem?.onUnequip?.(this.player, 'helm');
+					this._helm = null;
+				}
+				break;
+		}
+	}
+
+	deleteItem(key: ItemType, index?: number) {
 		if (key === 'consumables') {
-			this._consumables = this._consumables.filter((x) => x.name !== item.name);
+			if (index === undefined) {
+				this._consumables = [];
+			} else {
+				this._consumables.splice(index, 1);
+			}
 			return;
 		}
 		this.unequipItem(key);
@@ -107,104 +180,132 @@ export class PlayerGear {
 	 * Consumables
 	 */
 
-	private _consumables = $state<Item[]>([]);
-	public get consumables(): Item[] {
+	private _consumables = $state<Consumables[]>([]);
+	public get consumables(): Consumables[] {
 		return this._consumables;
 	}
-	public set consumables(value: Item[]) {
+	public set consumables(value: Consumables[]) {
 		this._consumables = value;
 	}
 
-	addConsumable(item: Item) {
-		if (item.type !== 'consumables') {
+	addConsumable(item: AllItems) {
+		if (item in items.consumables) {
+			this._consumables.push(item as Consumables);
+		} else {
 			toast.error('Item is not a consumable');
-			return;
 		}
-		this._consumables.push(item);
 	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Main Hand
 	 */
-	private _mainHand = $state<Item | null>(null);
-	public get mainHand(): Item | null {
+	private _mainHand = $state<MainHands | null>(null);
+	public get mainHand(): MainHands | null {
 		return this._mainHand;
 	}
 
-	addMainHand(item: Item) {
-		if (item.type !== 'mainhand') {
+	public get mainHandItem(): Item | null {
+		return this._mainHand ? getItemByType(this._mainHand) : null;
+	}
+
+	addMainHand(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return;
+		}
+		if (actualItem.type !== 'mainhand') {
 			toast.error('Item is not a main hand!');
 			return;
 		}
 		if (this._mainHand) {
 			this.unequipItem('mainhand');
 		}
-		this._mainHand = item;
-		item.onEquip?.(this.player, 'mainhand');
+		this._mainHand = item as MainHands;
+		actualItem.onEquip?.(this.player, 'mainhand');
 	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * off Hand
 	 */
-	private _offHand: Item | null = null;
-	public get offHand(): Item | null {
+	private _offHand = $state<OffHands | null>(null);
+	public get offHand(): OffHands | null {
 		return this._offHand;
 	}
 
-	addOffHand(item: Item) {
-		if (item.type !== 'offHand' && item.type !== 'mainhand') {
+	public get offHandItem(): Item | null {
+		return this._offHand ? getItemByType(this._offHand) : null;
+	}
+
+	addOffHand(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return;
+		}
+		if (actualItem.type !== 'offHand' && actualItem.type !== 'mainhand') {
 			toast.error('Item is not a main hand or offhand');
 			return;
 		}
 		if (this._offHand) {
 			this.unequipItem('offHand');
 		}
-		this._offHand = item;
-		item.onEquip?.(this.player, 'offHand');
+		this._offHand = item as OffHands;
+		actualItem.onEquip?.(this.player, 'offHand');
 	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Helm
 	 */
-	private _helm: Item | null = null;
-	public get helm(): Item | null {
+	private _helm = $state<Helms | null>(null);
+	public get helm(): Helms | null {
 		return this._helm;
 	}
 
-	addHelm(item: Item) {
-		if (item.type !== 'helm') {
+	addHelm(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return;
+		}
+		if (actualItem.type !== 'helm') {
 			toast.error('Item is not a helm');
 			return;
 		}
 		if (this._helm) {
 			this.unequipItem('helm');
 		}
-		this._helm = item;
-		item.onEquip?.(this.player, 'helm');
+		this._helm = item as Helms;
+		actualItem.onEquip?.(this.player, 'helm');
 	}
 
 	/**
 	 * --------------------------------------------------------------------------
 	 * Chest
 	 */
-	private _chest: Item | null = null;
-	public get chest(): Item | null {
+	private _chest = $state<Chests | null>(null);
+	public get chest(): Chests | null {
 		return this._chest;
 	}
 
-	addChest(item: Item) {
-		if (item.type !== 'chest') {
+	addChest(item: AllItems) {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			toast.error('Item is not a valid item');
+			return;
+		}
+		if (actualItem.type !== 'chest') {
 			toast.error('Item is not a chest');
 			return;
 		}
 		if (this._chest) {
 			this.unequipItem('chest');
 		}
-		this._chest = item;
-		item.onEquip?.(this.player, 'chest');
+		this._chest = item as Chests;
+		actualItem.onEquip?.(this.player, 'chest');
 	}
 
 	/**
@@ -215,23 +316,21 @@ export class PlayerGear {
 	serialize(): Record<string, any> {
 		return {
 			playerName: this._playerName,
-			mainHand: this._mainHand?.name,
-			offHand: this._offHand?.name,
-			helm: this._helm?.name,
-			chest: this._chest?.name,
-			consumables: this._consumables.map((item) => item.name)
+			mainHand: this._mainHand,
+			offHand: this._offHand,
+			helm: this._helm,
+			chest: this._chest,
+			consumables: this._consumables
 		};
 	}
 
 	static deserialize(data: Record<string, any>): PlayerGear {
 		const gear = new PlayerGear(data.playerName);
-		if (data.mainHand) gear.addMainHand(items.mainhand[data.mainHand as MainHands]);
-		if (data.offHand) gear.addOffHand(items.offHand[data.offHand as OffHands]);
-		if (data.helm) gear.addHelm(items.helm[data.helm as Helms]);
-		if (data.chest) gear.addChest(items.chest[data.chest as Chests]);
-		data.consumables?.forEach((name: string) => {
-			gear.addConsumable(items.consumables[name as keyof typeof items.consumables]);
-		});
+		gear._mainHand = data.mainHand;
+		gear._offHand = data.offHand;
+		gear._helm = data.helm;
+		gear._chest = data.chest;
+		gear._consumables = data.consumables;
 		return gear;
 	}
 }
