@@ -19,10 +19,6 @@ export function generateLoseWheel(playerName: string) {
 			//1
 			label: 'Lose 3 Base Attack',
 			onWin: () => {
-				if (player.baseAttack <= 3) {
-					player.baseAttack = 0;
-					return;
-				}
 				player.baseAttack -= 3;
 			}
 		},
@@ -30,10 +26,6 @@ export function generateLoseWheel(playerName: string) {
 			//2
 			label: 'Lose 3 Base Defense',
 			onWin: () => {
-				if (player.baseDefense <= 3) {
-					player.baseDefense = 0;
-					return;
-				}
 				player.baseDefense -= 3;
 			}
 		},
@@ -72,16 +64,14 @@ export function generateLoseWheel(playerName: string) {
 			//7
 			label: 'Lose 3 Base Attack',
 			onWin: () => {
-				const amount = player.baseAttack < 3 ? player.baseAttack : 3;
-				player.baseAttack -= amount;
+				player.baseAttack -= 3;
 			}
 		},
 		{
 			//8
 			label: 'Lose 3 Base Defense',
 			onWin: () => {
-				const amount = player.baseDefense < 3 ? player.baseDefense : 3;
-				player.baseAttack -= amount;
+				player.baseDefense -= 3;
 			}
 		},
 		{
