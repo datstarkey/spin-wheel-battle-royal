@@ -47,7 +47,9 @@ export function generateLoseWheel(playerName: string) {
 		{
 			//4
 			label: 'Lose 1 gold',
-			onWin: () => (player.gold -= 1)
+			onWin: () => {
+				player.gold -= 1;
+			}
 		},
 		{
 			//5
@@ -85,7 +87,9 @@ export function generateLoseWheel(playerName: string) {
 		{
 			//9
 			label: 'Lose 1 gold',
-			onWin: () => (player.gold -= 1)
+			onWin: () => {
+				player.gold -= 1;
+			}
 		},
 		{
 			//10

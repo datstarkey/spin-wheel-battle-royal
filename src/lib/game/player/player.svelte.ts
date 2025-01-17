@@ -1,5 +1,6 @@
 import {
 	addAuditTrail,
+	currentGame,
 	getGlobalHpReduction,
 	getItemCost,
 	increaseGlobalHpReduction,
@@ -65,6 +66,10 @@ export class Player {
 			addAuditTrail(`${this.name} is dead!`);
 			increaseGlobalHpReduction();
 			this.dead = true;
+
+			if (currentGame.value?.currentPlayer == this) {
+				currentGame.value?.finishTurn();
+			}
 		} else {
 			addAuditTrail(`${this.name} has ${this.hp} HP!`);
 		}
@@ -111,10 +116,12 @@ export class Player {
 	}
 
 	public set baseMovement(value: number) {
+		if (value < 1) value = 1;
 		this._baseMovement = value;
 		addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
 	}
 	public set bonusMovement(value: number) {
+		if (value < 0) value = 0;
 		this._bonusMovement = value;
 		addAuditTrail(`${this.name} movement is now ${this.movement}!`);
 	}
@@ -131,6 +138,7 @@ export class Player {
 		return this._baseAttackRange;
 	}
 	public set baseAttackRange(value: number) {
+		if (value < 1) value = 1;
 		this._baseAttackRange = value;
 		addAuditTrail(`${this.name} base attack range is now ${this.attackRange}!`);
 	}
@@ -138,6 +146,7 @@ export class Player {
 		return this._bonusAttackRange;
 	}
 	public set bonusAttackRange(value: number) {
+		if (value < 0) value = 0;
 		this._bonusAttackRange = value;
 		addAuditTrail(`${this.name} bonus attack range is now ${this.attackRange}!`);
 	}
@@ -168,6 +177,7 @@ export class Player {
 		return this._bonusAttack + this.brassKnucklesMultiplier;
 	}
 	public set bonusAttack(value: number) {
+		if (value < 0) value = 0;
 		this._bonusAttack = value;
 		addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
 	}
@@ -177,6 +187,7 @@ export class Player {
 		return this._baseAttack;
 	}
 	public set baseAttack(value: number) {
+		if (value < 1) value = 1;
 		this._baseAttack = value;
 		addAuditTrail(`${this.name} base attack is now ${this.baseAttack}!`);
 	}
@@ -187,12 +198,8 @@ export class Player {
 
 	//Combine both as basic attack
 	public get attack(): number {
-		//if bonus attack is negative, don't include it
-		const value = this.bonusAttack > 0 ? this.bonusAttack + this.baseAttack : this.baseAttack;
-		const multiplier = this.attackMultiplier;
-
 		//Add brass knuckles multiplier after attack multipliers
-		return value * multiplier;
+		return this.bonusAttack + this.baseAttack * this.attackMultiplier;
 	}
 
 	/**
@@ -209,6 +216,7 @@ export class Player {
 		return this._baseDefense;
 	}
 	public set baseDefense(value: number) {
+		if (value < 1) value = 1;
 		this._baseDefense = value;
 		addAuditTrail(`${this.name} base defense is now ${this.baseDefense}!`);
 	}
@@ -216,11 +224,13 @@ export class Player {
 	//Bonus
 	public get bonusDefense(): number {
 		if (this.classType == 'gigachad') {
-			return this._bonusDefense + 0.3 * this.baseAttack;
+			const gigaChadBonus = 0.3 * this._baseAttack;
+			return this._bonusDefense + gigaChadBonus;
 		}
 		return this._bonusDefense;
 	}
 	public set bonusDefense(value: number) {
+		if (value < 0) value = 0;
 		this._bonusDefense = value;
 		addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
 	}

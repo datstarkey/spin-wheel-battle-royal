@@ -18,22 +18,30 @@ export function generateWinWheel(playerName: string) {
 		{
 			//1
 			label: 'Gain 6 Base Attack',
-			onWin: () => (player.baseAttack += 6)
+			onWin: () => {
+				player.baseAttack += 6;
+			}
 		},
 		{
 			//2
 			label: 'Gain 6 Base Defense',
-			onWin: () => (player.baseDefense += 6)
+			onWin: () => {
+				player.baseDefense += 6;
+			}
 		},
 		{
 			//3
 			label: `Gain ${globalHpValue} Hp`,
-			onWin: () => (player.hp += globalHpValue)
+			onWin: () => {
+				player.hp += globalHpValue;
+			}
 		},
 		{
 			//4
 			label: 'Gain 3 Gold',
-			onWin: () => (player.gold += 3)
+			onWin: () => {
+				player.gold += 3;
+			}
 		},
 		//Todo - add when turn system is implemented
 		{
@@ -49,17 +57,23 @@ export function generateWinWheel(playerName: string) {
 		{
 			//7
 			label: 'Gain 6 Base Attack',
-			onWin: () => (player.baseAttack += 6)
+			onWin: () => {
+				player.baseAttack += 6;
+			}
 		},
 		{
 			//8
 			label: 'Gain 6 Base Defense',
-			onWin: () => (player.baseDefense += 6)
+			onWin: () => {
+				player.baseDefense += 6;
+			}
 		},
 		{
 			//9
 			label: `Gain ${globalHpValue} Hp`,
-			onWin: () => (player.hp += globalHpValue)
+			onWin: () => {
+				player.hp += globalHpValue;
+			}
 		},
 		{
 			//10

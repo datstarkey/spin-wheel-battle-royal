@@ -30,27 +30,37 @@ export function generateGamblerWheel(playerName: string) {
 		{
 			//2
 			label: 'Lose 7 Base Defense',
-			onWin: () => (player.baseDefense -= 7)
+			onWin: () => {
+				player.baseDefense -= 7;
+			}
 		},
 		{
 			//3
 			label: `Gain 15 Base Defense`,
-			onWin: () => (player.baseDefense += 15)
+			onWin: () => {
+				player.baseDefense += 15;
+			}
 		},
 		{
 			//4
 			label: 'Lose 7 Base Defense',
-			onWin: () => (player.baseDefense -= 7)
+			onWin: () => {
+				player.baseDefense -= 7;
+			}
 		},
 		{
 			//5
 			label: `Gain ${globalHpValue * 30} Hp`,
-			onWin: () => (player.hp += globalHpValue * 30)
+			onWin: () => {
+				player.hp += globalHpValue * 30;
+			}
 		},
 		{
 			//6
 			label: `Lose ${globalHpValue * 15} Hp`,
-			onWin: () => (player.hp -= globalHpValue * 15)
+			onWin: () => {
+				player.hp -= globalHpValue * 15;
+			}
 		},
 
 		{
