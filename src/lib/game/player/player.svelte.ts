@@ -1,4 +1,9 @@
-import { getGlobalHpReduction, increaseGlobalHpReduction } from '$lib/stores/gameStore.svelte';
+import {
+	getGlobalHpReduction,
+	getItemCost,
+	increaseGlobalHpReduction,
+	increaseItemCostModifier
+} from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import items, { getItemByType, type AllItems } from '../items/itemTypes';
@@ -163,7 +168,7 @@ export class Player {
 
 	private _baseDefense = $state(0);
 	private _bonusDefense = $state(0);
-	defenseMultiplier: Record<string, number> = $state({});
+	defenseMultipliers: Record<string, number> = $state({});
 
 	//Base
 	public get baseDefense(): number {
@@ -183,10 +188,14 @@ export class Player {
 		toast.success(`${this.name} bonus defense is now ${this.bonusDefense}!`);
 	}
 
+	public get defenseMultiplier(): number {
+		return Object.values(this.defenseMultipliers).reduce((acc, cur) => acc * cur, 1);
+	}
+
 	//Combine both when getting defense
 	public get defense(): number {
 		const value = this.bonusDefense > 0 ? this.bonusDefense + this.baseDefense : this.baseDefense;
-		const multiplier = Object.values(this.defenseMultiplier).reduce((acc, cur) => acc * cur, 1);
+		const multiplier = this.defenseMultiplier;
 		return value * multiplier;
 	}
 
@@ -222,6 +231,26 @@ export class Player {
 		return this.gear.allItems.filter((i) => i.name === itemName).length;
 	}
 
+	canBuyItem(item: AllItems): boolean {
+		const actualItem = getItemByType(item);
+		if (!actualItem) {
+			return false;
+		}
+
+		const cost = getItemCost(item);
+		if (this.gold < cost) {
+			return false;
+		}
+
+		if (actualItem.maxAmount && this.inventoryCount(actualItem.name) >= actualItem.maxAmount) {
+			return false;
+		}
+		if (actualItem.classLocks && !actualItem.classLocks.includes(this.classType)) {
+			return false;
+		}
+		return true;
+	}
+
 	assignItem(item: AllItems) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
@@ -238,12 +267,16 @@ export class Player {
 			return;
 		}
 
-		if (this.gold < actualItem.baseCost) {
-			toast.error(`${this.name} doesn't have enough gold to buy ${actualItem.name}!`);
+		if (!this.canBuyItem(item)) {
 			return;
 		}
+
+		const cost = getItemCost(item);
+
 		this.gear.addItem(item);
-		this.gold -= actualItem.baseCost;
+		this.gold -= cost;
+
+		increaseItemCostModifier(item);
 	}
 
 	/**
@@ -294,10 +327,14 @@ export class Player {
 	}
 
 	onTurnStart() {
+		this.class.onTurnStart?.(this);
+		this.gear.onTurnStart();
 		this.statuses.onTurnStart();
 	}
 
 	onTurnEnd() {
+		this.class.onTurnEnd?.(this);
+		this.gear.onTurnEnd();
 		this.statuses.onTurnEnd();
 	}
 
@@ -329,7 +366,7 @@ export class Player {
 			brassKnucklesMultiplier: this._brassKnucklesMultiplier,
 			baseDefense: this._baseDefense,
 			bonusDefense: this._bonusDefense,
-			defenseMultiplier: this.defenseMultiplier,
+			defenseMultiplier: this.defenseMultipliers,
 			gold: this._gold,
 			resources: this.resources,
 			gear: this.gear.serialize(),
@@ -352,7 +389,7 @@ export class Player {
 		player._brassKnucklesMultiplier = data.brassKnucklesMultiplier;
 		player._baseDefense = data.baseDefense;
 		player._bonusDefense = data.bonusDefense;
-		player.defenseMultiplier = data.defenseMultiplier;
+		player.defenseMultipliers = data.defenseMultiplier;
 		player._gold = data.gold;
 		player.resources = data.resources;
 		player.gear = PlayerGear.deserialize(data.gear);

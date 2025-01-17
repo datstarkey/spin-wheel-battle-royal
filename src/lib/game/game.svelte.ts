@@ -1,5 +1,6 @@
 import toast from 'svelte-french-toast';
 import { SvelteMap } from 'svelte/reactivity';
+import type { AllItems } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import type { WheelBase } from './wheels/wheels';
 
@@ -10,6 +11,16 @@ export class Game {
 	globalHpReduction = $state(1);
 
 	customWheels = new SvelteMap<string, WheelBase>();
+
+	itemCostModifiers = new SvelteMap<AllItems, number>();
+
+	getItemCostModifier(item: AllItems): number {
+		return this.itemCostModifiers.get(item) ?? 1;
+	}
+
+	increaseItemCostModifier(item: AllItems, amount: number = 1) {
+		this.itemCostModifiers.set(item, this.getItemCostModifier(item) + amount);
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -121,7 +132,8 @@ export class Game {
 			customWheels: Array.from(this.customWheels.entries()), // Convert SvelteMap to array
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
-			_shadowRealm: this._shadowRealm
+			_shadowRealm: this._shadowRealm,
+			itemCostModifiers: Array.from(this.itemCostModifiers.entries())
 		});
 	}
 
@@ -136,6 +148,7 @@ export class Game {
 		game.playerOrder = data.playerOrder;
 		game._currentTurn = data._currentTurn;
 		game._shadowRealm = data._shadowRealm;
+		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
 		return game;
 	}
 }

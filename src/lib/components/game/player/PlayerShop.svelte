@@ -5,6 +5,7 @@
 	import type { AllItems } from '$lib/game/items/itemTypes';
 	import items from '$lib/game/items/itemTypes';
 	import type { Player } from '$lib/game/player/player.svelte';
+	import { getItemCost } from '$lib/stores/gameStore.svelte';
 
 	interface Props {
 		player: Player;
@@ -45,7 +46,9 @@
 										<span class="ml-1 text-sm font-bold text-yellow-600">{owned} owned</span>
 									{/if}
 								</h3>
-								<span class="ml-1 text-sm font-bold text-yellow-600">{item.baseCost}💰</span>
+								<span class="ml-1 text-sm font-bold text-yellow-600"
+									>{getItemCost(itemName as AllItems)}💰</span
+								>
 							</div>
 
 							{#if item.image}
@@ -59,7 +62,7 @@
 							<p class="mb-2 line-clamp-2 text-xs">{item.description}</p>
 
 							<Button
-								disabled={!player.gear.canBuyItem(itemName as AllItems)}
+								disabled={!player.canBuyItem(itemName as AllItems)}
 								onclick={() => player.buyItem(itemName as AllItems)}
 								class="w-full py-1 text-sm"
 							>

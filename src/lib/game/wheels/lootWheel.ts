@@ -15,7 +15,7 @@ export function generateLootWheel(playerName: string) {
 			onWin() {
 				//Select all consumables that are not class locked or are locked to the players class
 				const consumables = Object.values(items.consumables).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.class.name)
+					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 
 				player.gear.addConsumable(randomFromArray(consumables));
@@ -26,7 +26,7 @@ export function generateLootWheel(playerName: string) {
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
 				const list = Object.values(items.helm).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.class.name)
+					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 				player.gear.addHelm(randomFromArray(list));
 			}
@@ -36,7 +36,7 @@ export function generateLootWheel(playerName: string) {
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
 				const list = Object.values(items.chest).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.class.name)
+					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 				player.gear.addChest(randomFromArray(list));
 			}
@@ -46,7 +46,7 @@ export function generateLootWheel(playerName: string) {
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
 				const list = Object.values(items.mainhand).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.class.name)
+					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 				player.gear.addMainHand(randomFromArray(list));
 			}
@@ -56,7 +56,7 @@ export function generateLootWheel(playerName: string) {
 			onWin() {
 				//Select all helms that are not class locked or are locked to the players class
 				const list = Object.values(items.offHand).filter(
-					(x) => !x.classLocks || x.classLocks.includes(player.class.name)
+					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 				player.gear.addOffHand(randomFromArray(list));
 			}

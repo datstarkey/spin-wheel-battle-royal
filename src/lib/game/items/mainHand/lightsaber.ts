@@ -7,7 +7,7 @@ export const Lightsaber: Item = {
 	type: 'mainhand',
 	baseCost: 3,
 	maxAmount: 1,
-	image: 'static/Items/MainHandEquipables/Lightsaber.svg',
+	image: '/Items/MainHandEquipables/Lightsaber.svg',
 
 	onEquip: (player: Player) => {
 		player.bonusAttack += 15;

@@ -15,7 +15,11 @@ export class PlayerStatuses {
 		return getPlayerByName(this._playerName) as Player;
 	}
 
-	private _statuses: PlayerStatusEffect[] = [];
+	private _statuses: PlayerStatusEffect[] = $state([]);
+
+	public get statuses(): PlayerStatusEffect[] {
+		return this._statuses;
+	}
 
 	addStatus(status: StatusType) {
 		const statusEffect = new PlayerStatusEffect(status);
@@ -32,17 +36,33 @@ export class PlayerStatuses {
 
 		this._statuses.push(statusEffect);
 		statusEffect.status.onApply?.(this.player);
+
+		toast.success(`${this.player.name} now has ${statusEffect.status.name}!`);
+	}
+
+	canHaveStatus(status: StatusType) {
+		const statusEffect = statusEffects[status];
+		if (statusEffect.classLock && !statusEffect.classLock.includes(this.player.classType)) {
+			return false;
+		}
+		return true;
 	}
 
 	hasStatus(status: StatusType) {
-		return this._statuses.some((s) => s.status.name === status);
+		return this._statuses.some((s) => s.statusName === status);
+	}
+
+	getEffect(status: StatusType) {
+		return this._statuses.find((s) => s.statusName === status);
 	}
 
 	removeStatus(status: StatusType) {
-		const statusEffect = this._statuses.find((s) => s.status.name === status);
+		const statusEffect = this._statuses.find((s) => s.statusName === status);
 		if (!statusEffect) return;
 		statusEffect.status.onRemove?.(this.player);
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
+
+		toast.success(`${this.player.name} no longer has ${statusEffect.status.name}!`);
 	}
 
 	onTurnStart() {
@@ -114,11 +134,14 @@ export class PlayerStatuses {
 
 	static deserialize(data: Record<string, any>): PlayerStatuses {
 		const statuses = new PlayerStatuses(data.playerName);
-		data.statuses?.forEach((statusData: { statusName: StatusType; duration: number }) => {
-			statuses.addStatus(statusData.statusName);
-			const status = statuses._statuses[statuses._statuses.length - 1];
-			status.duration = statusData.duration;
-		});
+
+		statuses._statuses =
+			data.statuses?.map((statusData: { statusName: StatusType; duration: number }) => {
+				const status = new PlayerStatusEffect(statusData.statusName);
+				status.duration = statusData.duration;
+				return status;
+			}) ?? [];
+
 		return statuses;
 	}
 }

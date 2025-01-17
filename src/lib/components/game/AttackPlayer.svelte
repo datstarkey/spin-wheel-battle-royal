@@ -96,7 +96,8 @@
 
 <PlayerShop {player} bind:open={shopOpen} />
 
-<label class="label">
+<label class="label mt-4">
+	<span>Player To Attack</span>
 	<select class="select" value={defendingPlayer?.name} onchange={defendingPlayerChanged}>
 		{#each availableToAttack as item}
 			<option value={item.name}>{item.name}</option>
@@ -105,7 +106,7 @@
 </label>
 
 <div class="flex w-full justify-center">
-	<div class="variant-filled-primary btn-group mx-auto mt-8">
+	<div class="variant-filled-primary btn-group mx-auto mt-4">
 		<button onclick={attackPlayer} disabled={defendingPlayer === null || showWheel}>Attack</button>
 		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
 		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>

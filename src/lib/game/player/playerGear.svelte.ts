@@ -83,32 +83,7 @@ export class PlayerGear {
 	 * Functions
 	 */
 
-	canBuyItem(item: AllItems) {
-		const actualItem = getItemByType(item);
-		if (!actualItem) {
-			toast.error('Item is not a valid item');
-			return false;
-		}
-		if (this.player.gold < actualItem.baseCost) {
-			return false;
-		}
-		if (
-			actualItem.maxAmount &&
-			this.player.inventoryCount(actualItem.name) >= actualItem.maxAmount
-		) {
-			return false;
-		}
-		if (actualItem.classLocks && !actualItem.classLocks.includes(this.player.classType)) {
-			return false;
-		}
-		return true;
-	}
-
 	addItem(item: AllItems) {
-		if (!this.canBuyItem(item)) {
-			return;
-		}
-
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
@@ -194,6 +169,12 @@ export class PlayerGear {
 		} else {
 			toast.error('Item is not a consumable');
 		}
+	}
+
+	useConsumable(item: Consumables) {
+		const actualItem = getItemByType(item);
+		actualItem?.onUse?.(this.player);
+		this.deleteItem('consumables', this._consumables.indexOf(item));
 	}
 
 	/**

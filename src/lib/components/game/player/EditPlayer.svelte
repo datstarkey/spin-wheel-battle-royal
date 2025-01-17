@@ -5,6 +5,7 @@
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { classMap } from '$lib/game/classes/classType';
 	import type { Player } from '$lib/game/player/player.svelte';
+	import EditPlayerStats from './EditPlayerStats.svelte';
 
 	interface Props {
 		player: Player;
@@ -20,13 +21,17 @@
 		<h1>Edit {player.name} Stats</h1>
 	</div>
 
-	<div class="p-8">
+	<div class="max-h-[85vh] space-y-4 overflow-y-auto p-8">
 		<div class="grid grid-cols-2 gap-2">
 			<Select label="Class" bind:value={player.class}>
 				{#each Object.entries(classMap) as [name, playerClass]}
 					<option value={playerClass}>{name}</option>
 				{/each}
 			</Select>
+
+			{#each Object.entries(player.resources) as [resource, amount]}
+				<Input label={resource} bind:value={player.resources[resource]} />
+			{/each}
 		</div>
 		<hr class="my-8" />
 
@@ -36,5 +41,9 @@
 			<Input label="Defense" bind:value={player.baseDefense} />
 			<Input label="Gold" bind:value={player.gold} />
 		</div>
+
+		<hr class="my-8" />
+
+		<EditPlayerStats {player} />
 	</div>
 </PullOutMenu>

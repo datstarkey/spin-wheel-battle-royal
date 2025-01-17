@@ -1,8 +1,9 @@
 import { addCustomWheel } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
 import type { Player } from '../player/player.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
+
+export const Swenergy = 'Swenergy';
 
 export const Swe: ClassBase = {
 	hp: 10,
@@ -31,34 +32,37 @@ export const Swe: ClassBase = {
 		addCustomWheel(`Swenergy for ${player.name}`, wheel);
 	},
 
+	onTurnStart(player) {
+		increaseSwenergy(player, 1);
+	},
+
 	onTurnEnd(player) {
-		if (player.statuses.hasStatus('swesupreme')) {
-			reduceSwenergy(player, -4);
+		if (player.statuses.hasStatus('Swesupreme')) {
+			reduceSwenergy(player, 4);
 		}
 	}
 };
 
 function increaseSwenergy(player: Player, amount: number) {
-	player.resources['swenergy'] ??= 0;
-	player.resources['swenergy'] += amount;
+	player.resources[Swenergy] ??= 0;
+	player.resources[Swenergy] += amount;
 
 	//if we go above 10, set to 10 and add swesupreme status
-	if (player.resources['swenergy'] >= 10) {
-		toast.success(`${player.name} is now the Swe Supreme!`);
-		player.statuses.addStatus('swesupreme');
+	if (player.resources[Swenergy] >= 10) {
+		player.resources[Swenergy] = 10;
+		player.statuses.addStatus('Swesupreme');
 	}
 }
 
 function reduceSwenergy(player: Player, amount: number) {
-	player.resources['swenergy'] ??= 0;
-	player.resources['swenergy'] -= amount;
+	player.resources[Swenergy] ??= 0;
+	player.resources[Swenergy] -= amount;
 
 	//if we go below 0, set to zero and remove swesupreme status
-	if (player.resources['swenergy'] <= 0) {
-		player.resources['swenergy'] = 0;
-		if (player.statuses.hasStatus('swesupreme')) {
-			toast.error(`${player.name} is no longer the Swe Supreme!`);
-			player.statuses.removeStatus('swesupreme');
+	if (player.resources[Swenergy] <= 0) {
+		player.resources[Swenergy] = 0;
+		if (player.statuses.hasStatus('Swesupreme')) {
+			player.statuses.removeStatus('Swesupreme');
 		}
 	}
 }

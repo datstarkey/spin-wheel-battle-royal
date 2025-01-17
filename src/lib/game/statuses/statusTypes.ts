@@ -1,3 +1,4 @@
+import type { ClassType } from '../classes/classType';
 import type { Player } from '../player/player.svelte';
 import { jaegerShots } from './jagerShots';
 import { movementPot } from './movmentPot';
@@ -10,6 +11,7 @@ export interface StatusEffect {
 	image: string;
 	turnDuration?: number;
 	allowMultiple?: boolean;
+	classLock?: ClassType[];
 	onApply?: (player: Player) => void;
 	onRemove?: (player: Player) => void;
 	onTurnStart?: (player: Player) => void;
@@ -25,10 +27,10 @@ export interface StatusEffect {
 }
 
 const statusEffects = {
-	'Vodka Redbull': vodkaRedbull,
-	swesupreme: sweSupreme,
-	'Movement pot Buff': movementPot,
-	'Jager Shots': jaegerShots
+	VodkaRedbull: vodkaRedbull,
+	Swesupreme: sweSupreme,
+	MovementPotBuff: movementPot,
+	JagerShots: jaegerShots
 };
 
 export default statusEffects;

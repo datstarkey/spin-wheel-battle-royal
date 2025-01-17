@@ -1,4 +1,5 @@
 import { Game } from '$lib/game/game.svelte';
+import { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import { Player } from '$lib/game/player/player.svelte';
 import type { WheelBase } from '$lib/game/wheels/wheels';
 import toast from 'svelte-french-toast';
@@ -78,4 +79,19 @@ export function addCustomWheel(key: string, wheel: WheelBase) {
 export function removeCustomWheel(key: string) {
 	if (!currentGame.value) return;
 	currentGame.value.customWheels.delete(key);
+}
+
+export function increaseItemCostModifier(item: AllItems, amount: number = 1) {
+	if (!currentGame.value) return;
+	currentGame.value.increaseItemCostModifier(item, amount);
+}
+
+export function getItemCostModifier(item: AllItems): number {
+	return currentGame.value?.getItemCostModifier(item) ?? 1;
+}
+
+export function getItemCost(item: AllItems): number {
+	const modifier = getItemCostModifier(item);
+	let baseCost = getItemByType(item)?.baseCost ?? 0;
+	return baseCost + modifier;
 }
