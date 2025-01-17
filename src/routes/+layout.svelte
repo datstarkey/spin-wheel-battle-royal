@@ -25,7 +25,7 @@
 	});
 </script>
 
-<Toaster position="top-center"></Toaster>
+<Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
 <Drawer />
 
 <AppShell>

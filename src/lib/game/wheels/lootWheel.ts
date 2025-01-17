@@ -18,7 +18,7 @@ export function generateLootWheel(playerName: string) {
 					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
 
-				player.gear.addConsumable(randomFromArray(consumables));
+				player.assignItem(randomFromArray(consumables));
 			}
 		},
 		{
@@ -28,7 +28,7 @@ export function generateLootWheel(playerName: string) {
 				const list = Object.values(items.helm).filter(
 					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
-				player.gear.addHelm(randomFromArray(list));
+				player.assignItem(randomFromArray(list));
 			}
 		},
 		{
@@ -38,7 +38,8 @@ export function generateLootWheel(playerName: string) {
 				const list = Object.values(items.chest).filter(
 					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
-				player.gear.addChest(randomFromArray(list));
+
+				player.assignItem(randomFromArray(list));
 			}
 		},
 		{
@@ -48,7 +49,7 @@ export function generateLootWheel(playerName: string) {
 				const list = Object.values(items.mainhand).filter(
 					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
-				player.gear.addMainHand(randomFromArray(list));
+				player.assignItem(randomFromArray(list));
 			}
 		},
 		{
@@ -58,7 +59,7 @@ export function generateLootWheel(playerName: string) {
 				const list = Object.values(items.offHand).filter(
 					(x) => !x.classLocks || x.classLocks.includes(player.classType)
 				);
-				player.gear.addOffHand(randomFromArray(list));
+				player.assignItem(randomFromArray(list));
 			}
 		},
 		{

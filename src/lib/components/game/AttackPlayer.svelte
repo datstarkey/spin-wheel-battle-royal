@@ -22,12 +22,15 @@
 	let { player, showWheel = $bindable(false) }: Props = $props();
 
 	let availableToAttack = $derived(
-		currentGame.value?.players.filter((p) => p.name !== player.name && player.hp > 0) || []
+		currentGame.value?.players.filter(
+			(p) => p.name !== player.name && player.hp > 0 && p.inShadowRealm == player.inShadowRealm
+		) || []
 	);
 
 	let defendingPlayer: Player | null = $state(null);
 
 	let winningPlayer = $state<Player | null>();
+	let hasAttacked = $state(false);
 
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
 
@@ -48,13 +51,11 @@
 		showWheel = true;
 		player.onAttackStart(defendingPlayer);
 		defendingPlayer.onDefenseStart(player);
-
+		hasAttacked = false;
 		currentAttackWindow = {
 			name: player.name,
-
 			close: () => {
 				showWheel = false;
-
 				winningPlayer = null;
 				player.onAttackEnd(defendingPlayer!);
 				defendingPlayer!.onDefenseEnd(player);
@@ -64,6 +65,7 @@
 
 	function onWinner(item: SpinWheelItem): void {
 		winningPlayer = getPlayerByName(item.label);
+		hasAttacked = true;
 		if (!winningPlayer) {
 			toast.error('Something went wrong could not find player ' + item.label);
 			return;
@@ -109,7 +111,9 @@
 
 <div class="flex w-full justify-center">
 	<div class="variant-filled-primary btn-group mx-auto mt-4">
-		<button onclick={attackPlayer} disabled={defendingPlayer === null || showWheel}>Attack</button>
+		<button onclick={attackPlayer} disabled={defendingPlayer === null || showWheel || hasAttacked}
+			>Attack</button
+		>
 		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
 		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>
 	</div>

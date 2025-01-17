@@ -18,12 +18,20 @@
 	class:variant-soft-error={player.hp <= 0}
 	class:variant-soft-success={player.hp > 0 && player.name == currentTurnPlayer?.name}
 >
-	<header class="mb-2 flex items-center justify-between">
-		<div class="flex flex-col">
+	<header class="mb-2 flex items-center justify-between gap-3">
+		<div class="flex grow flex-col">
 			<h3 class="h4">
 				{player.name}
 				{#if player.hp <= 0}
 					<span class="text-sm text-error-500">(DEAD)</span>
+				{/if}
+
+				{#if player.inShadowRealm}
+					<span class="variant-filled-surface badge mb-2 text-sm text-purple-500">
+						<Icon icon="mdi:star-cog" class="mr-2 text-xs text-purple-500" />
+
+						Shadow Realm
+					</span>
 				{/if}
 			</h3>
 			<span class="variant-filled-primary badge text-xs">{player.class.name}</span>

@@ -9,6 +9,7 @@ import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import items, { getItemByType, type AllItems } from '../items/itemTypes';
 import { generateLoseWheel } from '../wheels/loseWheel';
+import { generateShadowRealmWheel } from '../wheels/shadowRealm';
 import { generateWinWheel } from '../wheels/winWheel';
 import { PlayerGear } from './playerGear.svelte';
 import { PlayerStatuses } from './playerStatuses.svelte';
@@ -29,6 +30,14 @@ export class Player {
 	statuses: PlayerStatuses;
 
 	resources: Record<string, number> = $state({});
+
+	private _inShadowRealm = $state(false);
+	public get inShadowRealm() {
+		return this._inShadowRealm;
+	}
+	public set inShadowRealm(value) {
+		this._inShadowRealm = value;
+	}
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -88,6 +97,11 @@ export class Player {
 	public get baseMovement(): number {
 		return this._baseMovement;
 	}
+
+	public get bonusMovement(): number {
+		return this._bonusMovement;
+	}
+
 	public set baseMovement(value: number) {
 		this._baseMovement = value;
 		addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
@@ -270,6 +284,7 @@ export class Player {
 			return;
 		}
 
+		addAuditTrail(`${this.name} was given ${item}!`);
 		this.gear.addItem(item);
 	}
 	buyItem(item: AllItems) {
@@ -342,6 +357,10 @@ export class Player {
 		this.class.onTurnStart?.(this);
 		this.gear.onTurnStart();
 		this.statuses.onTurnStart();
+		if (this.inShadowRealm) {
+			addAuditTrail(`${this.name} is in the Shadow Realm!`);
+			generateShadowRealmWheel(this.name);
+		}
 	}
 
 	onTurnEnd() {
@@ -372,6 +391,7 @@ export class Player {
 			bonusMovement: this._bonusMovement,
 			baseAttackRange: this._baseAttackRange,
 			bonusAttackRange: this._bonusAttackRange,
+			inShadowRealm: this._inShadowRealm,
 			bonusAttack: this._bonusAttack,
 			baseAttack: this._baseAttack,
 			attackMultipliers: this.attackMultipliers,
@@ -395,6 +415,7 @@ export class Player {
 		player._bonusMovement = data.bonusMovement;
 		player._baseAttackRange = data.baseAttackRange;
 		player._bonusAttackRange = data.bonusAttackRange;
+		player._inShadowRealm = data.inShadowRealm;
 		player._bonusAttack = data.bonusAttack;
 		player._baseAttack = data.baseAttack;
 		player.attackMultipliers = data.attackMultipliers;

@@ -1,6 +1,7 @@
 import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { generateLootWheel } from './lootWheel';
+import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
 export function generateWinWheel(playerName: string) {
 	const player = getPlayerByName(playerName);
@@ -57,7 +58,13 @@ export function generateWinWheel(playerName: string) {
 		},
 		{
 			//10
-			label: 'Shadow Realm'
+			label: 'Send Someone to the Shadow Realm',
+			onWin: () => {
+				toast.success(`${playerName} Must spin again`);
+				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
+					winner.inShadowRealm = true;
+				});
+			}
 		}
 	];
 

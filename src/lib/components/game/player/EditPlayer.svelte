@@ -5,6 +5,8 @@
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { classMap } from '$lib/game/classes/classType';
 	import type { Player } from '$lib/game/player/player.svelte';
+	import { SlideToggle } from '@skeletonlabs/skeleton';
+	import EditPlayerSpinWheel from './EditPlayerSpinWheel.svelte';
 	import EditPlayerStats from './EditPlayerStats.svelte';
 
 	interface Props {
@@ -18,7 +20,7 @@
 		<Button onclick={open} icon="mdi:cog" class="btn-icon-sm"></Button>
 	{/snippet}
 	<div>
-		<h1>Edit {player.name} Stats</h1>
+		<h1>Edit {player.name}</h1>
 	</div>
 
 	<div class="max-h-[85vh] space-y-4 overflow-y-auto p-8">
@@ -28,6 +30,13 @@
 					<option value={playerClass}>{name}</option>
 				{/each}
 			</Select>
+
+			<SlideToggle
+				name="Shadow Realm"
+				bind:checked={player.inShadowRealm}
+				active="bg-purple-500"
+				class="mb-2 mt-auto">(Shadow Realm)</SlideToggle
+			>
 
 			{#each Object.entries(player.resources) as [resource, amount]}
 				<Input label={resource} bind:value={player.resources[resource]} />
@@ -47,5 +56,9 @@
 		<hr class="my-8" />
 
 		<EditPlayerStats {player} />
+
+		<hr class="my-8" />
+
+		<EditPlayerSpinWheel {player} />
 	</div>
 </PullOutMenu>

@@ -35,7 +35,9 @@ export function generateLoseWheel(playerName: string) {
 		{
 			//3 TODO - add when shadow realm is implemented
 			label: 'Go to the shadow realm',
-			onWin: () => {}
+			onWin: () => {
+				player.inShadowRealm = true;
+			}
 		},
 		{
 			//4
@@ -51,6 +53,7 @@ export function generateLoseWheel(playerName: string) {
 			//6
 			label: 'Give someone 5 HP',
 			onWin: () => {
+				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Gives 5 Hp To`, (winner) => {
 					//only give as much hp as the winner can take
 					let hpAmount = 5;
@@ -83,7 +86,13 @@ export function generateLoseWheel(playerName: string) {
 		},
 		{
 			//10
-			label: 'Send Someone to the Shadow Realm'
+			label: 'Send Someone to the Shadow Realm',
+			onWin: () => {
+				toast.success(`${playerName} Must spin again`);
+				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
+					winner.inShadowRealm = true;
+				});
+			}
 		}
 	];
 

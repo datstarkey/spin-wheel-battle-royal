@@ -14,6 +14,7 @@ export class Game {
 	customWheels = new SvelteMap<string, WheelBase>();
 
 	itemCostModifiers = new SvelteMap<AllItems, number>();
+	shopCostModifier = $state(0);
 
 	auditTrail = $state<string[]>([]);
 
@@ -144,7 +145,8 @@ export class Game {
 			_currentTurn: this._currentTurn,
 			_shadowRealm: this._shadowRealm,
 			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
-			auditTrail: this.auditTrail
+			auditTrail: this.auditTrail,
+			shopCostModifier: this.shopCostModifier
 		});
 	}
 
@@ -161,6 +163,7 @@ export class Game {
 		game._shadowRealm = data._shadowRealm;
 		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
 		game.auditTrail = data.auditTrail;
+		game.shopCostModifier = data.shopCostModifier;
 		return game;
 	}
 }

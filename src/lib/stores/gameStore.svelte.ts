@@ -86,6 +86,15 @@ export function increaseItemCostModifier(item: AllItems, amount: number = 1) {
 	currentGame.value.increaseItemCostModifier(item, amount);
 }
 
+export function increaseShopCostModifier(amount: number = 1) {
+	if (!currentGame.value) return;
+	currentGame.value.shopCostModifier += amount;
+}
+
+export function getShopCostModifier(): number {
+	return currentGame.value?.shopCostModifier ?? 0;
+}
+
 export function getItemCostModifier(item: AllItems): number {
 	return currentGame.value?.getItemCostModifier(item) ?? 1;
 }
@@ -93,7 +102,7 @@ export function getItemCostModifier(item: AllItems): number {
 export function getItemCost(item: AllItems): number {
 	const modifier = getItemCostModifier(item);
 	let baseCost = getItemByType(item)?.baseCost ?? 0;
-	return baseCost + modifier;
+	return baseCost + modifier + getShopCostModifier();
 }
 
 export function addAuditTrail(message: string) {
