@@ -1,5 +1,6 @@
 import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
+import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
@@ -9,6 +10,10 @@ export function generateWinWheel(playerName: string) {
 		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
 		return;
 	}
+
+	if (player.dead) return;
+
+	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 2;
 	const wheel = [
 		{
 			//1
@@ -22,8 +27,8 @@ export function generateWinWheel(playerName: string) {
 		},
 		{
 			//3
-			label: 'Gain 10 Hp',
-			onWin: () => (player.hp += 10)
+			label: `Gain ${globalHpValue} Hp`,
+			onWin: () => (player.hp += globalHpValue)
 		},
 		{
 			//4
@@ -53,8 +58,8 @@ export function generateWinWheel(playerName: string) {
 		},
 		{
 			//9
-			label: 'Gain 10 Hp',
-			onWin: () => (player.hp += 10)
+			label: `Gain ${globalHpValue} Hp`,
+			onWin: () => (player.hp += globalHpValue)
 		},
 		{
 			//10
@@ -68,5 +73,6 @@ export function generateWinWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Win Wheel - ${player.name}`, wheel);
+	if (player.classType == 'gambler') generateGamblerWheel(player.name);
+	else addCustomWheel(`Win Wheel - ${player.name}`, wheel);
 }

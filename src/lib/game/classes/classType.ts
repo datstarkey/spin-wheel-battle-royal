@@ -1,6 +1,5 @@
 import type { Player } from '../player/player.svelte';
-import { Gorf } from './gorf';
-import { Magicman } from './magicman';
+import { Gambler } from './gambler';
 import { None } from './none';
 import { Poopmaster } from './poopmaster';
 import { Stoner } from './stoner';
@@ -11,6 +10,8 @@ export interface ClassBase {
 	attack: number;
 	defense: number;
 	name: string;
+
+	startingGold?: number;
 
 	onWinAbility: string;
 	attackRange: number;
@@ -32,8 +33,9 @@ export const classMap = {
 	swe: Swe,
 	stoner: Stoner,
 	poopmaster: Poopmaster,
-	gorf: Gorf,
-	magicman: Magicman
+	gambler: Gambler
+	// gorf: Gorf,
+	// magicman: Magicman
 };
 
 export type ClassType = keyof typeof classMap;

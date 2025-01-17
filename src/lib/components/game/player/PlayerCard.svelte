@@ -7,10 +7,11 @@
 	interface Props {
 		player: Player;
 		currentTurnPlayer?: Player;
-		isAttackWindowOpen: boolean;
 	}
 
-	let { player, currentTurnPlayer, isAttackWindowOpen = $bindable() }: Props = $props();
+	let { player, currentTurnPlayer }: Props = $props();
+
+	let isAttackWindowOpen = $state(false);
 </script>
 
 <div

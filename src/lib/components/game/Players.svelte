@@ -9,7 +9,6 @@
 
 	let currentTurnPlayer = $derived(currentGame.value?.currentPlayer);
 
-	let isAttackWindowOpen = $state(false);
 </script>
 
 <GameHistory></GameHistory>
@@ -31,8 +30,11 @@
 	</h3>
 
 	<div class="flex flex-wrap gap-3">
-		{#each currentGame.value.players as player}
-			<PlayerCard {player} {currentTurnPlayer} bind:isAttackWindowOpen />
+		{#each Object.values(currentGame.value.playerOrder) as name (name)}
+			{@const player = getPlayerByName(name)}
+			{#if player}
+				<PlayerCard {player} {currentTurnPlayer} />
+			{/if}
 		{/each}
 	</div>
 {/if}

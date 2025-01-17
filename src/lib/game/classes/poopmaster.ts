@@ -2,10 +2,12 @@ import { addAuditTrail, addCustomWheel } from '$lib/stores/gameStore.svelte';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
+const poopMasterMultiplier = 'PoopReduction';
+const poopMasterMultiplierValue = 0.8;
 export const Poopmaster: ClassBase = {
-	hp: 10,
+	hp: 100,
 	attack: 8,
-	defense: 12,
+	defense: 10,
 	name: 'PoopMaster',
 	onWinAbility: 'Shit on one of their items deleting it',
 	attackRange: 1,
@@ -17,10 +19,10 @@ export const Poopmaster: ClassBase = {
 			wheelItems.push({
 				label: attackingPlayer.gear.mainHand,
 				onWin() {
-					attackingPlayer.gear.deleteItem('mainhand');
 					addAuditTrail(
-						`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.mainHand}!`
+						`${player.name} has shit on ${attackingPlayer.name} ${attackingPlayer.gear.mainHand}!`
 					);
+					attackingPlayer.gear.deleteItem('mainhand');
 				}
 			});
 		}
@@ -29,10 +31,10 @@ export const Poopmaster: ClassBase = {
 			wheelItems.push({
 				label: attackingPlayer.gear.offHand,
 				onWin() {
-					attackingPlayer.gear.deleteItem('offHand');
 					addAuditTrail(
-						`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.offHand}!`
+						`${player.name} has shit on ${attackingPlayer.name} ${attackingPlayer.gear.offHand}!`
 					);
+					attackingPlayer.gear.deleteItem('offHand');
 				}
 			});
 		}
@@ -41,8 +43,10 @@ export const Poopmaster: ClassBase = {
 			wheelItems.push({
 				label: attackingPlayer.gear.chest,
 				onWin() {
+					addAuditTrail(
+						`${player.name} has shit on ${attackingPlayer.name} ${attackingPlayer.gear.chest}!`
+					);
 					attackingPlayer.gear.deleteItem('chest');
-					addAuditTrail(`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.chest}!`);
 				}
 			});
 		}
@@ -51,26 +55,36 @@ export const Poopmaster: ClassBase = {
 			wheelItems.push({
 				label: attackingPlayer.gear.helm,
 				onWin() {
+					addAuditTrail(
+						`${player.name} has shit on ${attackingPlayer.name} ${attackingPlayer.gear.helm}!`
+					);
 					attackingPlayer.gear.deleteItem('helm');
-					addAuditTrail(`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.helm}!`);
 				}
 			});
 		}
 
-		const wheel = wheelItems.concat(
-			attackingPlayer.gear.consumables.map((x, index) => {
-				return {
-					label: x,
-					onWin() {
-						attackingPlayer.gear.deleteItem('consumables', index);
-						addAuditTrail(
-							`${attackingPlayer.name} has shit on their ${attackingPlayer.gear.helm}!`
-						);
-					}
-				};
-			})
-		);
+		if (wheelItems.length) {
+			const wheel = wheelItems.concat(
+				attackingPlayer.gear.consumables.map((x, index) => {
+					return {
+						label: x,
+						onWin() {
+							addAuditTrail(`${player.name} has shit on their ${x}!`);
+							attackingPlayer.gear.deleteItem('consumables', index);
+						}
+					};
+				})
+			);
 
-		addCustomWheel(`${player.name} poopmaster wheel`, wheel);
+			addCustomWheel(`${player.name} poopmaster wheel`, wheel);
+		} else {
+			addAuditTrail(`${player.name} has no items to shit on!`);
+		}
+	},
+	onDefenseStart(player, attackingPlayer) {
+		attackingPlayer.attackMultipliers[poopMasterMultiplier] = poopMasterMultiplierValue;
+	},
+	onDefenseEnd(player, attackingPlayer) {
+		delete attackingPlayer.attackMultipliers[poopMasterMultiplier];
 	}
 };

@@ -5,7 +5,7 @@ import type { SpinWheelItem } from './types';
 export function playerNameSpinItems(): SpinWheelItem[] {
 	return (
 		currentGame.value?.players
-			.filter((player) => !player.dead)
+			.filter((player) => !currentGame.value?.started || !player.dead)
 			.map((player) => ({ label: player.name })) ?? []
 	);
 }

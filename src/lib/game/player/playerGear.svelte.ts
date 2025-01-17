@@ -135,6 +135,13 @@ export class PlayerGear {
 					this._helm = null;
 				}
 				break;
+			case 'chest':
+				if (this._chest) {
+					const actualItem = getItemByType(this._chest);
+					actualItem?.onUnequip?.(this.player, 'chest');
+					this._chest = null;
+				}
+				break;
 		}
 	}
 
@@ -146,8 +153,9 @@ export class PlayerGear {
 				this._consumables.splice(index, 1);
 			}
 			return;
+		} else {
+			this.unequipItem(key);
 		}
-		this.unequipItem(key);
 	}
 
 	/**
