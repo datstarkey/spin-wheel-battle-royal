@@ -40,8 +40,6 @@
 	$effect(() => {
 		if (availableToAttack.length > 0 && !defendingPlayer) {
 			defendingPlayer = availableToAttack[0];
-		} else if (availableToAttack.length == 0) {
-			defendingPlayer = null;
 		}
 	});
 
@@ -63,7 +61,7 @@
 				showWheel = false;
 				winningPlayer = null;
 				player.onAttackEnd(defendingPlayer!);
-				defendingPlayer!.onDefenseEnd(player);
+				defendingPlayer?.onDefenseEnd(player);
 			}
 		};
 	}
