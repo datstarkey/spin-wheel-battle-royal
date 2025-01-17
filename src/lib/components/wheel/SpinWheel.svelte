@@ -125,7 +125,7 @@
 	</div>
 </div>
 
-{#if showSpin && wheel && items.length > 1}
+{#if showSpin && wheel && items.length > 0}
 	<div class="flex justify-between">
 		{#if children}{@render children({ spin })}{:else}
 			<div class="flex-auto"></div>
