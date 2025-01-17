@@ -14,6 +14,14 @@ SuperJSON.registerCustom<Game, string>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const stores = new Map<string, LocalStorageStore<any>>();
 
+export class IndexDbStorageStore<T> {
+	value: T = $state<T>()!;
+
+	constructor(key: string, initialValue: T) {
+		this.value = initialValue;
+	}
+}
+
 export class LocalStorageStore<T> {
 	value: T = $state<T>()!;
 
