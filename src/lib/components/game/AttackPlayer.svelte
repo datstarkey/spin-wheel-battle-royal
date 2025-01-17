@@ -126,7 +126,12 @@
 			disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value == true}
 			>Attack</button
 		>
-		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
+		<button
+			onclick={() => (shopOpen = true)}
+			disabled={showWheel || shopOpen || player.classType == 'gambler'}
+		>
+			Shop</button
+		>
 		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>
 	</div>
 </div>

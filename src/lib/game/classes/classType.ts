@@ -1,8 +1,8 @@
 import type { Player } from '../player/player.svelte';
 import { Gambler } from './gambler';
+import { GigaChad } from './gigaChad';
 import { None } from './none';
 import { Poopmaster } from './poopmaster';
-import { Stoner } from './stoner';
 import { Swe } from './swe';
 
 export interface ClassBase {
@@ -31,9 +31,10 @@ export interface ClassBase {
 export const classMap = {
 	none: None, //placeholder
 	swe: Swe,
-	stoner: Stoner,
 	poopmaster: Poopmaster,
-	gambler: Gambler
+	gambler: Gambler,
+	gigachad: GigaChad
+	// stoner: Stoner,
 	// gorf: Gorf,
 	// magicman: Magicman
 };

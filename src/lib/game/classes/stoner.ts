@@ -1,7 +1,7 @@
 import type { ClassBase } from './classType';
 
 export const Stoner: ClassBase = {
-	hp: 10,
+	hp: 100,
 	attack: 10,
 	defense: 10,
 	attackRange: 1,

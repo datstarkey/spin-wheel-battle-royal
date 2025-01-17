@@ -3,7 +3,7 @@ import {
 	getGlobalHpReduction,
 	getItemCost,
 	increaseGlobalHpReduction,
-	increaseItemCostModifier
+	increaseShopCostModifier
 } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
@@ -215,6 +215,9 @@ export class Player {
 
 	//Bonus
 	public get bonusDefense(): number {
+		if (this.classType == 'gigachad') {
+			return this._bonusDefense + 0.3 * this.baseAttack;
+		}
 		return this._bonusDefense;
 	}
 	public set bonusDefense(value: number) {
@@ -262,7 +265,7 @@ export class Player {
 		this._baseAttack = this.class.attack;
 		this._baseDefense = this.class.defense;
 		this._baseAttackRange = this.class.attackRange;
-		this._gold = this.class.startingGold ?? 0;
+		this._gold = this.class.startingGold ?? 15;
 
 		if (this.classType == 'gambler') {
 			this._hp = this.class.startingGold ?? 0;
@@ -319,7 +322,7 @@ export class Player {
 		addAuditTrail(`${this.name} buys ${item}!`);
 		this.gear.addItem(item);
 		this.gold -= cost;
-		increaseItemCostModifier(item);
+		increaseShopCostModifier(1);
 	}
 
 	/**
