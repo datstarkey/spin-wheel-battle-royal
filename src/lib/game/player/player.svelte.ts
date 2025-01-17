@@ -8,6 +8,7 @@ import {
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import items, { getItemByType, type AllItems } from '../items/itemTypes';
+import { generateDamageTakenWheel } from '../wheels/damageTakenWheel';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
 import { generateWinWheel } from '../wheels/winWheel';
@@ -52,12 +53,12 @@ export class Player {
 			return;
 		}
 
-		// if (this.classType == 'gambler') {
-		// 	this.gold = value;
-		// 	this._hp = this.gold;
-		// } else {
-		// 	this._hp = value;
-		// }
+		if (this.classType == 'gambler') {
+			this._gold = value;
+			this._hp = this.gold;
+		} else {
+			this._hp = value;
+		}
 		this._hp = value;
 		if (this._hp < 0) this._hp = 0;
 		if (this._hp === 0) {
@@ -244,9 +245,9 @@ export class Player {
 	public set gold(value: number) {
 		this._gold = value;
 		if (this._gold < 0) this._gold = 0;
-		// if (this.classType == 'gambler') {
-		// 	this.hp = this.gold;
-		// }
+		if (this.classType == 'gambler') {
+			this.hp = this.gold;
+		}
 		addAuditTrail(`${this.name} now has ${this.gold} gold!`);
 	}
 
@@ -261,6 +262,11 @@ export class Player {
 		this._baseAttack = this.class.attack;
 		this._baseDefense = this.class.defense;
 		this._baseAttackRange = this.class.attackRange;
+		this._gold = this.class.startingGold ?? 0;
+
+		if (this.classType == 'gambler') {
+			this._hp = this.class.startingGold ?? 0;
+		}
 	}
 
 	inventoryCount(itemName: string): number {
@@ -323,11 +329,11 @@ export class Player {
 
 	onAttackWin(defendingPlayer: Player) {
 		this.gold += 1;
-		defendingPlayer.hp -= getGlobalHpReduction();
 		this.statuses.onAttackWin(defendingPlayer);
 		this.gear.onAttackWin(defendingPlayer);
 		this.class.onAttackWin(this, defendingPlayer);
 		generateWinWheel(this.name);
+		generateDamageTakenWheel(defendingPlayer.name);
 	}
 
 	onAttackLose(defendingPlayer: Player) {
@@ -337,6 +343,7 @@ export class Player {
 		this.gear.onAttackLose(defendingPlayer);
 		this.class.onAttackLose?.(this, defendingPlayer);
 		generateLoseWheel(this.name);
+		generateDamageTakenWheel(this.name);
 	}
 
 	onDefendWin(playerAttackingYou: Player) {

@@ -124,6 +124,7 @@ export class Game {
 		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
 		this.hasTurnStarted = false;
+		hasPlayerAttacked.value = false;
 		this.startTurn();
 	}
 

@@ -7,8 +7,12 @@ export const Gambler: ClassBase = {
 	name: 'Gambler',
 	onWinAbility: 'Spin the Gambler wheel instead of the win and loss wheels',
 	attackRange: 1,
+	startingGold: 15,
 
 	onAttackWin(player, defendingPlayer) {
 		//in the win wheel or lose wheel its calculated to nothing to do here
+	},
+	onTurnStart(player) {
+		player.hp = player.gold;
 	}
 };

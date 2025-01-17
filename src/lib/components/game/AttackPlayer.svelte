@@ -40,8 +40,7 @@
 	$effect(() => {
 		if (availableToAttack.length > 0 && !defendingPlayer) {
 			defendingPlayer = availableToAttack[0];
-		}
-		if (availableToAttack.length == 0) {
+		} else if (availableToAttack.length == 0) {
 			defendingPlayer = null;
 		}
 	});
@@ -124,7 +123,8 @@
 	<div class="variant-filled-primary btn-group mx-auto mt-4">
 		<button
 			onclick={attackPlayer}
-			disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value}>Attack</button
+			disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value == true}
+			>Attack</button
 		>
 		<button onclick={() => (shopOpen = true)} disabled={showWheel || shopOpen}> Shop</button>
 		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>
@@ -151,6 +151,7 @@
 						]}
 						buttonText="Attack"
 						{onWinner}
+						showSpin={hasPlayerAttacked.value == false}
 						onSpin={() => {
 							addAuditTrail(`${player.name} attacks ${defendingPlayer?.name}!`);
 						}}

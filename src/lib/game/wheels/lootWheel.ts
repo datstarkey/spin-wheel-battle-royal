@@ -3,7 +3,7 @@ import { randomFromArray } from '$lib/utils/random';
 import toast from 'svelte-french-toast';
 import items from '../items/itemTypes';
 
-export function generateLootWheel(playerName: string) {
+export function generateLootWheel(playerName: string, index: number = 1) {
 	const player = getPlayerByName(playerName);
 	if (!player) {
 		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
@@ -97,5 +97,5 @@ export function generateLootWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Loot Wheel for ${player.name}`, wheel);
+	addCustomWheel(`Loot Wheel for ${player.name} - ${index}`, wheel);
 }

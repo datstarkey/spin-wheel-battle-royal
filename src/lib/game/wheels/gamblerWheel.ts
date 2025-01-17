@@ -58,8 +58,8 @@ export function generateGamblerWheel(playerName: string) {
 			//9
 			label: `Spin Loot Wheel Twice`,
 			onWin: () => {
-				generateLootWheel(player.name);
-				generateLootWheel(player.name);
+				generateLootWheel(player.name, 1);
+				generateLootWheel(player.name, 2);
 			}
 		},
 		{

@@ -68,6 +68,7 @@ export function getPlayerByName(name?: string): Player | undefined {
 export function startGame() {
 	if (!currentGame.value) return;
 	currentGame.value.started = true;
+	currentGame.value.startTurn();
 	addAuditTrail('Game started!');
 }
 

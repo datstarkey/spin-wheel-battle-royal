@@ -11,9 +11,9 @@ export function generateLoseWheel(playerName: string) {
 		return;
 	}
 
-	if(player.dead) return;
+	if (player.dead) return;
 
-	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 2;
+	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 15;
 	const wheel = [
 		{
 			//1
@@ -59,10 +59,8 @@ export function generateLoseWheel(playerName: string) {
 			label: 'Give someone HP',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
-				generateRandomPlayerWheel(`${playerName} Gives 5 Hp To`, (winner) => {
-					//only give as much hp as the winner can take
-					let hpAmount = globalHpValue;
-					if (player.hp < 5) hpAmount = player.hp;
+				generateRandomPlayerWheel(`${playerName} Gives ${globalHpValue} Hp To`, (winner) => {
+					let hpAmount = Math.min(player.hp, globalHpValue);
 					player.hp -= hpAmount;
 					winner.hp += hpAmount;
 				});
