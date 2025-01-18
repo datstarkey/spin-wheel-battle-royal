@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
+	import { generateButtonWheel } from '$lib/game/wheels/buttonWheel';
 	import { generateLootWheel } from '$lib/game/wheels/lootWheel';
 	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
 	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
@@ -50,5 +51,14 @@
 		}}
 	>
 		Add Lose Wheel
+	</Button>
+
+	<Button
+		onclick={() => {
+			generateButtonWheel(player.name);
+			toast.success('Button Wheel Added');
+		}}
+	>
+		Add Button Wheel
 	</Button>
 </div>
