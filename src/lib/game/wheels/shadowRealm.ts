@@ -16,6 +16,7 @@ export function generateShadowRealmWheel(playerName: string) {
 		return;
 	}
 	if (player.dead) return;
+	if (player.classType == "shadeweaver") return;
 
 	const wheel: WheelBase = [
 		{

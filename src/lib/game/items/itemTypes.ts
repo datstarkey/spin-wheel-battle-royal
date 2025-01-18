@@ -15,6 +15,9 @@ import { Fireball } from './mainHand/fireball';
 import { Lightsaber } from './mainHand/lightsaber';
 import { HylianShield } from './offhand/hylianShield';
 import { Shiv } from './offhand/shiv';
+import { JagerShots } from './consumables/jagerShots';
+import { stellaArtois } from './consumables/stellaArtois';
+import { vodkaRedbull } from './consumables/vodkaRedbull';
 export interface Item {
 	name: string;
 	type: ItemType;
@@ -66,7 +69,11 @@ export const chests = {
 };
 
 export const consumables = {
-	HealthPot: HealthPot
+	HealthPot: HealthPot,
+	JagerShots: JagerShots,
+	stellaArtois: stellaArtois,
+	vodkaRedbull: vodkaRedbull
+	
 };
 
 const items = {
