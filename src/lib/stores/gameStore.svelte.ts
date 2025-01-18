@@ -97,6 +97,12 @@ export function increaseShopCostModifier(amount: number = 1) {
 	currentGame.value.shopCostModifier += amount;
 }
 
+export function increaseShopConsumableCostModifier(amount: number = 1) {
+	if (!currentGame.value) return;
+	currentGame.value.shopConsumableCostModifier += amount;
+}
+
+//#endregion#
 export function getShopCostModifier(): number {
 	return currentGame.value?.shopCostModifier ?? 0;
 }
@@ -105,17 +111,16 @@ export function getItemCostModifier(item: AllItems): number {
 	return currentGame.value?.getItemCostModifier(item) ?? 1;
 }
 
-
-export function getConsumableItemCostModifier(item: AllItems){
-	return currentGame.value?.shopConsumableCostModifier ?? 0
+export function getConsumableItemCostModifier(item: AllItems) {
+	return currentGame.value?.shopConsumableCostModifier ?? 0;
 }
 
 export function getItemCost(item: AllItems): number {
 	const modifier = getItemCostModifier(item);
 	const actualitem = getItemByType(item);
 	let baseCost = actualitem?.baseCost ?? 0;
-	let isConsumable = actualitem?.type == "consumables"
-	if( isConsumable  ) return baseCost + getConsumableItemCostModifier(item) + modifier;
+	let isConsumable = actualitem?.type == 'consumables';
+	if (isConsumable) return baseCost + getConsumableItemCostModifier(item) + modifier;
 	return baseCost + modifier + getShopCostModifier();
 }
 

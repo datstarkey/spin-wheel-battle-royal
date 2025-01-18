@@ -71,10 +71,12 @@ export class PlayerStatuses {
 
 	onTurnEnd() {
 		this._statuses.forEach((s) => {
-			s.duration! -= 1;
-			if (s.duration! <= 0) {
-				s.status.onRemove?.(this.player);
-				this._statuses = this._statuses.filter((x) => x !== s);
+			if (s.duration) {
+				s.duration -= 1;
+				if (s.duration! <= 0) {
+					s.status.onRemove?.(this.player);
+					this._statuses = this._statuses.filter((x) => x !== s);
+				}
 			}
 		});
 	}
@@ -147,7 +149,7 @@ export class PlayerStatuses {
 export class PlayerStatusEffect {
 	private _statusName: StatusType;
 
-	duration: number | undefined;
+	duration = $state<number>();
 
 	constructor(status: StatusType) {
 		this._statusName = status;

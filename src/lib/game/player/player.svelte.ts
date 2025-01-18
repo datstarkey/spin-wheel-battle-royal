@@ -4,6 +4,7 @@ import {
 	getGlobalHpReduction,
 	getItemCost,
 	increaseGlobalHpReduction,
+	increaseShopConsumableCostModifier,
 	increaseShopCostModifier
 } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
@@ -332,7 +333,12 @@ export class Player {
 		addAuditTrail(`${this.name} buys ${item}!`);
 		this.gear.addItem(item);
 		this.gold -= cost;
-		increaseShopCostModifier(1);
+
+		if (actualItem.type == 'consumables') {
+			increaseShopConsumableCostModifier(1);
+		} else {
+			increaseShopCostModifier(1);
+		}
 	}
 
 	/**
