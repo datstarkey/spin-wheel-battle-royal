@@ -45,12 +45,12 @@
 		<hr class="my-8" />
 
 		<div class="grid grid-cols-2 gap-2">
-			<Input label="HP" bind:value={player.hp} />
-			<Input label="Attack" bind:value={player.baseAttack} />
-			<Input label="Defense" bind:value={player.baseDefense} />
-			<Input label="Gold" bind:value={player.gold} />
-			<Input label="Movement" bind:value={player.baseMovement} />
-			<Input label="Attack Range" bind:value={player.baseAttackRange} />
+			<Input label="HP" bind:value={player.hp} type="number" />
+			<Input label="Attack" bind:value={player.baseAttack} type="number" />
+			<Input label="Defense" bind:value={player.baseDefense} type="number" />
+			<Input label="Gold" bind:value={player.gold} type="number" />
+			<Input label="Movement" bind:value={player.baseMovement} type="number" />
+			<Input label="Attack Range" bind:value={player.baseAttackRange} type="number" />
 		</div>
 
 		<hr class="my-8" />
