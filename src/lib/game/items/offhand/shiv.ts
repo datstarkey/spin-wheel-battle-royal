@@ -5,7 +5,7 @@ const SHIV_COST = 5;
 
 export const Shiv: Item = {
 	name: 'Shiv',
-	description: 'Steal one gold on win',
+	description: 'Steal 5 gold on win',
 	type: 'offHand',
 	baseCost: 3,
 	image: '/Items/OffHandEquipables/Shiv.svg',
