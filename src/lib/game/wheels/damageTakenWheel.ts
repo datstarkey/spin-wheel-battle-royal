@@ -13,65 +13,73 @@ export function generateDamageTakenWheel(playerName: string) {
 
 	const globalHpValue = currentGame.value?.globalHpReduction ?? 1;
 
+	let reductionPercentage = 0;
+
+	if (player.class.name == 'Absolute Unit') {
+		reductionPercentage = Math.min(player.baseDefense, 50);
+	}
+
+	const reductionPercentageInversion = (100 - reductionPercentage) / 100;
+
 	const wheel: WheelBase = [
 		{
 			label: `Take ${globalHpValue * 1} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 1;
+				player.hp -= Math.floor(globalHpValue * 1 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 2} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 2;
+				player.hp -= Math.floor(globalHpValue * 2 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 3} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 3;
+				player.hp -= Math.floor(globalHpValue * 3 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 4} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 4;
+				player.hp -= Math.floor(globalHpValue * 4 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 5} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 5;
+				player.hp -= Math.floor(globalHpValue * 5 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 10} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 10;
+				player.hp -= Math.floor(globalHpValue * 10 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 15} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 15;
+				player.hp -= Math.floor(globalHpValue * 15 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 10} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 10;
+				player.hp -= Math.floor(globalHpValue * 10 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 15} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 15;
+				player.hp -= Math.floor(globalHpValue * 15 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 20} damage and go to shadow realm`,
 			onWin: () => {
-				player.hp -= globalHpValue * 20;
+				player.hp -= Math.floor(globalHpValue * 20 * reductionPercentageInversion);
 				player.inShadowRealm = true;
 			}
 		}
