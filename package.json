@@ -41,6 +41,7 @@
 	"type": "module",
 	"dependencies": {
 		"iconify-icon": "2.3.0",
+		"idb-keyval": "^6.2.1",
 		"spin-wheel": "5.0.2",
 		"superjson": "2.2.2",
 		"svelte-french-toast": "1.2.0",
