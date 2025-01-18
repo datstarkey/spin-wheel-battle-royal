@@ -11,6 +11,9 @@ importers:
       iconify-icon:
         specifier: 2.3.0
         version: 2.3.0
+      idb-keyval:
+        specifier: ^6.2.1
+        version: 6.2.1
       spin-wheel:
         specifier: 5.0.2
         version: 5.0.2
@@ -1273,6 +1276,9 @@ packages:
 
   iconify-icon@2.3.0:
     resolution: {integrity: sha512-C0beI9oTDxQz6voI5CKl7MiJf0Lw4UU8K4G4t6pcUDClLmCvuMOpcvd8MAztQ2SfoH0iv7WHdxBFjekKPFKH2Q==}
+
+  idb-keyval@6.2.1:
+    resolution: {integrity: sha512-8Sb3veuYCyrZL+VBt9LJfZjLUPWVvqn8tG28VqYNFCo43KHcKuq+b4EiXGeuaLAQWL2YmyDgMp2aSpH9JHsEQg==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -3285,6 +3291,8 @@ snapshots:
   iconify-icon@2.3.0:
     dependencies:
       '@iconify/types': 2.0.0
+
+  idb-keyval@6.2.1: {}
 
   ignore@5.3.2: {}
 
