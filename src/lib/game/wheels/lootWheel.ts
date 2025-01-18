@@ -17,9 +17,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: 'Get a random Consumable',
 			onWin() {
 				//Select all consumables that are not class locked or are locked to the players class
-				const consumables = Object.entries(items.consumables).filter(
-					(x) => !x[1].classLocks || x[1].classLocks.includes(player.classType)
-				);
+				const consumables = Object.entries(items.consumables)
+					.filter((x) => !x[1].classLocks || x[1].classLocks.includes(player.classType))
+					.map((x) => x[0]);
 
 				player.assignItem(randomFromArray(consumables));
 			}
