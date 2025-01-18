@@ -190,6 +190,7 @@ export class Game {
 			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
 			auditTrail: this.auditTrail,
 			shopCostModifier: this.shopCostModifier,
+			shopConsumableCostModifier: this.shopConsumableCostModifier,
 			hasTurnStarted: this.hasTurnStarted,
 			skippedNextTurns: this.skippedNextTurns
 		});
