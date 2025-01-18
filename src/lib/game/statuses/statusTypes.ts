@@ -4,6 +4,8 @@ import { jaegerShots } from './jagerShots';
 import { movementPot } from './movmentPot';
 import { sweSupreme } from './swesupreme';
 import { vodkaRedbull } from './vodkaRedbull';
+import { emotionalDamage } from './emotionalDamage';
+import { stellaArtois } from './stellaArtois';
 
 export interface StatusEffect {
 	name: string;
@@ -30,7 +32,9 @@ const statusEffects = {
 	VodkaRedbull: vodkaRedbull,
 	Swesupreme: sweSupreme,
 	MovementPotBuff: movementPot,
-	JagerShots: jaegerShots
+	JagerShots: jaegerShots,
+	EmotionalDamage: emotionalDamage,
+	StellaArtois: stellaArtois
 };
 
 export default statusEffects;

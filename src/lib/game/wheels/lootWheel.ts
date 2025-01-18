@@ -66,21 +66,9 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			}
 		},
 		{
-			label: '1 Gold',
+			label: '5 Gold',
 			onWin() {
-				player.gold += 1;
-			}
-		},
-		{
-			label: '1 Gold',
-			onWin() {
-				player.gold += 1;
-			}
-		},
-		{
-			label: '3 Gold',
-			onWin() {
-				player.gold += 3;
+				player.gold += 5;
 			}
 		},
 		{
@@ -93,6 +81,18 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 			label: '10 Gold',
 			onWin() {
 				player.gold += 10;
+			}
+		},
+		{
+			label: '10 Gold',
+			onWin() {
+				player.gold += 10;
+			}
+		},
+		{
+			label: '20 Gold',
+			onWin() {
+				player.gold += 20;
 			}
 		}
 	];

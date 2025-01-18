@@ -3,7 +3,7 @@ import type { Item } from '../itemTypes';
 
 export const Kaibrows: Item = {
 	name: 'Kaibrows',
-	description: 'Gain +15 Attack, Lose -5 Defense',
+	description: 'Gain 10% Attack',
 	type: 'helm',
 	baseCost: 3,
 	maxAmount: 1,

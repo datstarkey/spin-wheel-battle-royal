@@ -88,7 +88,11 @@ export function generateShadowRealmWheel(playerName: string) {
 		},
 		{
 			label: 'Emotional damage',
-			onWin: () => toast.error('Not implemented yet')
+			onWin: () => {
+				generateRandomPlayerWheel(`${player.name} hurls out some insults`, (winner) => {
+					winner.statuses.addStatus('EmotionalDamage');
+				})
+			}
 		},
 		{
 			label: 'Nothing'

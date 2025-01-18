@@ -15,39 +15,27 @@ export function generateDamageTakenWheel(playerName: string) {
 
 	const wheel: WheelBase = [
 		{
-			label: `Take ${globalHpValue * 5} damage`,
+			label: `Take ${globalHpValue * 1} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 5;
+				player.hp -= globalHpValue * 1;
 			}
 		},
 		{
-			label: `Take ${globalHpValue * 10} damage`,
+			label: `Take ${globalHpValue * 2} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 10;
+				player.hp -= globalHpValue * 2;
 			}
 		},
 		{
-			label: `Take ${globalHpValue * 15} damage`,
+			label: `Take ${globalHpValue * 3} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 15;
+				player.hp -= globalHpValue * 3;
 			}
 		},
 		{
-			label: `Take ${globalHpValue * 5} damage`,
+			label: `Take ${globalHpValue * 4} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 5;
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 10} damage`,
-			onWin: () => {
-				player.hp -= globalHpValue * 10;
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 15} damage`,
-			onWin: () => {
-				player.hp -= globalHpValue * 15;
+				player.hp -= globalHpValue * 4;
 			}
 		},
 		{
@@ -69,9 +57,21 @@ export function generateDamageTakenWheel(playerName: string) {
 			}
 		},
 		{
-			label: `Take ${globalHpValue * 30} damage and go to shadow realm`,
+			label: `Take ${globalHpValue * 10} damage`,
 			onWin: () => {
-				player.hp -= globalHpValue * 30;
+				player.hp -= globalHpValue * 10;
+			}
+		},
+		{
+			label: `Take ${globalHpValue * 15} damage`,
+			onWin: () => {
+				player.hp -= globalHpValue * 15;
+			}
+		},
+		{
+			label: `Take ${globalHpValue * 20} damage and go to shadow realm`,
+			onWin: () => {
+				player.hp -= globalHpValue * 20;
 				player.inShadowRealm = true;
 			}
 		}

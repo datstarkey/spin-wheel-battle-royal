@@ -2,17 +2,15 @@ import type { Item } from '../itemTypes';
 
 export const SportsBra: Item = {
 	name: 'Sports Bra',
-	description: 'Opponents lose 5 attack, you dont want a lawsuit',
+	description: 'Opponents give you 10% of their gold when attacking you',
 	type: 'chest',
 	baseCost: 3,
 	maxAmount: 1,
 	image: '/Items/ChestEquipables/Sportsbra.svg',
 
 	onDefenseStart(player, playerAttackingYou) {
-		playerAttackingYou.bonusAttack -= 5;
-	},
-
-	onDefenseEnd(player, playerAttackingYou) {
-		playerAttackingYou.bonusAttack += 5;
+		const goldToTake = playerAttackingYou.gold * 0.9
+		playerAttackingYou.gold -= goldToTake
+		player.gold += goldToTake
 	}
 };

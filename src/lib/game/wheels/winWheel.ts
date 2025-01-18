@@ -31,16 +31,16 @@ export function generateWinWheel(playerName: string) {
 		},
 		{
 			//3
-			label: `Gain ${globalHpValue} Hp`,
+			label: `Gain 10 Hp`,
 			onWin: () => {
-				player.hp += globalHpValue;
+				player.hp += 10;
 			}
 		},
 		{
 			//4
-			label: 'Gain 3 Gold',
+			label: 'Gain 10 Gold',
 			onWin: () => {
-				player.gold += 3;
+				player.gold += 10;
 			}
 		},
 		//Todo - add when turn system is implemented
@@ -70,13 +70,20 @@ export function generateWinWheel(playerName: string) {
 		},
 		{
 			//9
-			label: `Gain ${globalHpValue} Hp`,
+			label: `Gain 10 Hp`,
 			onWin: () => {
-				player.hp += globalHpValue;
+				player.hp += 10;
 			}
 		},
 		{
 			//10
+			label: 'Gain 10 Gold',
+			onWin: () => {
+				player.gold += 10;
+			}
+		},
+		{
+			//11
 			label: 'Send Someone to the Shadow Realm',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
@@ -85,6 +92,7 @@ export function generateWinWheel(playerName: string) {
 				});
 			}
 		}
+		
 	];
 
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);

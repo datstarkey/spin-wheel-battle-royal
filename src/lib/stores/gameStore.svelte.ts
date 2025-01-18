@@ -105,9 +105,17 @@ export function getItemCostModifier(item: AllItems): number {
 	return currentGame.value?.getItemCostModifier(item) ?? 1;
 }
 
+
+export function getConsumableItemCostModifier(item: AllItems){
+	return currentGame.value?.shopConsumableCostModifier ?? 0
+}
+
 export function getItemCost(item: AllItems): number {
 	const modifier = getItemCostModifier(item);
-	let baseCost = getItemByType(item)?.baseCost ?? 0;
+	const actualitem = getItemByType(item);
+	let baseCost = actualitem?.baseCost ?? 0;
+	let isConsumable = actualitem?.type == "consumables"
+	if( isConsumable  ) return baseCost + getConsumableItemCostModifier(item) + modifier;
 	return baseCost + modifier + getShopCostModifier();
 }
 

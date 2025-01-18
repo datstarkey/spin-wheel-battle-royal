@@ -1,6 +1,6 @@
 <script module lang="ts">
 	export const quickMode = $state({
-		value: true
+		value: false
 	});
 </script>
 

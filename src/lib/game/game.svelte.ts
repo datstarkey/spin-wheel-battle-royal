@@ -24,6 +24,7 @@ export class Game {
 	skippedNextTurns = $state<string[]>([]);
 
 	shopCostModifier = $state(0);
+	shopConsumableCostModifier = $state(0);
 
 	auditTrail = $state<string[]>([]);
 

@@ -275,7 +275,7 @@ export class Player {
 		this._baseAttack = this.class.attack;
 		this._baseDefense = this.class.defense;
 		this._baseAttackRange = this.class.attackRange;
-		this._gold = this.class.startingGold ?? 15;
+		this._gold = this.class.startingGold ?? 30;
 
 		if (this.classType == 'gambler') {
 			this._hp = this.class.startingGold ?? 0;

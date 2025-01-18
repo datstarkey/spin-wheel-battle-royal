@@ -90,7 +90,13 @@ export function generateLoseWheel(playerName: string) {
 					winner.inShadowRealm = true;
 				});
 			}
-		}
+		},
+		{
+			label: 'Emotional damage',
+			onWin: () => {
+					player.statuses.addStatus('EmotionalDamage');
+				}
+		},
 	];
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);
 	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel);

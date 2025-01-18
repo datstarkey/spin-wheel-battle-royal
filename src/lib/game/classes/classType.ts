@@ -5,6 +5,9 @@ import { GigaChad } from './gigaChad';
 import { None } from './none';
 import { Poopmaster } from './poopmaster';
 import { Swe } from './swe';
+// import { Stoner } from './stoner';
+import { Shadeweaver } from './shadeweaver';
+
 
 export interface ClassBase {
 	hp: number;
@@ -35,8 +38,9 @@ export const classMap = {
 	poopmaster: Poopmaster,
 	gambler: Gambler,
 	gigachad: GigaChad,
-	absoluteUnit: AbsoluteUnit
-	// stoner: Stoner,
+	absoluteUnit: AbsoluteUnit,
+	shadeweaver: Shadeweaver
+	// stoner: Stoner
 	// gorf: Gorf,
 	// magicman: Magicman
 };

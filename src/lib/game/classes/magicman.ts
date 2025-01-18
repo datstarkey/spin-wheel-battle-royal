@@ -1,13 +1,13 @@
 import type { ClassBase } from './classType';
 
 export const Magicman: ClassBase = {
-	hp: 8,
-	attack: 20,
-	defense: 5,
-	attackRange: 3,
+	hp: 80,
+	attack: 25,
+	defense: 1,
+	attackRange: 2,
 	name: 'Magic Man',
-	onWinAbility: 'Can teleport any other player',
-	onAttackWin() {
-		//Need Board to be able to access players
+	onWinAbility: 'Can blink away',
+	onAttackWin: (player) => {
+			player.baseAttackRange += 1;
 	}
 };
