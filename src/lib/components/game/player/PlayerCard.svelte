@@ -66,10 +66,14 @@
 			<span>
 				{player.baseAttack}
 				{#if player.bonusAttack > 0}
-					+ {player.bonusAttack.toPrecision(2)} ({player.attack.toPrecision(2)})
+					+ {player.bonusAttack.toPrecision(2)}
 				{/if}
 				{#if player.attackMultiplier > 1}
 					* {player.attackMultiplier.toPrecision(2)}
+				{/if}
+
+				{#if player.bonusAttack > 0 || player.attackMultiplier > 1}
+					({player.attack.toPrecision(2)})
 				{/if}
 			</span>
 		</div>
@@ -82,6 +86,10 @@
 				{/if}
 				{#if player.defenseMultiplier > 1}
 					* {player.defenseMultiplier.toPrecision(2)}
+				{/if}
+
+				{#if player.bonusDefense > 0 || player.defenseMultiplier > 1}
+					({player.defense.toPrecision(2)})
 				{/if}
 			</span>
 		</div>
