@@ -3,16 +3,15 @@ import type { Item } from '../itemTypes';
 
 export const Halo: Item = {
 	name: 'Halo',
-	description: 'Gain +5 Movement',
-	type: 'helm',
-	baseCost: 3,
+	description: 'Negates the effects of the Shadow Realm - Consumed on use',
+	type: 'consumables',
+	baseCost: 10,
 	maxAmount: 1,
 	image: '/Items/HelmEquipables/Halo.svg',
 
-	onEquip: (player: Player) => {
-		player.bonusMovement += 5;
-	},
-	onUnequip: (player: Player) => {
-		player.bonusMovement -= 5;
+	onUse(player) {
+		player.inShadowRealm = false
 	}
+
+
 };
