@@ -10,9 +10,9 @@ export const Halo: Item = {
 	image: '/Items/HelmEquipables/Halo.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusMovement += 5;
+		player.addStatModifier('Halo', 'movement', 5);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusMovement -= 5;
+		player.removeStatModifier('Halo', 'movement');
 	}
 };

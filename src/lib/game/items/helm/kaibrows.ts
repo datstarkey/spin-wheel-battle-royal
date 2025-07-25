@@ -10,11 +10,11 @@ export const Kaibrows: Item = {
 	image: '/Items/HelmEquipables/Kaibrows.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusAttack += 15;
-		player.bonusDefense -= 5;
+		player.addStatModifier('Kaibrows', 'attack', 15);
+		player.addStatModifier('Kaibrows', 'defense', -5);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttack -= 15;
-		player.bonusDefense += 5;
+		player.removeStatModifier('Kaibrows', 'attack');
+		player.removeStatModifier('Kaibrows', 'defense');
 	}
 };

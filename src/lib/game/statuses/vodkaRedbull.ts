@@ -9,9 +9,9 @@ export const vodkaRedbull: StatusEffect = {
 	allowMultiple: false,
 
 	onApply(player) {
-		player.bonusMovement += 5;
+		player.addStatModifier('Vodka Redbull', 'movement', 5);
 	},
 	onRemove(player) {
-		player.bonusMovement -= 5;
+		player.removeStatModifier('Vodka Redbull', 'movement');
 	}
 };

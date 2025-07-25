@@ -9,9 +9,9 @@ export const Fireball: Item = {
 	baseCost: 3,
 	maxAmount: 1,
 	onEquip: (player: Player) => {
-		player.bonusAttackRange += 1;
+		player.addStatModifier('Fireball', 'attackRange', 1);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttackRange -= 1;
+		player.removeStatModifier('Fireball', 'attackRange');
 	}
 };

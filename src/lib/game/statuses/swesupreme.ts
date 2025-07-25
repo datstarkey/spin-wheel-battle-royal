@@ -11,12 +11,12 @@ export const sweSupreme: StatusEffect = {
 	onApply(player) {
 		player.attackMultipliers['swenergy'] = 1.5;
 		player.defenseMultipliers['swenergy'] = 1.5;
-		player.bonusMovement += 3;
+		player.addStatModifier('Swe Supreme', 'movement', 3);
 	},
 
 	onRemove(player) {
 		delete player.attackMultipliers['swenergy'];
 		delete player.defenseMultipliers['swenergy'];
-		player.bonusMovement -=3;
+		player.removeStatModifier('Swe Supreme', 'movement');
 	}
 };

@@ -9,9 +9,9 @@ export const jaegerShots: StatusEffect = {
 	allowMultiple: true,
 
 	onApply(player) {
-		player.bonusDefense += 10;
+		player.addStatModifier('Jager Shots', 'defense', 10);
 	},
 	onRemove(player) {
-		player.bonusDefense -= 10;
+		player.removeStatModifier('Jager Shots', 'defense');
 	}
 };

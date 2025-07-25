@@ -9,12 +9,12 @@ export const emotionalDamage: StatusEffect = {
 	allowMultiple: true,
 
 	onApply(player) {
-		player.bonusAttack -= 5
-		player.bonusDefense -= 5;
+		player.addStatModifier('Emotional Damage', 'attack', -5);
+		player.addStatModifier('Emotional Damage', 'defense', -5);
 	},
 
 	onRemove(player) {
-		player.bonusAttack += 5
-		player.bonusDefense += 5;
+		player.removeStatModifier('Emotional Damage', 'attack');
+		player.removeStatModifier('Emotional Damage', 'defense');
 	}
 };

@@ -10,9 +10,9 @@ export const GoFasterStripes: Item = {
 	image: '/Items/ChestEquipables/GoFasterStripes.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusMovement += 2;
+		player.addStatModifier('Go Faster Stripes', 'movement', 2);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusMovement -= 2;
+		player.removeStatModifier('Go Faster Stripes', 'movement');
 	}
 };

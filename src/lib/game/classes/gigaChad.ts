@@ -8,6 +8,7 @@ export const GigaChad: ClassBase = {
 	onWinAbility: 'Spin the Giga Chad wheel instead of the win and loss wheels',
 	attackRange: 1,
 	onAttackWin: (player) => {
+		// GigaChad permanently increases base attack
 		player.baseAttack += 3;
 	}
 };

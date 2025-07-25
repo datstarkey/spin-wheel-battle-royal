@@ -9,7 +9,7 @@ import {
 } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
-import items, { getItemByType, type AllItems } from '../items/itemTypes';
+import { getItemByType, type AllItems } from '../items/itemTypes';
 import { generateDamageTakenWheel } from '../wheels/damageTakenWheel';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
@@ -24,7 +24,7 @@ export class Player {
 		this.statuses = new PlayerStatuses(name);
 	}
 	private _name = $state<string>('');
-	public get name() {
+	public get name(): string {
 		return this._name;
 	}
 
@@ -32,6 +32,45 @@ export class Player {
 	statuses: PlayerStatuses;
 
 	resources: Record<string, number> = $state({});
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Stat Modifiers System
+	 */
+	// Track all stat modifiers by source (item name or status name)
+	private statModifiers = $state<{
+		attack: Record<string, number>;
+		defense: Record<string, number>;
+		movement: Record<string, number>;
+		attackRange: Record<string, number>;
+		hp: Record<string, number>;
+	}>({
+		attack: {},
+		defense: {},
+		movement: {},
+		attackRange: {},
+		hp: {}
+	});
+
+	// Add or update a stat modifier
+	addStatModifier(source: string, stat: keyof typeof this.statModifiers, value: number) {
+		this.statModifiers[stat][source] = value;
+		addAuditTrail(`${this.name} gains ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
+	}
+
+	// Remove a stat modifier
+	removeStatModifier(source: string, stat: keyof typeof this.statModifiers) {
+		const value = this.statModifiers[stat][source];
+		if (value !== undefined) {
+			delete this.statModifiers[stat][source];
+			addAuditTrail(`${this.name} loses ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
+		}
+	}
+
+	// Get total modifier for a stat
+	getTotalStatModifier(stat: keyof typeof this.statModifiers): number {
+		return Object.values(this.statModifiers[stat]).reduce((sum, value) => sum + value, 0);
+	}
 
 	private _inShadowRealm = $state(false);
 	public get inShadowRealm() {
@@ -56,12 +95,11 @@ export class Player {
 		}
 
 		if (this.classType == 'gambler') {
+			this._hp = value;
 			this._gold = value;
-			this._hp = this.gold;
 		} else {
 			this._hp = value;
 		}
-		this._hp = value;
 		if (this._hp < 0) this._hp = 0;
 		if (this._hp === 0) {
 			addAuditTrail(`${this.name} is dead!`);
@@ -105,15 +143,14 @@ export class Player {
 	private _baseMovement = $state(1);
 	private _bonusMovement = $state(0);
 	public get movement(): number {
-		if (this._bonusMovement < 0) return this._baseMovement;
-		return this._baseMovement + this._bonusMovement;
+		return Math.max(1, this._baseMovement + this._bonusMovement);
 	}
 	public get baseMovement(): number {
 		return this._baseMovement;
 	}
 
 	public get bonusMovement(): number {
-		return this._bonusMovement;
+		return this._bonusMovement + this.getTotalStatModifier('movement');
 	}
 
 	public set baseMovement(value: number) {
@@ -122,7 +159,6 @@ export class Player {
 		addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
 	}
 	public set bonusMovement(value: number) {
-		if (value < 0) value = 0;
 		this._bonusMovement = value;
 		addAuditTrail(`${this.name} movement is now ${this.movement}!`);
 	}
@@ -144,12 +180,11 @@ export class Player {
 		addAuditTrail(`${this.name} base attack range is now ${this.attackRange}!`);
 	}
 	public get bonusAttackRange(): number {
-		return this._bonusAttackRange;
+		return this._bonusAttackRange + this.getTotalStatModifier('attackRange');
 	}
 	public set bonusAttackRange(value: number) {
-		if (value < 0) value = 0;
 		this._bonusAttackRange = value;
-		addAuditTrail(`${this.name} bonus attack range is now ${this.attackRange}!`);
+		addAuditTrail(`${this.name} attack range is now ${this.attackRange}!`);
 	}
 	public get attackRange(): number {
 		return this._baseAttackRange + this._bonusAttackRange;
@@ -175,10 +210,9 @@ export class Player {
 
 	//Bonus
 	public get bonusAttack(): number {
-		return this._bonusAttack + this.brassKnucklesMultiplier;
+		return this._bonusAttack + this.getTotalStatModifier('attack');
 	}
 	public set bonusAttack(value: number) {
-		if (value < 0) value = 0;
 		this._bonusAttack = value;
 		addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
 	}
@@ -200,7 +234,7 @@ export class Player {
 	//Combine both as basic attack
 	public get attack(): number {
 		//Add brass knuckles multiplier after attack multipliers
-		return this.bonusAttack + this.baseAttack * this.attackMultiplier;
+		return (this.bonusAttack + this.baseAttack + this.brassKnucklesMultiplier) * this.attackMultiplier;
 	}
 
 	/**
@@ -224,14 +258,15 @@ export class Player {
 
 	//Bonus
 	public get bonusDefense(): number {
+		let bonus = this._bonusDefense + this.getTotalStatModifier('defense');
 		if (this.classType == 'gigachad') {
-			const gigaChadBonus = 0.3 * this._baseAttack;
-			return this._bonusDefense + gigaChadBonus;
+			// GigaChad gets 30% of base attack as defense
+			const gigaChadBonus = Math.floor(0.3 * this._baseAttack);
+			bonus += gigaChadBonus;
 		}
-		return this._bonusDefense;
+		return bonus;
 	}
 	public set bonusDefense(value: number) {
-		if (value < 0) value = 0;
 		this._bonusDefense = value;
 		addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
 	}
@@ -243,8 +278,7 @@ export class Player {
 	//Combine both when getting defense
 	public get defense(): number {
 		const value = this.bonusDefense > 0 ? this.bonusDefense + this.baseDefense : this.baseDefense;
-		const multiplier = this.defenseMultiplier;
-		return value * multiplier;
+		return value * this.defenseMultiplier;
 	}
 
 	/**
@@ -260,7 +294,7 @@ export class Player {
 		this._gold = value;
 		if (this._gold < 0) this._gold = 0;
 		if (this.classType == 'gambler') {
-			this.hp = this.gold;
+			this._hp = this._gold;
 		}
 		addAuditTrail(`${this.name} now has ${this.gold} gold!`);
 	}
@@ -271,6 +305,11 @@ export class Player {
 	 */
 
 	assignClass(classType: ClassType) {
+		// Remove previous class modifiers if any
+		if (this._class && this._class !== 'none') {
+			this.removeStatModifier(`Class: ${this.class.name}`, 'defense');
+		}
+		
 		this._class = classType;
 		this._hp = this.class.hp;
 		this._baseAttack = this.class.attack;
@@ -280,6 +319,12 @@ export class Player {
 
 		if (this.classType == 'gambler') {
 			this._hp = this.class.startingGold ?? 0;
+		}
+		
+		// Apply class-specific passive modifiers
+		if (this.classType == 'gigachad') {
+			// GigaChad's defense bonus is handled dynamically in the getter
+			// No need to add it to modifiers
 		}
 	}
 
@@ -310,7 +355,7 @@ export class Player {
 	assignItem(item: AllItems) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
-			toast.error(`${items} is not a valid item!`);
+			toast.error(`${item} is not a valid item!`);
 			return;
 		}
 
@@ -320,7 +365,7 @@ export class Player {
 	buyItem(item: AllItems) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
-			toast.error(`${items} is not a valid item!`);
+			toast.error(`${item} is not a valid item!`);
 			return;
 		}
 
@@ -351,8 +396,8 @@ export class Player {
 		this.statuses.onAttackWin(defendingPlayer);
 		this.gear.onAttackWin(defendingPlayer);
 		this.class.onAttackWin(this, defendingPlayer);
-		generateWinWheel(this.name);
-		generateDamageTakenWheel(defendingPlayer.name);
+		if (this.name) generateWinWheel(this.name);
+		if (defendingPlayer.name) generateDamageTakenWheel(defendingPlayer.name);
 	}
 
 	onAttackLose(defendingPlayer: Player) {
@@ -361,8 +406,8 @@ export class Player {
 		this.statuses.onAttackLose(defendingPlayer);
 		this.gear.onAttackLose(defendingPlayer);
 		this.class.onAttackLose?.(this, defendingPlayer);
-		generateLoseWheel(this.name);
-		generateDamageTakenWheel(this.name);
+		if (this.name) generateLoseWheel(this.name);
+		if (this.name) generateDamageTakenWheel(this.name);
 	}
 
 	onDefendWin(playerAttackingYou: Player) {
@@ -395,7 +440,7 @@ export class Player {
 		this.statuses.onTurnStart();
 		if (this.inShadowRealm) {
 			addAuditTrail(`${this.name} is in the Shadow Realm!`);
-			generateShadowRealmWheel(this.name);
+			if (this.name) generateShadowRealmWheel(this.name);
 		}
 	}
 
@@ -438,7 +483,8 @@ export class Player {
 			gold: this._gold,
 			resources: this.resources,
 			gear: this.gear.serialize(),
-			statuses: this.statuses.serialize()
+			statuses: this.statuses.serialize(),
+			statModifiers: this.statModifiers
 		};
 	}
 
@@ -461,6 +507,13 @@ export class Player {
 		player.defenseMultipliers = data.defenseMultiplier;
 		player._gold = data.gold;
 		player.resources = data.resources;
+		player.statModifiers = data.statModifiers || {
+			attack: {},
+			defense: {},
+			movement: {},
+			attackRange: {},
+			hp: {}
+		};
 		player.gear = PlayerGear.deserialize(data.gear);
 		player.statuses = PlayerStatuses.deserialize(data.statuses);
 		return player;

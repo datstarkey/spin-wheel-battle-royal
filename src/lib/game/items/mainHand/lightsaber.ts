@@ -10,9 +10,9 @@ export const Lightsaber: Item = {
 	image: '/Items/MainHandEquipables/Lightsaber.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusAttack += 15;
+		player.addStatModifier('Lightsaber', 'attack', 15);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttack -= 15;
+		player.removeStatModifier('Lightsaber', 'attack');
 	}
 } as const;

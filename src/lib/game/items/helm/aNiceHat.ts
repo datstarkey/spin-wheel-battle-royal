@@ -10,11 +10,11 @@ export const ANiceHat: Item = {
 	image: '/Items/HelmEquipables/ANiceHat.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusAttack += 5;
-		player.bonusDefense += 5;
+		player.addStatModifier('A Nice Hat', 'attack', 5);
+		player.addStatModifier('A Nice Hat', 'defense', 5);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttack -= 5;
-		player.bonusDefense -= 5;
+		player.removeStatModifier('A Nice Hat', 'attack');
+		player.removeStatModifier('A Nice Hat', 'defense');
 	}
 };

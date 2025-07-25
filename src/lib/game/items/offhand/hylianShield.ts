@@ -9,9 +9,9 @@ export const HylianShield: Item = {
 	image: '/Items/OffHandEquipables/HylianShield.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusDefense += 20;
+		player.addStatModifier('Hylian Shield', 'defense', 20);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusDefense -= 20;
+		player.removeStatModifier('Hylian Shield', 'defense');
 	}
 };

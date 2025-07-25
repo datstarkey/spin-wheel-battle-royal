@@ -10,9 +10,9 @@ export const Kevlar: Item = {
 	image: '/Items/ChestEquipables/KevlarVest.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusDefense += 15;
+		player.addStatModifier('Kevlar', 'defense', 15);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusDefense -= 15;
+		player.removeStatModifier('Kevlar', 'defense');
 	}
 };

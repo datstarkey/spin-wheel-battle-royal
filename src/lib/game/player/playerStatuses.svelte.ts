@@ -12,7 +12,11 @@ export class PlayerStatuses {
 	}
 
 	private get player(): Player {
-		return getPlayerByName(this._playerName) as Player;
+		const player = getPlayerByName(this._playerName);
+		if (!player) {
+			throw new Error(`Player ${this._playerName} not found`);
+		}
+		return player;
 	}
 
 	private _statuses: PlayerStatusEffect[] = $state([]);
@@ -70,14 +74,21 @@ export class PlayerStatuses {
 	}
 
 	onTurnEnd() {
+		const statusesToRemove: PlayerStatusEffect[] = [];
+		
 		this._statuses.forEach((s) => {
-			if (s.duration) {
+			if (s.duration !== undefined) {
 				s.duration -= 1;
-				if (s.duration! <= 0) {
-					s.status.onRemove?.(this.player);
-					this._statuses = this._statuses.filter((x) => x !== s);
+				if (s.duration <= 0) {
+					statusesToRemove.push(s);
 				}
 			}
+		});
+		
+		statusesToRemove.forEach((s) => {
+			addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
+			s.status.onRemove?.(this.player);
+			this._statuses = this._statuses.filter((x) => x !== s);
 		});
 	}
 
@@ -139,6 +150,8 @@ export class PlayerStatuses {
 			data.statuses?.map((statusData: { statusName: StatusType; duration: number }) => {
 				const status = new PlayerStatusEffect(statusData.statusName);
 				status.duration = statusData.duration;
+				// Trigger onApply callbacks
+				status.status.onApply?.(statuses.player);
 				return status;
 			}) ?? [];
 

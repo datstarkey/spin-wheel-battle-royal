@@ -18,7 +18,11 @@ export class PlayerGear {
 	}
 
 	private get player(): Player {
-		return getPlayerByName(this._playerName) as Player;
+		const player = getPlayerByName(this._playerName);
+		if (!player) {
+			throw new Error(`Player ${this._playerName} not found`);
+		}
+		return player;
 	}
 
 	private get gearItems(): Item[] {
@@ -146,15 +150,20 @@ export class PlayerGear {
 	}
 
 	deleteItem(key: ItemType, index?: number) {
-		if (key === 'consumables') {
-			if (index === undefined) {
-				this._consumables = [];
-			} else {
-				this._consumables.splice(index, 1);
-			}
-			return;
-		} else {
-			this.unequipItem(key);
+		switch (key) {
+			case 'consumables':
+				if (index === undefined) {
+					this._consumables = [];
+				} else {
+					this._consumables.splice(index, 1);
+				}
+				break;
+			case 'mainhand':
+			case 'offHand':
+			case 'helm':
+			case 'chest':
+				this.unequipItem(key);
+				break;
 		}
 	}
 
@@ -180,11 +189,17 @@ export class PlayerGear {
 	}
 
 	useConsumable(item: Consumables) {
+		const index = this._consumables.indexOf(item);
+		if (index === -1) {
+			toast.error('Consumable not found in inventory');
+			return;
+		}
+		
 		const actualItem = getItemByType(item);
 		actualItem?.onUse?.(this.player);
 
 		addAuditTrail(`${this.player.name} uses ${item}!`);
-		this.deleteItem('consumables', this._consumables.indexOf(item));
+		this._consumables.splice(index, 1);
 	}
 
 	/**
@@ -317,11 +332,22 @@ export class PlayerGear {
 
 	static deserialize(data: Record<string, any>): PlayerGear {
 		const gear = new PlayerGear(data.playerName);
-		gear._mainHand = data.mainHand;
-		gear._offHand = data.offHand;
-		gear._helm = data.helm;
-		gear._chest = data.chest;
-		gear._consumables = data.consumables;
+		gear._consumables = data.consumables || [];
+		
+		// Re-equip items to trigger onEquip callbacks
+		if (data.mainHand) {
+			gear.addMainHand(data.mainHand);
+		}
+		if (data.offHand) {
+			gear.addOffHand(data.offHand);
+		}
+		if (data.helm) {
+			gear.addHelm(data.helm);
+		}
+		if (data.chest) {
+			gear.addChest(data.chest);
+		}
+		
 		return gear;
 	}
 }

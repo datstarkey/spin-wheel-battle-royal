@@ -9,9 +9,9 @@ export const stellaArtois: StatusEffect = {
 	allowMultiple: false,
 
 	onApply(player) {
-		player.bonusAttack += 10;
+		player.addStatModifier('Stella Artois', 'attack', 10);
 	},
 	onRemove(player) {
-		player.bonusAttack -= 10;
+		player.removeStatModifier('Stella Artois', 'attack');
 	}
 };

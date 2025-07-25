@@ -10,11 +10,11 @@ export const BarbarianHarness: Item = {
 	image: '/Items/ChestEquipables/BarbarianHarness.svg',
 
 	onEquip: (player: Player) => {
-		player.bonusAttack += 20;
-		player.bonusDefense -= 10;
+		player.addStatModifier('Barbarian Harness', 'attack', 20);
+		player.addStatModifier('Barbarian Harness', 'defense', -10);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttack -= 20;
-		player.bonusDefense += 10;
+		player.removeStatModifier('Barbarian Harness', 'attack');
+		player.removeStatModifier('Barbarian Harness', 'defense');
 	}
 };
