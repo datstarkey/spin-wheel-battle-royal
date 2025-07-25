@@ -1,13 +1,16 @@
 import type { ClassType } from '../classes/classType';
 import type { Player } from '../player/player.svelte';
-import { SportsBra } from './chest/sportsBra';
 import { BarbarianHarness } from './chest/barbarianHarness';
 import { GoFasterStripes } from './chest/goFasterStripes';
 import { Kevlar } from './chest/kevlar';
+import { SportsBra } from './chest/sportsBra';
+import { Halo } from './consumables/halo';
 import { HealthPot } from './consumables/healthPot';
+import { JagerShots } from './consumables/jagerShots';
+import { stellaArtois } from './consumables/stellaArtois';
+import { vodkaRedbull } from './consumables/vodkaRedbull';
 import { ANiceHat } from './helm/aNiceHat';
 import { BeerGoggles } from './helm/beerGoggles';
-import { Halo } from './helm/halo';
 import { Kaibrows } from './helm/kaibrows';
 import { BrassKnucklesMH } from './mainHand/brassKnucklesMH';
 import { BrassKnucklesOH } from './mainHand/brassKnucklesOH';
@@ -15,9 +18,6 @@ import { Fireball } from './mainHand/fireball';
 import { Lightsaber } from './mainHand/lightsaber';
 import { HylianShield } from './offhand/hylianShield';
 import { Shiv } from './offhand/shiv';
-import { JagerShots } from './consumables/jagerShots';
-import { stellaArtois } from './consumables/stellaArtois';
-import { vodkaRedbull } from './consumables/vodkaRedbull';
 export interface Item {
 	name: string;
 	type: ItemType;
@@ -72,8 +72,8 @@ export const consumables = {
 	HealthPot: HealthPot,
 	JagerShots: JagerShots,
 	stellaArtois: stellaArtois,
-	vodkaRedbull: vodkaRedbull
-	
+	vodkaRedbull: vodkaRedbull,
+	halo: Halo
 };
 
 const items = {
