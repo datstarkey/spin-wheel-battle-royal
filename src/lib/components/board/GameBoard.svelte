@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BOARD_WIDTH, BOARD_HEIGHT, TILES } from '$lib/game/board/boardData';
+	import { BOARD_WIDTH, BOARD_HEIGHT, TILES, TREASURE_CHESTS } from '$lib/game/board/boardData';
 	import { gameBoard } from '$lib/game/board/board.svelte';
 	import type { Position, Tile } from '$lib/game/board/types';
 	import { positionsEqual } from '$lib/game/board/types';
@@ -9,6 +9,15 @@
 		moveCurrentPlayerTo
 	} from '$lib/stores/gameStore.svelte';
 	import PlayerToken from './PlayerToken.svelte';
+
+	// Check if a position has an unlooted treasure chest
+	function hasUnlootedTreasure(pos: Position): boolean {
+		const game = currentGame.value;
+		if (!game) return false;
+		const isTreasureTile = TREASURE_CHESTS.some((t) => t.x === pos.x && t.y === pos.y);
+		if (!isTreasureTile) return false;
+		return !game.isTreasureLooted(pos.x, pos.y);
+	}
 
 	interface Props {
 		tileSize?: number;
@@ -241,6 +250,7 @@
 				{@const isSelected =
 					gameBoard.selectedTile !== null &&
 					positionsEqual(gameBoard.selectedTile, tile.position)}
+				{@const hasTreasure = hasUnlootedTreasure(tile.position)}
 				<button
 					class="absolute box-border border border-transparent bg-transparent p-0 hover:border-white/50"
 					class:cursor-pointer={tile.walkable}
@@ -260,6 +270,21 @@
 						<div class="absolute inset-0 border-2 border-green-400/90 bg-green-400/30"></div>
 					{/if}
 				</button>
+				{#if hasTreasure}
+					<div
+						class="pointer-events-none absolute z-10 flex items-center justify-center"
+						style:left="{tile.position.x * tileSize}px"
+						style:top="{tile.position.y * tileSize}px"
+						style:width="{tileSize}px"
+						style:height="{tileSize}px"
+					>
+						<iconify-icon
+							icon="mdi:treasure-chest"
+							class="text-primary-400 drop-shadow-[0_0_4px_rgba(220,38,38,0.6)]"
+							width={Math.max(10, tileSize - 4)}
+						></iconify-icon>
+					</div>
+				{/if}
 				{#if players.length > 0}
 					<div
 						class="pointer-events-none absolute z-20 flex -translate-x-1/2 -translate-y-1/2 gap-0.5"
