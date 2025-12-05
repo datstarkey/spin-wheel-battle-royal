@@ -4,7 +4,7 @@ import {
 	getPlayerByName,
 	increaseShopCostModifier
 } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import type { Player } from '../player/player.svelte';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 import type { WheelBase } from './wheels';

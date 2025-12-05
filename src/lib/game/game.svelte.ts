@@ -1,6 +1,6 @@
 import { hasPlayerAttacked } from '$lib/components/game/AttackPlayer.svelte';
 import { addAuditTrail } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { AllItems } from './items/itemTypes';
 import { Player } from './player/player.svelte';

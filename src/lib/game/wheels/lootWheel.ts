@@ -1,6 +1,6 @@
 import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import { randomFromArray } from '$lib/utils/random';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import items from '../items/itemTypes';
 
 export function generateLootWheel(playerName: string, index: number = 1) {

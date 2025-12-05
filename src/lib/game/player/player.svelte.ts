@@ -7,7 +7,7 @@ import {
 	increaseShopConsumableCostModifier,
 	increaseShopCostModifier
 } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
 import type { SerializedPlayer } from '../serialization';

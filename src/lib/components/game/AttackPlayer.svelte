@@ -12,7 +12,7 @@
 <script lang="ts">
 	import type { Player } from '$lib/game/player/player.svelte';
 	import { addAuditTrail, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
-	import toast from 'svelte-french-toast';
+	import toast from '$lib/stores/toaster.svelte';
 	import Button from '../Button.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../wheel/types';
@@ -31,17 +31,22 @@
 		) || []
 	);
 
-	let defendingPlayer: Player | null = $state(null);
+	// Default to first available player, allow manual override via select
+	let selectedPlayerName = $state<string | null>(null);
+
+	let defendingPlayer = $derived.by(() => {
+		// If user selected a player, use that
+		if (selectedPlayerName) {
+			const selected = availableToAttack.find((p) => p.name === selectedPlayerName);
+			if (selected) return selected;
+		}
+		// Otherwise default to first available
+		return availableToAttack[0] ?? null;
+	});
 
 	let winningPlayer = $state<Player | null>();
 
 	let position = $derived(!showWheel ? 'translate-x-full' : 'translate-x-0');
-
-	$effect(() => {
-		if (availableToAttack.length > 0 && !defendingPlayer) {
-			defendingPlayer = availableToAttack[0];
-		}
-	});
 
 	let shopOpen = $state(false);
 
@@ -93,11 +98,7 @@
 
 	function defendingPlayerChanged(event: Event) {
 		const target = event.target as HTMLSelectElement;
-		const selectedPlayer = target.value;
-		const newDefendingPlayer = getPlayerByName(selectedPlayer);
-		if (newDefendingPlayer) {
-			defendingPlayer = newDefendingPlayer;
-		}
+		selectedPlayerName = target.value;
 	}
 </script>
 
@@ -111,31 +112,38 @@
 		onchange={defendingPlayerChanged}
 		placeholder="None"
 	>
-		{#each availableToAttack as item}
+		{#each availableToAttack as item (item.name)}
 			<option value={item.name}>{item.name}</option>
 		{/each}
 	</select>
 </label>
 
-<div class="flex w-full justify-center">
-	<div class="variant-filled-primary btn-group mx-auto mt-4">
-		<button
-			onclick={attackPlayer}
-			disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value == true}
-			>Attack</button
-		>
-		<button
-			onclick={() => (shopOpen = true)}
-			disabled={showWheel || shopOpen || player.classType == 'gambler' || player.inShadowRealm}
-		>
-			Shop</button
-		>
-		<button onclick={() => currentGame?.value?.finishTurn()} disabled={showWheel}>Finish</button>
-	</div>
+<div class="mx-auto mt-4 flex justify-center gap-2">
+	<button
+		class="rounded border border-primary-600 bg-primary-600 px-4 py-2 font-semibold text-white transition-all hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+		onclick={attackPlayer}
+		disabled={defendingPlayer === null || showWheel || hasPlayerAttacked.value == true}
+	>
+		Attack
+	</button>
+	<button
+		class="rounded border border-warning-600 bg-warning-600 px-4 py-2 font-semibold text-white transition-all hover:bg-warning-700 disabled:cursor-not-allowed disabled:opacity-50"
+		onclick={() => (shopOpen = true)}
+		disabled={showWheel || shopOpen || player.classType == 'gambler' || player.inShadowRealm}
+	>
+		Shop
+	</button>
+	<button
+		class="rounded border border-success-600 bg-success-600 px-4 py-2 font-semibold text-white transition-all hover:bg-success-700 disabled:cursor-not-allowed disabled:opacity-50"
+		onclick={() => currentGame?.value?.finishTurn()}
+		disabled={showWheel}
+	>
+		Finish
+	</button>
 </div>
 
 <div
-	class="bg-surface-100-800-token fixed bottom-0 right-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[550px] {position}"
+	class="bg-surface-50 dark:bg-surface-900 fixed top-0 right-0 bottom-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[550px] {position}"
 >
 	<div class="flex justify-end">
 		<Button icon="mdi:close" onclick={() => currentAttackWindow?.close()}></Button>
@@ -161,7 +169,7 @@
 					></SpinWheel>
 
 					<div
-						class="card variant-soft-surface mt-5 flex items-center justify-center gap-3 p-4 text-lg font-bold"
+						class="card preset-tonal-surface mt-5 flex items-center justify-center gap-3 p-4 text-lg font-bold"
 					>
 						<p class="text-primary-500">{player.name} | Attack | {player.attack}</p>
 						<p class="text-tertiary-500">VS</p>
@@ -172,7 +180,7 @@
 
 					{#if winningPlayer}
 						<div
-							class="card variant-soft-surface mt-5 flex items-center justify-center gap-3 p-4 text-lg font-bold"
+							class="card preset-tonal-surface mt-5 flex items-center justify-center gap-3 p-4 text-lg font-bold"
 						>
 							<p class="text-primary-500">{winningPlayer?.name} wins!</p>
 						</div>

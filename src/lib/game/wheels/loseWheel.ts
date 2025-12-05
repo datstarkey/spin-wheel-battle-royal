@@ -1,5 +1,5 @@
 import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';

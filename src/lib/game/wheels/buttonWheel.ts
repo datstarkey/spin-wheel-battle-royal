@@ -1,6 +1,6 @@
 import { hasPlayerAttacked } from '$lib/components/game/AttackPlayer.svelte';
 import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import { generateLootWheel } from './lootWheel';
 import type { WheelBase } from './wheels';
 

@@ -1,5 +1,5 @@
 import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
-import toast from 'svelte-french-toast';
+import toast from '$lib/stores/toaster.svelte';
 import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
 import items, {
 	getItemByType,
