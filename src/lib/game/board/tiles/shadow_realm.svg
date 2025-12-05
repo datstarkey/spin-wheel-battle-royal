@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <!-- Purple shadow realm tile -->
+  <rect width="10" height="10" fill="#430067"/>
+  <!-- Spooky swirl pattern -->
+  <circle cx="5" cy="5" r="3" fill="none" stroke="#6a00a3" stroke-width="0.8" opacity="0.6"/>
+  <circle cx="5" cy="5" r="1.5" fill="none" stroke="#6a00a3" stroke-width="0.5" opacity="0.8"/>
+  <!-- Corner wisps -->
+  <circle cx="2" cy="2" r="1" fill="#6a00a3" opacity="0.4"/>
+  <circle cx="8" cy="8" r="1" fill="#6a00a3" opacity="0.4"/>
+</svg>

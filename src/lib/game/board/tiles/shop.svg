@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <!-- Yellow shop tile -->
+  <rect width="10" height="10" fill="#FFFC40"/>
+  <!-- Coin/gold icon -->
+  <circle cx="5" cy="5" r="3" fill="#FFD541" stroke="#d4a500" stroke-width="0.5"/>
+  <text x="5" y="6.5" font-size="4" font-weight="bold" fill="#d4a500" text-anchor="middle">$</text>
+</svg>

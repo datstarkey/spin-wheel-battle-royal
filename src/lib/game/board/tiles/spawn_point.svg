@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <!-- Brown spawn point marker -->
+  <rect width="10" height="10" fill="#DBA463"/>
+  <!-- Inner highlight -->
+  <rect x="2" y="2" width="6" height="6" fill="#e8b87a" opacity="0.6"/>
+  <!-- Center dot -->
+  <circle cx="5" cy="5" r="2" fill="#c4914f"/>
+</svg>

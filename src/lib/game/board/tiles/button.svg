@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <!-- Red center button tile -->
+  <rect width="10" height="10" fill="#DF3E23"/>
+  <!-- Button base/shadow -->
+  <ellipse cx="5" cy="6" rx="3.5" ry="2" fill="#B4202A"/>
+  <!-- Button top -->
+  <ellipse cx="5" cy="5" rx="3.5" ry="2" fill="#ff5a3d"/>
+  <!-- Highlight -->
+  <ellipse cx="4" cy="4.5" rx="1.5" ry="0.8" fill="#ff8066" opacity="0.6"/>
+  <!-- Exclamation mark -->
+  <rect x="4.5" y="3" width="1" height="2" fill="#fff" opacity="0.9"/>
+  <circle cx="5" cy="6" r="0.5" fill="#fff" opacity="0.9"/>
+</svg>
