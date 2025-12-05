@@ -1,13 +1,15 @@
 import type { ClassType } from '../classes/classType';
 import type { Player } from '../player/player.svelte';
+import { actually } from './actually';
 import { archmage } from './archmage';
+import { emotionalDamage } from './emotionalDamage';
 import { jaegerShots } from './jagerShots';
 import { movementPot } from './movmentPot';
+import { overthinking } from './overthinking';
 import { runeOfPower } from './runeOfPower';
+import { stellaArtois } from './stellaArtois';
 import { sweSupreme } from './swesupreme';
 import { vodkaRedbull } from './vodkaRedbull';
-import { emotionalDamage } from './emotionalDamage';
-import { stellaArtois } from './stellaArtois';
 
 export interface StatusEffect {
 	name: string;
@@ -38,7 +40,9 @@ const statusEffects = {
 	EmotionalDamage: emotionalDamage,
 	StellaArtois: stellaArtois,
 	RuneOfPower: runeOfPower,
-	Archmage: archmage
+	Archmage: archmage,
+	Overthinking: overthinking,
+	Actually: actually
 };
 
 export default statusEffects;
