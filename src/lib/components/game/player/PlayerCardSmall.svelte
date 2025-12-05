@@ -191,10 +191,10 @@
 		<div class="p-4">
 			<!-- Action Bar -->
 			<div class="mb-4 flex items-center justify-between border-b border-surface-700/30 pb-3">
-				<div class="flex gap-1">
+				<div class="flex items-center gap-1">
 					<div class="relative">
 						<button
-							class="flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100"
+							class="flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100"
 							onclick={() => (wheelDropdownOpen = !wheelDropdownOpen)}
 							title="Add Wheel"
 						>

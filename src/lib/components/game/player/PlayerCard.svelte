@@ -9,6 +9,15 @@
 	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
 	import { generateWinWheel } from '$lib/game/wheels/winWheel';
 	import {
+		generateMinorSpellWheel,
+		generateMajorSpellWheel,
+		generateUltimateSpellWheel,
+		getMana,
+		canCastSpell,
+		MAX_MANA
+	} from '$lib/game/wheels/spellWheels';
+	import {
+		currentGame,
 		enterMovementMode,
 		exitMovementMode,
 		getHasMovedThisTurn,
@@ -292,7 +301,24 @@
 							>{amount}/10</span
 						>
 					</div>
-				{:else}
+				{:else if resource === 'Mana'}
+					<!-- Mana Bar for Magic Man -->
+					<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
+						<span class="text-surface-300 flex min-w-[50px] items-center gap-1 text-[0.65rem]">
+							<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
+							Mana
+						</span>
+						<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
+							<div
+								class="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-300 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+								style:width="{(amount / MAX_MANA) * 100}%"
+							></div>
+						</div>
+						<span class="text-violet-300 min-w-[45px] text-right text-[0.65rem] font-semibold"
+							>{amount}/{MAX_MANA}</span
+						>
+					</div>
+				{:else if resource !== 'RuneOfPowerTurns'}
 					<div class="mt-1 flex items-center gap-1.5 rounded-sm bg-black/20 px-2 py-1 text-xs">
 						<Icon icon="mdi:cube-outline" class="text-teal-400" />
 						<span>{resource}</span>
@@ -444,6 +470,67 @@
 					</button>
 				{/if}
 			</div>
+
+			<!-- Magic Man Spell Buttons -->
+			{#if player.classType === 'magicman'}
+				{@const mana = getMana(player)}
+				{@const hasFought = currentGame.value?.hasFought === true}
+				<div class="mb-3">
+					<div class="text-surface-400 mb-2 flex items-center gap-1.5 text-[0.6rem] font-semibold tracking-[0.15em] uppercase">
+						<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
+						<span>Cast Spell</span>
+						{#if hasFought}
+							<span class="text-error-400 ml-auto text-[0.55rem]">(Used Action)</span>
+						{/if}
+					</div>
+					<div class="grid grid-cols-3 gap-1.5">
+						<!-- Minor Spell (25 mana) -->
+						<button
+							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-500/20 to-violet-700/10 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+							disabled={!canCastSpell(player, 25) || hasFought}
+							onclick={() => {
+								generateMinorSpellWheel(player.name);
+								if (currentGame.value) currentGame.value.hasFought = true;
+							}}
+							title="Minor Spell - 25 Mana"
+						>
+							<Icon icon="mdi:star-outline" class="text-violet-400 text-lg" />
+							<span class="text-[0.6rem] font-bold text-violet-300">Minor</span>
+							<span class="text-[0.5rem] text-violet-400/70">25 MP</span>
+						</button>
+
+						<!-- Major Spell (50 mana) -->
+						<button
+							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-500/20 to-violet-700/10 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+							disabled={!canCastSpell(player, 50) || hasFought}
+							onclick={() => {
+								generateMajorSpellWheel(player.name);
+								if (currentGame.value) currentGame.value.hasFought = true;
+							}}
+							title="Major Spell - 50 Mana"
+						>
+							<Icon icon="mdi:star-half-full" class="text-violet-400 text-lg" />
+							<span class="text-[0.6rem] font-bold text-violet-300">Major</span>
+							<span class="text-[0.5rem] text-violet-400/70">50 MP</span>
+						</button>
+
+						<!-- Ultimate Spell (100 mana) -->
+						<button
+							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-600/30 to-violet-800/20 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/40 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] disabled:cursor-not-allowed disabled:opacity-40"
+							disabled={!canCastSpell(player, 100) || hasFought}
+							onclick={() => {
+								generateUltimateSpellWheel(player.name);
+								if (currentGame.value) currentGame.value.hasFought = true;
+							}}
+							title="Ultimate Spell - 100 Mana"
+						>
+							<Icon icon="mdi:star-shooting" class="text-violet-300 text-lg animate-pulse" />
+							<span class="text-[0.6rem] font-bold text-violet-200">Ultimate</span>
+							<span class="text-[0.5rem] text-violet-400/70">100 MP</span>
+						</button>
+					</div>
+				</div>
+			{/if}
 
 			<AttackPlayer bind:showWheel={isAttackWindowOpen} {player} />
 		</div>
