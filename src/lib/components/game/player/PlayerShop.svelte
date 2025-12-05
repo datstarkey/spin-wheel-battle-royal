@@ -52,12 +52,21 @@
 					<span class="text-surface-400 text-xs">Browse and purchase items</span>
 				</div>
 			</div>
-			<div
-				class="border-warning-500/30 from-warning-500/20 to-warning-400/10 flex items-center gap-2 rounded-sm border bg-gradient-to-br px-3 py-2"
-			>
-				<Icon icon="mdi:coin" class="text-warning-400" />
-				<span class="text-warning-300 text-lg font-bold">{player.gold}</span>
-				<span class="text-warning-500 text-xs font-semibold uppercase">Gold</span>
+			<div class="flex items-center gap-3">
+				<div
+					class="border-warning-500/30 from-warning-500/20 to-warning-400/10 flex items-center gap-2 rounded-sm border bg-gradient-to-br px-3 py-2"
+				>
+					<Icon icon="mdi:coin" class="text-warning-400" />
+					<span class="text-warning-300 text-lg font-bold">{player.gold}</span>
+					<span class="text-warning-500 text-xs font-semibold uppercase">Gold</span>
+				</div>
+				<button
+					onclick={() => (open = false)}
+					class="text-surface-300 hover:text-surface-100 hover:border-primary-500 flex h-10 w-10 items-center justify-center rounded-sm border border-white/10 bg-black/30 transition-all hover:bg-black/50"
+					title="Close Shop"
+				>
+					<Icon icon="mdi:close" class="text-xl" />
+				</button>
 			</div>
 		</div>
 	</div>
