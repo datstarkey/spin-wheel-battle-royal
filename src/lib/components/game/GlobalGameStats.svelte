@@ -136,7 +136,7 @@
 			</div>
 
 			<!-- Turn Actions -->
-			<div class="grid grid-cols-3 gap-3">
+			<div class="grid grid-cols-2 gap-3">
 				<div class="rounded border border-white/10 bg-black/20 p-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
@@ -182,6 +182,23 @@
 							onCheckedChange={(details) => (game.hasShopped = details.checked)}
 						>
 							<Switch.Control class="data-[state=checked]:bg-warning-500">
+								<Switch.Thumb />
+							</Switch.Control>
+							<Switch.HiddenInput />
+						</Switch>
+					</div>
+				</div>
+				<div class="rounded border border-white/10 bg-black/20 p-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<Icon icon="mdi:slot-machine" class="text-tertiary-400" />
+							<span class="text-surface-300 text-sm">Casino</span>
+						</div>
+						<Switch
+							checked={game.hasUsedCasino}
+							onCheckedChange={(details) => (game.hasUsedCasino = details.checked)}
+						>
+							<Switch.Control class="data-[state=checked]:bg-tertiary-500">
 								<Switch.Thumb />
 							</Switch.Control>
 							<Switch.HiddenInput />

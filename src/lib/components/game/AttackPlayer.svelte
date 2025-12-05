@@ -17,8 +17,10 @@
 		currentGame,
 		getPlayerByName,
 		isCurrentPlayerOnShop,
+		isCurrentPlayerOnCasino,
 		isPlayerInAttackRange
 	} from '$lib/stores/gameStore.svelte';
+	import { generateCasinoWheel, canGambleAtCasino, getCasinoEntryFee } from '$lib/game/wheels/casinoWheel';
 	import toast from '$lib/stores/toaster.svelte';
 	import Portal from '../Portal.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
@@ -44,6 +46,9 @@
 
 	// Check if player is on a shop tile
 	let canAccessShop = $derived(isCurrentPlayerOnShop());
+
+	// Check if player is on a casino tile
+	let canAccessCasino = $derived(isCurrentPlayerOnCasino());
 
 	// Default to first available player, allow manual override via select
 	let selectedPlayerName = $state<string | null>(null);
@@ -76,6 +81,9 @@
 			: 1
 	);
 	let isFavored = $derived(attackerWinChance > 50);
+
+	// Casino gambling check
+	let casinoCheck = $derived(canGambleAtCasino(player.name));
 
 	function attackPlayer() {
 		if (!defendingPlayer) {
@@ -131,6 +139,18 @@
 		const target = event.target as HTMLSelectElement;
 		selectedPlayerName = target.value;
 	}
+
+	function handleCasinoClick() {
+		if (!canAccessCasino) {
+			toast.error('Must be on a casino tile to gamble!');
+			return;
+		}
+		if (!casinoCheck.canGamble) {
+			toast.error(casinoCheck.reason || 'Cannot gamble');
+			return;
+		}
+		generateCasinoWheel(player.name);
+	}
 </script>
 
 <PlayerShop {player} bind:open={shopOpen} />
@@ -149,16 +169,17 @@
 	</select>
 </label>
 
-<div class="mx-auto mt-4 flex justify-center gap-2">
+<div class="mt-4 grid grid-cols-2 gap-2">
 	<button
-		class="border-primary-600 bg-primary-600 hover:bg-primary-700 rounded border px-4 py-2 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
+		class="border-primary-600 bg-primary-600 hover:bg-primary-700 flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
 		onclick={attackPlayer}
 		disabled={defendingPlayer === null || showWheel || currentGame.value?.hasFought === true}
 	>
+		<iconify-icon icon="mdi:sword-cross" width="16"></iconify-icon>
 		Attack
 	</button>
 	<button
-		class="border-warning-600 bg-warning-600 hover:bg-warning-700 rounded border px-4 py-2 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
+		class="border-warning-600 bg-warning-600 hover:bg-warning-700 flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
 		onclick={() => (shopOpen = true)}
 		disabled={showWheel ||
 			shopOpen ||
@@ -167,13 +188,24 @@
 			!canAccessShop}
 		title={!canAccessShop ? 'Must be on a shop tile to access the shop' : ''}
 	>
+		<iconify-icon icon="mdi:store" width="16"></iconify-icon>
 		Shop
 	</button>
 	<button
-		class="border-success-600 bg-success-600 hover:bg-success-700 rounded border px-4 py-2 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
+		class="flex items-center justify-center gap-2 rounded border border-tertiary-600 bg-tertiary-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-tertiary-700 disabled:cursor-not-allowed disabled:opacity-50"
+		onclick={handleCasinoClick}
+		disabled={showWheel || player.inShadowRealm || !canAccessCasino || !casinoCheck.canGamble}
+		title={!canAccessCasino ? 'Must be on a casino tile to gamble' : casinoCheck.reason || `Entry fee: ${getCasinoEntryFee()}g`}
+	>
+		<iconify-icon icon="mdi:slot-machine" width="16"></iconify-icon>
+		Casino
+	</button>
+	<button
+		class="border-success-600 bg-success-600 hover:bg-success-700 flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50"
 		onclick={() => currentGame?.value?.finishTurn()}
 		disabled={showWheel}
 	>
+		<iconify-icon icon="mdi:check-bold" width="16"></iconify-icon>
 		Finish
 	</button>
 </div>
