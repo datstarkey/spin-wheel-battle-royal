@@ -12,6 +12,24 @@ import { generateCasinoWheel } from '../wheels/casinoWheel';
 import { generateLootWheel } from '../wheels/lootWheel';
 import { addAuditTrail, currentGame } from '$lib/stores/gameStore.svelte';
 
+/**
+ * The 4 corner tiles around the center button that trigger the button wheel.
+ * These are the accessible tiles adjacent to the blocked center area.
+ */
+const BUTTON_TRIGGER_TILES: Position[] = [
+	{ x: 13, y: 13 },
+	{ x: 16, y: 13 },
+	{ x: 13, y: 16 },
+	{ x: 16, y: 16 }
+];
+
+/**
+ * Check if a position is one of the button trigger tiles
+ */
+function isButtonTriggerTile(pos: Position): boolean {
+	return BUTTON_TRIGGER_TILES.some((t) => t.x === pos.x && t.y === pos.y);
+}
+
 export interface TileActionResult {
 	/** Whether the action was handled */
 	handled: boolean;
@@ -30,6 +48,11 @@ export function executeTileAction(player: Player, position: Position): TileActio
 	const tile = getTileAt(position);
 	if (!tile) {
 		return { handled: false };
+	}
+
+	// Check for button trigger tiles (the 4 corners around the center)
+	if (isButtonTriggerTile(position)) {
+		return handleButtonTile(player);
 	}
 
 	switch (tile.type) {
@@ -76,8 +99,14 @@ function handleShopTile(player: Player): TileActionResult {
 
 /**
  * Handle landing on a shadow realm tile
+ * Shadeweaver is immune - they can freely enter/exit without becoming trapped
  */
 function handleShadowRealmTile(player: Player): TileActionResult {
+	// Shadeweaver is immune to shadow realm entrapment
+	if (player.classType === 'shadeweaver') {
+		return { handled: false };
+	}
+
 	if (!player.inShadowRealm) {
 		player.inShadowRealm = true;
 		addAuditTrail(`${player.name} has entered the Shadow Realm!`);

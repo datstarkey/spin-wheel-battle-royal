@@ -1,4 +1,4 @@
-import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
@@ -87,6 +87,7 @@ export function generateWinWheel(playerName: string) {
 				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
 					winner.inShadowRealm = true;
+					addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
 				});
 			}
 		}

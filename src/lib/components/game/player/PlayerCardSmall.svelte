@@ -49,7 +49,7 @@
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
-	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / 20) * 100)));
+	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100)));
 
 	// Get first letter for avatar
 	let avatarLetter = $derived(player.name.charAt(0).toUpperCase());

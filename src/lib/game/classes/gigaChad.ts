@@ -5,10 +5,16 @@ export const GigaChad: ClassBase = {
 	attack: 20,
 	defense: 5,
 	name: 'Giga Chad',
-	onWinAbility: 'Spin the Giga Chad wheel instead of the win and loss wheels',
+	description: 'An unstoppable force. Gets 30% of base attack as bonus defense.',
+	onWinAbility: 'Gain 3 attack permanently',
 	attackRange: 1,
-	onAttackWin: (player) => {
-		// GigaChad permanently increases base attack
+
+	// Passive: 30% of base attack becomes bonus defense
+	getBonusDefense(player) {
+		return Math.floor(0.3 * player.baseAttack);
+	},
+
+	onAttackWin(player, _defendingPlayer) {
 		player.baseAttack += 3;
 	}
 };

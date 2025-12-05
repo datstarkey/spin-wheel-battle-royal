@@ -149,6 +149,21 @@ export function getSpawnPointsForZone(zoneId: number): Position[] {
 }
 
 /**
+ * Get all spawn points from all zones
+ */
+export function getAllSpawnPoints(): Position[] {
+	return SPAWN_ZONES.flatMap((zone) => zone.spawnPoints);
+}
+
+/**
+ * Get a random spawn point from any zone
+ */
+export function getRandomSpawnPoint(): Position {
+	const allSpawnPoints = getAllSpawnPoints();
+	return allSpawnPoints[Math.floor(Math.random() * allSpawnPoints.length)];
+}
+
+/**
  * Get all outer teleporter positions (for teleporter destination selection)
  */
 export function getOuterTeleporters(): Position[] {

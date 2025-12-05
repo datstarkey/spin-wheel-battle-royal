@@ -1,4 +1,4 @@
-import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
@@ -30,10 +30,11 @@ export function generateLoseWheel(playerName: string) {
 			}
 		},
 		{
-			//3 TODO - add when shadow realm is implemented
+			//3
 			label: 'Go to the shadow realm',
 			onWin: () => {
 				player.inShadowRealm = true;
+				addAuditTrail(`${player.name} was sent to the Shadow Realm!`);
 			}
 		},
 		{
@@ -55,6 +56,7 @@ export function generateLoseWheel(playerName: string) {
 				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Gives ${globalHpValue} Hp To`, (winner) => {
 					let hpAmount = Math.min(player.hp, globalHpValue);
+					addAuditTrail(`${player.name} transfers ${hpAmount} HP to ${winner.name}`);
 					player.hp -= hpAmount;
 					winner.hp += hpAmount;
 				});
@@ -88,14 +90,16 @@ export function generateLoseWheel(playerName: string) {
 				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
 					winner.inShadowRealm = true;
+					addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
 				});
 			}
 		},
 		{
 			label: 'Emotional damage',
 			onWin: () => {
-					player.statuses.addStatus('EmotionalDamage');
-				}
+				player.statuses.addStatus('EmotionalDamage');
+				addAuditTrail(`${player.name} suffered Emotional Damage!`);
+			}
 		},
 	];
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);

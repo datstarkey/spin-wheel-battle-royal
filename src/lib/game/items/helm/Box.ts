@@ -7,7 +7,7 @@ export const Box: Item = {
 	type: 'helm',
 	baseCost: 3,
 	maxAmount: 1,
-	image: '/Items/HelmEquipables/Box.jpg',
+	image: '/Items/HelmEquipables/Box.svg',
 
 	onEquip: (player: Player) => {
 		player.addStatModifier('A Box', 'attack', -10);

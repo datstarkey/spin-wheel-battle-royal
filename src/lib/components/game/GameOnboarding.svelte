@@ -107,7 +107,7 @@
 	let playerCount = $derived(currentGame.value?.players?.length ?? 0);
 </script>
 
-<div class="w-full max-w-2xl">
+<div class="mx-auto w-full max-w-2xl">
 	<!-- Header -->
 	<div class="mb-8 text-center">
 		<h1 class="mb-2 text-3xl font-bold tracking-wider text-surface-100 uppercase">

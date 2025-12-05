@@ -23,6 +23,10 @@ export interface ClassBase {
 	onWinAbility: string;
 	attackRange: number;
 
+	// Passive stat bonuses - called when calculating stats
+	getBonusAttack?: (player: Player) => number;
+	getBonusDefense?: (player: Player) => number;
+
 	onAttackWin: (player: Player, defendingPlayer: Player) => void;
 	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
 	onDefendWin?: (player: Player, attackingPlayer: Player) => void;

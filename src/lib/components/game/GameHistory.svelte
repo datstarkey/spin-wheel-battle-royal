@@ -78,6 +78,29 @@
 				bgClass: 'bg-secondary-500/10 border-secondary-500/30'
 			};
 
+		// Damage tracking
+		if (lower.includes('took') && lower.includes('damage'))
+			return {
+				type: 'damage',
+				icon: '💥',
+				colorClass: 'text-error-400',
+				bgClass: 'bg-error-500/10 border-error-500/30'
+			};
+		if (lower.includes('healed') && lower.includes('hp'))
+			return {
+				type: 'heal',
+				icon: '💚',
+				colorClass: 'text-success-400',
+				bgClass: 'bg-success-500/10 border-success-500/30'
+			};
+		if (lower.includes('transfers') && lower.includes('hp'))
+			return {
+				type: 'hp-transfer',
+				icon: '💔',
+				colorClass: 'text-warning-400',
+				bgClass: 'bg-warning-500/10 border-warning-500/30'
+			};
+
 		// Shadow Realm events
 		if (lower.includes('shadow realm') || lower.includes('swaps places'))
 			return {

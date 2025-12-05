@@ -35,13 +35,19 @@
 	let { player, showWheel = $bindable(false) }: Props = $props();
 
 	let availableToAttack = $derived(
-		currentGame.value?.players.filter(
-			(p) =>
-				p.name !== player.name &&
-				player.hp > 0 &&
-				p.inShadowRealm == player.inShadowRealm &&
-				isPlayerInAttackRange(p.name)
-		) || []
+		currentGame.value?.players.filter((p) => {
+			if (p.name === player.name) return false;
+			if (player.hp <= 0) return false;
+			if (!isPlayerInAttackRange(p.name)) return false;
+
+			// Shadeweaver can attack anyone in the Shadow Realm from anywhere
+			if (player.classType === 'shadeweaver' && p.inShadowRealm) {
+				return true;
+			}
+
+			// Normal rule: must share shadow realm status
+			return p.inShadowRealm === player.inShadowRealm;
+		}) || []
 	);
 
 	// Check if player is on a shop tile
@@ -123,13 +129,14 @@
 		}
 
 		const won = player.name == winningPlayer.name;
+		const attackerOddsStr = attackerWinChance.toFixed(0);
 
 		if (won) {
-			addAuditTrail(`${player.name} beat ${defendingPlayer.name}!`);
+			addAuditTrail(`${player.name} (ATK ${player.attack}) beat ${defendingPlayer.name} (DEF ${defendingPlayer.defense}) [${attackerOddsStr}% odds]`);
 			player.onAttackWin(defendingPlayer);
 			defendingPlayer.onDefendWin(player);
 		} else {
-			addAuditTrail(`${player.name} lost to ${defendingPlayer.name}!`);
+			addAuditTrail(`${player.name} (ATK ${player.attack}) lost to ${defendingPlayer.name} (DEF ${defendingPlayer.defense}) [${attackerOddsStr}% odds]`);
 			player.onAttackLose(defendingPlayer);
 			defendingPlayer.onDefendLose(player);
 		}

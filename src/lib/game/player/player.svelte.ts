@@ -176,14 +176,21 @@ export class Player {
 	 * HP Stats
 	 */
 	private _hp = $state(0);
+	private _maxHp = $state(0);
+
 	public get hp(): number {
 		return this._hp;
+	}
+	public get maxHp(): number {
+		return this._maxHp;
 	}
 	public set hp(value: number) {
 		if (this.dead) {
 			toast.error("Can't change HP of dead player!");
 			return;
 		}
+
+		const oldHp = this._hp;
 
 		if (this.classType == 'gambler') {
 			this._hp = value;
@@ -192,16 +199,32 @@ export class Player {
 			this._hp = value;
 		}
 		if (this._hp < 0) this._hp = 0;
+
+		// Track max HP as highest value seen
+		if (this._hp > this._maxHp) {
+			this._maxHp = this._hp;
+		}
+
+		const delta = this._hp - oldHp;
+
 		if (this._hp === 0) {
-			addAuditTrail(`${this.name} is dead!`);
+			if (delta < 0) {
+				addAuditTrail(`${this.name} took ${Math.abs(delta)} damage and is dead!`);
+			} else {
+				addAuditTrail(`${this.name} is dead!`);
+			}
 			increaseGlobalHpReduction();
 			this.dead = true;
 
 			if (currentGame.value?.currentPlayer == this) {
 				currentGame.value?.finishTurn();
 			}
-		} else {
-			addAuditTrail(`${this.name} has ${this.hp} HP!`);
+		} else if (delta !== 0) {
+			if (delta > 0) {
+				addAuditTrail(`${this.name} healed ${delta} HP (${this._hp}/${this._maxHp})`);
+			} else {
+				addAuditTrail(`${this.name} took ${Math.abs(delta)} damage (${this._hp}/${this._maxHp} HP)`);
+			}
 		}
 	}
 
@@ -301,7 +324,12 @@ export class Player {
 
 	//Bonus
 	public get bonusAttack(): number {
-		return this._bonusAttack + this.getTotalStatModifier('attack');
+		let bonus = this._bonusAttack + this.getTotalStatModifier('attack');
+		// Add class-specific bonus attack if defined
+		if (this.class.getBonusAttack) {
+			bonus += this.class.getBonusAttack(this);
+		}
+		return bonus;
 	}
 	public set bonusAttack(value: number) {
 		this._bonusAttack = value;
@@ -350,10 +378,9 @@ export class Player {
 	//Bonus
 	public get bonusDefense(): number {
 		let bonus = this._bonusDefense + this.getTotalStatModifier('defense');
-		if (this.classType == 'gigachad') {
-			// GigaChad gets 30% of base attack as defense
-			const gigaChadBonus = Math.floor(0.3 * this._baseAttack);
-			bonus += gigaChadBonus;
+		// Add class-specific bonus defense if defined
+		if (this.class.getBonusDefense) {
+			bonus += this.class.getBonusDefense(this);
 		}
 		return bonus;
 	}
@@ -565,6 +592,7 @@ export class Player {
 		return {
 			name: this.name,
 			hp: this._hp,
+			maxHp: this._maxHp,
 			class: this._class,
 			dead: this.dead,
 			movement: this._baseMovement,
@@ -597,6 +625,7 @@ export class Player {
 	static deserialize(data: SerializedPlayer): Player {
 		const player = new Player(data.name);
 		player._hp = data.hp;
+		player._maxHp = data.maxHp ?? data.hp; // Fallback to current HP for backwards compatibility
 		player._class = data.class;
 		player.dead = data.dead;
 		player._baseMovement = data.movement;

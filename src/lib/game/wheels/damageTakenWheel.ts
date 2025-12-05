@@ -1,4 +1,4 @@
-import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addAuditTrail, addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import type { WheelBase } from './wheels';
 
@@ -81,6 +81,7 @@ export function generateDamageTakenWheel(playerName: string) {
 			onWin: () => {
 				player.hp -= Math.floor(globalHpValue * 20 * reductionPercentageInversion);
 				player.inShadowRealm = true;
+				addAuditTrail(`${player.name} was banished to the Shadow Realm!`);
 			}
 		}
 	];

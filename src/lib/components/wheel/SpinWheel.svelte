@@ -1,7 +1,7 @@
 <script module lang="ts">
-	export const quickMode = $state({
-		value: false
-	});
+	import { localStorageStore } from '$lib/stores/localStorageStore.svelte';
+
+	export const quickMode = localStorageStore<boolean>('wheel-quick-mode', false);
 </script>
 
 <script lang="ts">

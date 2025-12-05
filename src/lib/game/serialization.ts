@@ -100,6 +100,7 @@ export interface SerializedPlayerStatuses {
 export interface SerializedPlayer {
 	name: string;
 	hp: number;
+	maxHp: number;
 	class: ClassType;
 	dead: boolean;
 	movement: number;
@@ -253,9 +254,14 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 		position = { x: data.position.x, y: data.position.y };
 	}
 
+	// For maxHp, default to hp if not present (backwards compatibility)
+	const hp = isNumber(data.hp) ? data.hp : 0;
+	const maxHp = isNumber(data.maxHp) ? data.maxHp : hp;
+
 	return {
 		name: data.name,
-		hp: isNumber(data.hp) ? data.hp : 0,
+		hp,
+		maxHp,
 		class: classType,
 		dead: isBoolean(data.dead) ? data.dead : false,
 		movement: isNumber(data.movement) ? data.movement : 1,

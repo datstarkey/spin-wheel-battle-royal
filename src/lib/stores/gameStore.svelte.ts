@@ -67,8 +67,9 @@ export function enterMovementMode() {
 	_isMovementMode = true;
 
 	// Calculate and highlight valid moves based on player's movement stat
-	// Players not in shadow realm cannot move onto shadow realm tiles
-	const excludeShadowRealm = !currentPlayer.inShadowRealm;
+	// Players not in shadow realm cannot move onto shadow realm tiles (except Shadeweaver)
+	const canEnterShadowRealm = currentPlayer.inShadowRealm || currentPlayer.classType === 'shadeweaver';
+	const excludeShadowRealm = !canEnterShadowRealm;
 	const validMoves = getValidMoves(currentPlayer.position, currentPlayer.movement, excludeShadowRealm);
 	gameBoard.highlightedMoves = validMoves;
 }
@@ -167,6 +168,7 @@ export function getDistanceBetweenPlayers(player1Name: string, player2Name: stri
 /**
  * Check if a target player is within attack range of the current player
  * In the Shadow Realm, any player can attack any other player (no range limit)
+ * Shadeweaver can attack anyone in the Shadow Realm from anywhere (infinite range)
  */
 export function isPlayerInAttackRange(targetName: string): boolean {
 	if (!currentGame.value) return false;
@@ -175,6 +177,12 @@ export function isPlayerInAttackRange(targetName: string): boolean {
 
 	// In the Shadow Realm, any player can attack any other player
 	if (attacker.inShadowRealm) {
+		return true;
+	}
+
+	// Shadeweaver can attack anyone in the Shadow Realm from anywhere
+	const target = getPlayerByName(targetName);
+	if (attacker.classType === 'shadeweaver' && target?.inShadowRealm) {
 		return true;
 	}
 

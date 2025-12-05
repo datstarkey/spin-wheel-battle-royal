@@ -67,7 +67,7 @@
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
-	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / 20) * 100)));
+	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100)));
 </script>
 
 <div
@@ -409,7 +409,7 @@
 			<div class="flex flex-wrap gap-1">
 				{#each player.statuses.statuses as status (status.status.name)}
 					<div
-						class="border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5"
+						class="group relative border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 cursor-help"
 					>
 						<span class="text-warning-400 text-[0.6rem]">{status.status.name}</span>
 						{#if status.duration && status.duration > 0}
@@ -420,6 +420,22 @@
 						{:else}
 							<span class="text-tertiary-400 text-[0.6rem]">∞</span>
 						{/if}
+						<!-- Tooltip -->
+						<div
+							class="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+						>
+							<div
+								class="bg-surface-950 border-surface-500/50 max-w-48 rounded border px-2 py-1.5 text-center shadow-lg"
+							>
+								<p class="text-surface-100 text-[0.65rem] leading-relaxed">
+									{status.status.description}
+								</p>
+							</div>
+							<!-- Arrow -->
+							<div
+								class="border-surface-950 absolute left-1/2 -translate-x-1/2 border-4 border-b-0 border-l-transparent border-r-transparent"
+							></div>
+						</div>
 					</div>
 				{/each}
 			</div>
