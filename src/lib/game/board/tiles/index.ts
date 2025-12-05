@@ -31,7 +31,8 @@ export const TILE_SVGS: Record<TileType, string> = {
 	shadow_realm: shadowRealmSvg,
 	teleporter_outer: teleporterOuterSvg,
 	teleporter_inner: teleporterInnerSvg,
-	button: buttonSvg
+	button: buttonSvg,
+	treasure: pathSvg // Uses path appearance with yellow border
 };
 
 /**
@@ -54,7 +55,8 @@ export const TILE_NAMES: Record<TileType, string> = {
 	shadow_realm: 'Shadow Realm',
 	teleporter_outer: 'Teleporter',
 	teleporter_inner: 'Teleporter (Exit)',
-	button: 'The Button'
+	button: 'The Button',
+	treasure: 'Treasure Chest'
 };
 
 /**
@@ -70,5 +72,6 @@ export const TILE_DESCRIPTIONS: Record<TileType, string> = {
 	shadow_realm: 'Enter the Shadow Realm...',
 	teleporter_outer: 'Teleport to another location',
 	teleporter_inner: 'Teleporter exit point only',
-	button: 'Press for a special reward!'
+	button: 'Press for a special reward!',
+	treasure: 'Open for random loot!'
 };

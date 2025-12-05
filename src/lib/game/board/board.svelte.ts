@@ -62,8 +62,15 @@ export function canMoveBetween(from: Position, to: Position): boolean {
 /**
  * Calculate all valid move positions from a starting position within a given range.
  * Uses BFS (flood fill) respecting tile connections.
+ * @param startPos - Starting position
+ * @param range - Maximum movement range
+ * @param excludeShadowRealm - If true, shadow realm tiles are excluded from valid moves
  */
-export function getValidMoves(startPos: Position, range: number): Position[] {
+export function getValidMoves(
+	startPos: Position,
+	range: number,
+	excludeShadowRealm: boolean = false
+): Position[] {
 	const validMoves: Position[] = [];
 	const visited = new SvelteSet<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
@@ -94,6 +101,12 @@ export function getValidMoves(startPos: Position, range: number): Position[] {
 			const key = posKey(nextPos);
 
 			if (!visited.has(key) && isWalkable(nextPos)) {
+				// Skip shadow realm tiles if excluded
+				const nextTile = getTileAt(nextPos);
+				if (excludeShadowRealm && nextTile?.type === 'shadow_realm') {
+					continue;
+				}
+
 				visited.add(key);
 				queue.push({ pos: nextPos, distance: current.distance + 1 });
 			}

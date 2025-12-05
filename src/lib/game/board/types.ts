@@ -1,7 +1,8 @@
 /**
  * Gameboard Type Definitions
  *
- * The board is a 48x48 tile grid parsed from the original Map.svg
+ * The board is a 24x24 logical tile grid parsed from the 480x480 Map.svg
+ * Each logical tile = 20x20 pixels (2x2 visual tiles of 10x10 each)
  */
 
 export type TileType =
@@ -14,13 +15,14 @@ export type TileType =
 	| 'shadow_realm' // Purple - sets player inShadowRealm
 	| 'teleporter_outer' // Blue/purple - outer teleporters (entry/exit)
 	| 'teleporter_inner' // Blue/purple - center teleporter (exit only)
-	| 'button'; // Red center - triggers button wheel
+	| 'button' // Red center - triggers button wheel
+	| 'treasure'; // Blue with yellow outline - treasure chest
 
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
 export interface Position {
-	x: number; // Column (0-47)
-	y: number; // Row (0-47)
+	x: number; // Column (0-23)
+	y: number; // Row (0-23)
 }
 
 export interface Tile {
@@ -69,28 +71,31 @@ export interface BoardConfig {
 	shadowRealmTiles: Position[];
 	/** Center button position */
 	buttonTile: Position;
+	/** Treasure chest positions */
+	treasureChests: Position[];
 }
 
 /**
  * Color hex codes from the original SVG mapped to tile types
+ * Note: Uses lowercase hex codes for comparison
  */
 export const COLOR_TO_TILE_TYPE: Record<string, TileType> = {
 	'#000000': 'blocked',
-	'#249FDE': 'path', // Blue paths
-	'#060608': 'path', // Path shadows (treat as path)
-	'#DCDCDC': 'spawn_zone', // White corner areas
-	'#DAE0EA': 'spawn_zone', // Light gray (also spawn zone)
+	'#249fde': 'path', // Blue paths
+	'#060608': 'blocked', // Path shadows - walls/dividers
+	'#dcdcdc': 'spawn_zone', // White corner areas
+	'#dae0ea': 'spawn_zone', // Light gray spawn
 	'#430067': 'shadow_realm', // Purple
-	'#59C135': 'spawn_entry', // Green
-	'#DBA463': 'spawn_point', // Brown/tan
-	'#FFFC40': 'shop', // Yellow
-	'#FFD541': 'shop', // Also yellow (variation)
-	'#285CC4': 'teleporter_outer', // Blue teleporter
-	'#DF3E23': 'button', // Red center
-	'#B4202A': 'button', // Red shadow (also button)
-	'#FA6A0A': 'path', // Orange arrows near center (walkable)
-	'#8B93AF': 'path', // Gray details (walkable)
-	'#FFFFFF': 'spawn_zone' // White details in spawn
+	'#59c135': 'spawn_entry', // Green
+	'#dba463': 'spawn_point', // Brown/tan
+	'#fffc40': 'shop', // Yellow
+	'#ffd541': 'shop', // Also yellow
+	'#285cc4': 'teleporter_outer', // Blue teleporter
+	'#df3e23': 'button', // Red center
+	'#b4202a': 'button', // Red shadow
+	'#fa6a0a': 'path', // Orange arrows near center
+	'#8b93af': 'blocked', // Gray details - structure
+	'#ffffff': 'spawn_zone' // White details
 };
 
 /**

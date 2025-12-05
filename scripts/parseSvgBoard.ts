@@ -2,6 +2,9 @@
  * SVG Board Parser
  *
  * Parses the Map.svg file and generates board data for the game.
+ * Uses 10:1 pixel sampling - each 10x10 pixel region becomes 1 game tile.
+ * This gives us a 48x48 tile grid from the 480x480 SVG.
+ *
  * Run with: npx tsx scripts/parseSvgBoard.ts
  */
 
@@ -23,7 +26,8 @@ type TileType =
 	| 'shadow_realm'
 	| 'teleporter_outer'
 	| 'teleporter_inner'
-	| 'button';
+	| 'button'
+	| 'treasure';
 
 type Direction = 'north' | 'south' | 'east' | 'west';
 
@@ -42,24 +46,45 @@ interface Tile {
 }
 
 // Color mapping - maps hex colors to tile types
+// Using lowercase for comparison
 const COLOR_TO_TILE_TYPE: Record<string, TileType> = {
 	'#000000': 'blocked',
-	'#249fde': 'path',
-	'#060608': 'path', // Path shadows
-	'#dcdcdc': 'spawn_zone',
-	'#dae0ea': 'spawn_zone',
-	'#430067': 'shadow_realm',
-	'#59c135': 'spawn_entry',
-	'#dba463': 'spawn_point',
-	'#fffc40': 'shop',
-	'#ffd541': 'shop',
-	'#285cc4': 'teleporter_outer', // Will need manual adjustment for inner
-	'#df3e23': 'button',
-	'#b4202a': 'button',
-	'#fa6a0a': 'path', // Orange arrows
-	'#8b93af': 'path', // Gray details
-	'#ffffff': 'spawn_zone'
+	'#249fde': 'path', // Blue paths
+	'#060608': 'blocked', // Path shadows/borders - dark borders are walls
+	'#dcdcdc': 'blocked', // White corner areas - blocked for now
+	'#dae0ea': 'blocked', // Light gray - blocked for now
+	'#430067': 'shadow_realm', // Purple
+	'#59c135': 'spawn_entry', // Green
+	'#dba463': 'spawn_point', // Brown/tan
+	'#fffc40': 'shop', // Yellow
+	'#ffd541': 'shop', // Also yellow
+	'#285cc4': 'teleporter_outer', // Blue teleporter
+	'#df3e23': 'button', // Red center
+	'#b4202a': 'button', // Red shadow
+	'#fa6a0a': 'path', // Orange arrows near center
+	'#8b93af': 'blocked', // Gray details - structural
+	'#ffffff': 'blocked' // White details - blocked for now
 };
+
+// Colors that indicate a WALL/BARRIER (blocks connections)
+const WALL_COLORS = [
+	'#000000', // Pure black
+	'#060608', // Dark path borders
+];
+
+// Colors that are walkable for path connection purposes
+const PATH_COLORS = [
+	'#249fde', // Blue paths
+	'#430067', // Purple shadow realm
+	'#59c135', // Green spawn entry
+	'#dba463', // Brown spawn point
+	'#fffc40', // Yellow shop
+	'#ffd541', // Yellow shop alt
+	'#285cc4', // Blue teleporter
+	'#df3e23', // Red button
+	'#b4202a', // Red button shadow
+	'#fa6a0a', // Orange arrows
+];
 
 // Tiles that players can walk on
 const WALKABLE_TYPES: TileType[] = [
@@ -71,25 +96,32 @@ const WALKABLE_TYPES: TileType[] = [
 	'shadow_realm',
 	'teleporter_outer',
 	'teleporter_inner',
-	'button'
+	'button',
+	'treasure'
 ];
 
-// SVG dimensions
+// Yellow colors that indicate treasure chest borders
+const YELLOW_COLORS = ['#fffc40', '#ffd541'];
+
+// SVG is 480x480 pixels
+// Each "logical tile" (game tile) is 16x16 pixels
+// This gives us a 30x30 logical tile grid for gameplay
+const PIXELS_PER_LOGICAL_TILE = 16;
 const SVG_WIDTH = 480;
 const SVG_HEIGHT = 480;
-const TILE_SIZE = 10; // Each game tile = 10x10 pixels
-const BOARD_WIDTH = SVG_WIDTH / TILE_SIZE; // 48
-const BOARD_HEIGHT = SVG_HEIGHT / TILE_SIZE; // 48
+const BOARD_WIDTH = SVG_WIDTH / PIXELS_PER_LOGICAL_TILE; // 30
+const BOARD_HEIGHT = SVG_HEIGHT / PIXELS_PER_LOGICAL_TILE; // 30
 
 /**
- * Parse the SVG and extract pixel colors
+ * Parse the SVG and extract all pixel colors into a map
  */
 function parseSvg(svgPath: string): Map<string, string> {
 	const content = readFileSync(svgPath, 'utf-8');
 	const pixelColors = new Map<string, string>();
 
 	// Match all rect elements: <rect x="X" y="Y" width="1" height="1" fill="#XXXXXX" />
-	const rectRegex = /<rect\s+x="(\d+)"\s+y="(\d+)"\s+width="1"\s+height="1"\s+fill="(#[0-9a-fA-F]{6})"\s*\/>/g;
+	const rectRegex =
+		/<rect\s+x="(\d+)"\s+y="(\d+)"\s+width="1"\s+height="1"\s+fill="(#[0-9a-fA-F]{6})"\s*\/>/g;
 
 	let match;
 	while ((match = rectRegex.exec(content)) !== null) {
@@ -104,57 +136,108 @@ function parseSvg(svgPath: string): Map<string, string> {
 }
 
 /**
- * Sample the dominant color for a tile (10x10 pixel area)
+ * Determine the dominant tile type for a 16x16 pixel region (logical tile)
+ * by counting occurrences of each tile type
  */
-function getTileColor(pixelColors: Map<string, string>, tileX: number, tileY: number): string {
-	const colorCounts = new Map<string, number>();
+function getDominantTileType(
+	pixelColors: Map<string, string>,
+	tileX: number,
+	tileY: number
+): TileType {
+	const typeCounts = new Map<TileType, number>();
+	let hasYellowBorder = false;
+	let hasPathPixels = false;
 
-	// Sample all pixels in the 10x10 area
-	for (let py = 0; py < TILE_SIZE; py++) {
-		for (let px = 0; px < TILE_SIZE; px++) {
-			const pixelX = tileX * TILE_SIZE + px;
-			const pixelY = tileY * TILE_SIZE + py;
-			const color = pixelColors.get(`${pixelX},${pixelY}`) || '#000000';
+	// Sample all pixels in the 16x16 region
+	const startX = tileX * PIXELS_PER_LOGICAL_TILE;
+	const startY = tileY * PIXELS_PER_LOGICAL_TILE;
 
-			colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+	for (let py = 0; py < PIXELS_PER_LOGICAL_TILE; py++) {
+		for (let px = 0; px < PIXELS_PER_LOGICAL_TILE; px++) {
+			const color = pixelColors.get(`${startX + px},${startY + py}`) || '#000000';
+			const tileType = COLOR_TO_TILE_TYPE[color] || 'blocked';
+			typeCounts.set(tileType, (typeCounts.get(tileType) || 0) + 1);
+
+			// Check for yellow border pixels (treasure chest indicator)
+			if (YELLOW_COLORS.includes(color)) {
+				hasYellowBorder = true;
+			}
+			// Check for blue path pixels
+			if (color === '#249fde') {
+				hasPathPixels = true;
+			}
 		}
 	}
 
-	// Find the most common non-black color (unless all black)
-	let dominantColor = '#000000';
+	// Total pixels in region
+	const totalPixels = PIXELS_PER_LOGICAL_TILE * PIXELS_PER_LOGICAL_TILE; // 256
+
+	// Special case: if tile has both path pixels and yellow border, it's a treasure chest
+	if (hasPathPixels && hasYellowBorder) {
+		return 'treasure';
+	}
+
+	// Find the most common walkable type, or blocked if mostly blocked
+	let dominant: TileType = 'blocked';
 	let maxCount = 0;
 
-	for (const [color, count] of colorCounts) {
-		// Prioritize non-black colors
-		if (color !== '#000000' && count > maxCount) {
-			dominantColor = color;
-			maxCount = count;
+	// Priority order for special tiles (they should win even with fewer pixels)
+	const priorityTypes: TileType[] = [
+		'button',
+		'teleporter_outer',
+		'shop',
+		'shadow_realm',
+		'spawn_entry',
+		'spawn_point',
+		'spawn_zone',
+		'path'
+	];
+
+	// First check for special types with priority
+	for (const type of priorityTypes) {
+		const count = typeCounts.get(type) || 0;
+		// If a special type has at least 15% coverage, it wins
+		if (count >= totalPixels * 0.15) {
+			return type;
 		}
 	}
 
-	// If very few non-black pixels, treat as blocked
-	if (maxCount < 20) {
-		// Less than 20% coverage
-		dominantColor = '#000000';
+	// Otherwise find the most common type
+	for (const [type, count] of typeCounts) {
+		if (count > maxCount) {
+			maxCount = count;
+			dominant = type;
+		}
 	}
 
-	return dominantColor;
+	return dominant;
 }
 
+
 /**
- * Determine tile type from color
+ * Check if a pixel color is a wall/barrier
  */
-function getTileType(color: string): TileType {
-	return COLOR_TO_TILE_TYPE[color] || 'blocked';
+function isWallColor(color: string): boolean {
+	return WALL_COLORS.includes(color);
 }
 
 /**
- * Calculate connections for a tile based on neighbors
+ * Check if a pixel color represents a walkable path
+ */
+function isPathColor(color: string): boolean {
+	return PATH_COLORS.includes(color);
+}
+
+/**
+ * Calculate connections for a tile by checking edges for walls
+ * Logic: If there's a wall (black) on the edge, no connection. Otherwise check if neighbor is walkable.
  */
 function calculateConnections(
+	pixelColors: Map<string, string>,
 	tiles: (TileType | null)[][],
 	x: number,
-	y: number
+	y: number,
+	debug: boolean = false
 ): Direction[] {
 	const connections: Direction[] = [];
 	const currentType = tiles[y]?.[x];
@@ -163,24 +246,130 @@ function calculateConnections(
 		return [];
 	}
 
-	// Check each direction
-	const directions: { dir: Direction; dx: number; dy: number }[] = [
-		{ dir: 'north', dx: 0, dy: -1 },
-		{ dir: 'south', dx: 0, dy: 1 },
-		{ dir: 'east', dx: 1, dy: 0 },
-		{ dir: 'west', dx: -1, dy: 0 }
-	];
+	const startX = x * PIXELS_PER_LOGICAL_TILE;
+	const startY = y * PIXELS_PER_LOGICAL_TILE;
 
-	for (const { dir, dx, dy } of directions) {
-		const nx = x + dx;
-		const ny = y + dy;
+	// Check the center 6 pixels of each edge (pixels 5-10 of 16)
+	const CENTER_START = 5;
+	const CENTER_END = 11;
 
-		if (nx >= 0 && nx < BOARD_WIDTH && ny >= 0 && ny < BOARD_HEIGHT) {
-			const neighborType = tiles[ny]?.[nx];
-			if (neighborType && WALKABLE_TYPES.includes(neighborType)) {
-				connections.push(dir);
+	// Helper to check if an edge has NO walls (allows connection)
+	// Returns true if the edge is clear (no wall pixels), false if blocked
+	function checkEdgeClear(coords: { x: number; y: number }[], label: string): boolean {
+		let wallCount = 0;
+		let pathCount = 0;
+		const colors: string[] = [];
+		for (const coord of coords) {
+			const color = pixelColors.get(`${coord.x},${coord.y}`) || '#000000';
+			colors.push(color);
+			if (isWallColor(color)) {
+				wallCount++;
+			}
+			if (isPathColor(color)) {
+				pathCount++;
 			}
 		}
+		if (debug) {
+			console.log(`    ${label}: ${colors.join(', ')} -> ${wallCount} walls, ${pathCount} path`);
+		}
+		// Edge is clear if there are no wall pixels AND at least some path pixels
+		return wallCount === 0 && pathCount > 0;
+	}
+
+	// Check north edge - need clear path on BOTH our top edge AND neighbor's bottom edge
+	const northTile = tiles[y - 1]?.[x];
+	if (y > 0 && northTile && WALKABLE_TYPES.includes(northTile)) {
+		const neighborStartY = (y - 1) * PIXELS_PER_LOGICAL_TILE;
+
+		// Our top edge (y = startY)
+		const ourEdge = [];
+		for (let px = CENTER_START; px < CENTER_END; px++) {
+			ourEdge.push({ x: startX + px, y: startY });
+		}
+
+		// Neighbor's bottom edge (y = neighborStartY + 15)
+		const neighborEdge = [];
+		for (let px = CENTER_START; px < CENTER_END; px++) {
+			neighborEdge.push({ x: startX + px, y: neighborStartY + PIXELS_PER_LOGICAL_TILE - 1 });
+		}
+
+		if (debug) console.log(`  Checking NORTH (${x}, ${y-1}):`);
+		const ourOk = checkEdgeClear(ourEdge, 'Our top edge');
+		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor bottom edge');
+
+		if (ourOk && neighborOk) connections.push('north');
+	}
+
+	// Check south edge - need clear path on BOTH our bottom edge AND neighbor's top edge
+	const southTile = tiles[y + 1]?.[x];
+	if (y < BOARD_HEIGHT - 1 && southTile && WALKABLE_TYPES.includes(southTile)) {
+		const neighborStartY = (y + 1) * PIXELS_PER_LOGICAL_TILE;
+
+		// Our bottom edge (y = startY + 15)
+		const ourEdge = [];
+		for (let px = CENTER_START; px < CENTER_END; px++) {
+			ourEdge.push({ x: startX + px, y: startY + PIXELS_PER_LOGICAL_TILE - 1 });
+		}
+
+		// Neighbor's top edge (y = neighborStartY)
+		const neighborEdge = [];
+		for (let px = CENTER_START; px < CENTER_END; px++) {
+			neighborEdge.push({ x: startX + px, y: neighborStartY });
+		}
+
+		if (debug) console.log(`  Checking SOUTH (${x}, ${y+1}):`);
+		const ourOk = checkEdgeClear(ourEdge, 'Our bottom edge');
+		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor top edge');
+
+		if (ourOk && neighborOk) connections.push('south');
+	}
+
+	// Check west edge - need clear path on BOTH our left edge AND neighbor's right edge
+	const westTile = tiles[y]?.[x - 1];
+	if (x > 0 && westTile && WALKABLE_TYPES.includes(westTile)) {
+		const neighborStartX = (x - 1) * PIXELS_PER_LOGICAL_TILE;
+
+		// Our left edge (x = startX)
+		const ourEdge = [];
+		for (let py = CENTER_START; py < CENTER_END; py++) {
+			ourEdge.push({ x: startX, y: startY + py });
+		}
+
+		// Neighbor's right edge (x = neighborStartX + 15)
+		const neighborEdge = [];
+		for (let py = CENTER_START; py < CENTER_END; py++) {
+			neighborEdge.push({ x: neighborStartX + PIXELS_PER_LOGICAL_TILE - 1, y: startY + py });
+		}
+
+		if (debug) console.log(`  Checking WEST (${x-1}, ${y}):`);
+		const ourOk = checkEdgeClear(ourEdge, 'Our left edge');
+		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor right edge');
+
+		if (ourOk && neighborOk) connections.push('west');
+	}
+
+	// Check east edge - need clear path on BOTH our right edge AND neighbor's left edge
+	const eastTile = tiles[y]?.[x + 1];
+	if (x < BOARD_WIDTH - 1 && eastTile && WALKABLE_TYPES.includes(eastTile)) {
+		const neighborStartX = (x + 1) * PIXELS_PER_LOGICAL_TILE;
+
+		// Our right edge (x = startX + 15)
+		const ourEdge = [];
+		for (let py = CENTER_START; py < CENTER_END; py++) {
+			ourEdge.push({ x: startX + PIXELS_PER_LOGICAL_TILE - 1, y: startY + py });
+		}
+
+		// Neighbor's left edge (x = neighborStartX)
+		const neighborEdge = [];
+		for (let py = CENTER_START; py < CENTER_END; py++) {
+			neighborEdge.push({ x: neighborStartX, y: startY + py });
+		}
+
+		if (debug) console.log(`  Checking EAST (${x+1}, ${y}):`);
+		const ourOk = checkEdgeClear(ourEdge, 'Our right edge');
+		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor left edge');
+
+		if (ourOk && neighborOk) connections.push('east');
 	}
 
 	return connections;
@@ -207,24 +396,18 @@ function getSpawnZone(x: number, y: number, type: TileType): number | undefined 
 /**
  * Determine teleporter group (1-4 for outer, 0 for inner)
  */
-function getTeleporterGroup(
-	x: number,
-	y: number,
-	type: TileType
-): number | undefined {
+function getTeleporterGroup(x: number, y: number, type: TileType): number | undefined {
 	if (!type.startsWith('teleporter')) {
 		return undefined;
 	}
 
-	// Center area is roughly in the middle
+	// Center area is roughly in the middle (around 240,240)
 	const centerX = BOARD_WIDTH / 2;
 	const centerY = BOARD_HEIGHT / 2;
-	const distFromCenter = Math.sqrt(
-		Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
-	);
+	const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
 
-	// If close to center, it's the inner teleporter
-	if (distFromCenter < 5) {
+	// If close to center (within ~50 pixels), it's the inner teleporter
+	if (distFromCenter < 50) {
 		return 0; // Inner teleporter
 	}
 
@@ -244,13 +427,13 @@ function generateBoardData() {
 
 	const pixelColors = parseSvg(svgPath);
 
-	// First pass: determine tile types
+	// First pass: determine tile types by sampling 10x10 pixel regions
 	const tileTypes: TileType[][] = [];
 	for (let y = 0; y < BOARD_HEIGHT; y++) {
 		tileTypes[y] = [];
 		for (let x = 0; x < BOARD_WIDTH; x++) {
-			const color = getTileColor(pixelColors, x, y);
-			tileTypes[y][x] = getTileType(color);
+			// Get dominant tile type for this 10x10 region
+			tileTypes[y][x] = getDominantTileType(pixelColors, x, y);
 		}
 	}
 
@@ -258,17 +441,25 @@ function generateBoardData() {
 	const tiles: Tile[][] = [];
 	const shops: Position[] = [];
 	const shadowRealmTiles: Position[] = [];
+	const treasureChests: Position[] = [];
 	const teleporterOuter: Position[] = [];
-	let teleporterInner: Position = { x: 24, y: 24 }; // Default to center
-	let buttonTile: Position = { x: 24, y: 24 };
+	let teleporterInner: Position = { x: 240, y: 240 }; // Default to center
+	let buttonTile: Position = { x: 240, y: 240 };
 
 	for (let y = 0; y < BOARD_HEIGHT; y++) {
 		tiles[y] = [];
 		for (let x = 0; x < BOARD_WIDTH; x++) {
 			let type = tileTypes[y][x];
 			const position = { x, y };
+			const connections = calculateConnections(pixelColors, tileTypes, x, y);
+
+			// If a tile has no connections, mark it as blocked (unreachable)
+			// This handles spawn entries in corners surrounded by blocked tiles
+			if (connections.length === 0 && type !== 'blocked') {
+				type = 'blocked';
+			}
+
 			const walkable = WALKABLE_TYPES.includes(type);
-			const connections = calculateConnections(tileTypes, x, y);
 
 			// Collect special tiles
 			if (type === 'shop') {
@@ -277,6 +468,8 @@ function generateBoardData() {
 				shadowRealmTiles.push(position);
 			} else if (type === 'button') {
 				buttonTile = position;
+			} else if (type === 'treasure') {
+				treasureChests.push(position);
 			}
 
 			// Handle teleporter classification
@@ -337,7 +530,8 @@ function generateBoardData() {
 			inner: teleporterInner
 		},
 		shadowRealmTiles,
-		buttonTile
+		buttonTile,
+		treasureChests
 	};
 
 	// Write to boardData.ts
@@ -347,6 +541,8 @@ function generateBoardData() {
  * Generated on: ${new Date().toISOString()}
  *
  * DO NOT EDIT MANUALLY - regenerate using: npx tsx scripts/parseSvgBoard.ts
+ *
+ * Board is 480x480 tiles (1:1 pixel mapping from Map.svg)
  */
 
 import type { BoardConfig, Tile, SpawnZone, Position, TeleporterConfig } from './types';
@@ -362,6 +558,7 @@ export const SHOPS = BOARD_CONFIG.shops;
 export const TELEPORTERS = BOARD_CONFIG.teleporters;
 export const SHADOW_REALM_TILES = BOARD_CONFIG.shadowRealmTiles;
 export const BUTTON_TILE = BOARD_CONFIG.buttonTile;
+export const TREASURE_CHESTS = BOARD_CONFIG.treasureChests;
 `;
 
 	writeFileSync(outputPath, output);
@@ -369,8 +566,9 @@ export const BUTTON_TILE = BOARD_CONFIG.buttonTile;
 
 	// Print summary
 	console.log('\n=== Board Summary ===');
-	console.log(`Dimensions: ${BOARD_WIDTH}x${BOARD_HEIGHT} tiles`);
+	console.log(`Dimensions: ${BOARD_WIDTH}x${BOARD_HEIGHT} tiles (1:1 pixel mapping)`);
 	console.log(`Shops: ${shops.length} tiles`);
+	console.log(`Treasure Chests: ${treasureChests.length} tiles`);
 	console.log(`Shadow Realm: ${shadowRealmTiles.length} tiles`);
 	console.log(`Outer Teleporters: ${teleporterOuter.length} tiles`);
 	console.log(`Button at: (${buttonTile.x}, ${buttonTile.y})`);
