@@ -11,7 +11,8 @@
 	let { icon = undefined, children, ...rest }: Props = $props();
 
 	let isIconOnly = $derived(!!icon && !children);
-	let isSmall = $derived(rest.class?.includes('btn-icon-sm'));
+	let classStr = $derived(typeof rest.class === 'string' ? rest.class : '');
+	let isSmall = $derived(classStr.includes('btn-icon-sm'));
 </script>
 
 <button
@@ -21,7 +22,7 @@
 		? isSmall
 			? 'flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100'
 			: 'btn-icon preset-filled'
-		: 'btn preset-filled'} {rest.class?.replace('btn-icon-sm', '') ?? ''}"
+		: 'btn preset-filled'} {classStr.replace('btn-icon-sm', '')}"
 >
 	{#if icon}
 		<Icon {icon} size={isSmall ? 'md' : 'xl'} />
