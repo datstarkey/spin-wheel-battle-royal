@@ -11,6 +11,7 @@ import { stellaArtois } from './consumables/stellaArtois';
 import { vodkaRedbull } from './consumables/vodkaRedbull';
 import { ANiceHat } from './helm/aNiceHat';
 import { BeerGoggles } from './helm/beerGoggles';
+import { Box } from './helm/Box';
 import { Kaibrows } from './helm/kaibrows';
 import { BrassKnucklesMH } from './mainHand/brassKnucklesMH';
 import { BrassKnucklesOH } from './mainHand/brassKnucklesOH';
@@ -55,7 +56,7 @@ export const offhands = {
 };
 
 export const helms = {
-	Halo: Halo,
+	Box: Box,
 	ANiceHat: ANiceHat,
 	Kaibrows: Kaibrows,
 	BeerGoggles: BeerGoggles

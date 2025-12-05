@@ -2,6 +2,7 @@
 	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
+	import GlobalGameStats from './GlobalGameStats.svelte';
 
 	// import type { PageData } from './$types';
 
@@ -17,7 +18,10 @@
 		<p>No Players</p>
 	{/if}
 
-	<h2 class="mb-5">Current Turn: {currentTurnPlayer?.name}</h2>
+	<div class="flex items-center justify-between mb-5">
+		<h2>Current Turn: {currentTurnPlayer?.name}</h2>
+		<GlobalGameStats />
+	</div>
 
 	<h3>Order</h3>
 	<h3 class="mb-5">
@@ -29,7 +33,7 @@
 		{/each}
 	</h3>
 
-	<div class="flex flex-wrap gap-3">
+	<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 		{#each Object.values(currentGame.value.playerOrder) as name (name)}
 			{@const player = getPlayerByName(name)}
 			{#if player}
