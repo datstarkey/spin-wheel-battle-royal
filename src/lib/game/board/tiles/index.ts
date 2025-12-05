@@ -32,7 +32,8 @@ export const TILE_SVGS: Record<TileType, string> = {
 	teleporter_outer: teleporterOuterSvg,
 	teleporter_inner: teleporterInnerSvg,
 	button: buttonSvg,
-	treasure: pathSvg // Uses path appearance with yellow border
+	treasure: pathSvg, // Uses path appearance with yellow border
+	casino: shopSvg // Uses shop appearance with casino styling
 };
 
 /**
@@ -56,7 +57,8 @@ export const TILE_NAMES: Record<TileType, string> = {
 	teleporter_outer: 'Teleporter',
 	teleporter_inner: 'Teleporter (Exit)',
 	button: 'The Button',
-	treasure: 'Treasure Chest'
+	treasure: 'Treasure Chest',
+	casino: 'Casino'
 };
 
 /**
@@ -73,5 +75,6 @@ export const TILE_DESCRIPTIONS: Record<TileType, string> = {
 	teleporter_outer: 'Teleport to another location',
 	teleporter_inner: 'Teleporter exit point only',
 	button: 'Press for a special reward!',
-	treasure: 'Open for random loot!'
+	treasure: 'Open for random loot!',
+	casino: 'Gamble for gold and prizes! (5g entry fee)'
 };
