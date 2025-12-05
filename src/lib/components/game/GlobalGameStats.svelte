@@ -88,7 +88,7 @@
 {/snippet}
 
 {#if game}
-	<PullOutMenu position="bottom" width="500px">
+	<PullOutMenu position="right" width="500px">
 		{#snippet trigger(open)}
 			<Button onclick={open} icon="mdi:earth" class="btn-icon-sm" title="Global Game Stats"></Button>
 		{/snippet}
@@ -136,12 +136,12 @@
 			</div>
 
 			<!-- Turn Actions -->
-			<div class="grid grid-cols-2 gap-3">
+			<div class="grid grid-cols-3 gap-3">
 				<div class="rounded border border-white/10 bg-black/20 p-3">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<Icon icon="ion:footsteps" class="text-success-400" />
-							<span class="text-surface-300 text-sm">Has Moved</span>
+							<span class="text-surface-300 text-sm">Moved</span>
 						</div>
 						<Switch
 							checked={game.hasMoved}
@@ -158,13 +158,30 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<Icon icon="mdi:sword-cross" class="text-primary-400" />
-							<span class="text-surface-300 text-sm">Has Fought</span>
+							<span class="text-surface-300 text-sm">Fought</span>
 						</div>
 						<Switch
 							checked={game.hasFought}
 							onCheckedChange={(details) => (game.hasFought = details.checked)}
 						>
 							<Switch.Control class="data-[state=checked]:bg-primary-500">
+								<Switch.Thumb />
+							</Switch.Control>
+							<Switch.HiddenInput />
+						</Switch>
+					</div>
+				</div>
+				<div class="rounded border border-white/10 bg-black/20 p-3">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<Icon icon="mdi:cart" class="text-warning-400" />
+							<span class="text-surface-300 text-sm">Shopped</span>
+						</div>
+						<Switch
+							checked={game.hasShopped}
+							onCheckedChange={(details) => (game.hasShopped = details.checked)}
+						>
+							<Switch.Control class="data-[state=checked]:bg-warning-500">
 								<Switch.Thumb />
 							</Switch.Control>
 							<Switch.HiddenInput />
@@ -281,51 +298,55 @@
 				<div class="h-px flex-1 bg-linear-to-r from-transparent via-surface-600 to-transparent"></div>
 			</div>
 
-			<div class="flex flex-wrap gap-2">
-				<Button
+			<div class="grid grid-cols-2 gap-2">
+				<button
+					type="button"
+					class="btn preset-tonal-success flex items-center justify-center gap-2 text-xs"
 					onclick={() => {
 						game.resetTurnActions();
 						toast.success('Turn actions reset!');
 					}}
-					class="preset-tonal-success text-xs"
-					icon="mdi:refresh"
 				>
-					Reset Turn Actions
-				</Button>
+					<Icon icon="mdi:refresh" />
+					<span>Reset Turn Actions</span>
+				</button>
 
-				<Button
+				<button
+					type="button"
+					class="btn preset-tonal-warning flex items-center justify-center gap-2 text-xs"
 					onclick={() => {
 						game.shopCostModifier = 0;
 						game.shopConsumableCostModifier = 0;
 						toast.success('Shop modifiers reset!');
 					}}
-					class="preset-tonal-warning text-xs"
-					icon="mdi:store-remove"
 				>
-					Reset Shop Costs
-				</Button>
+					<Icon icon="mdi:store-remove" />
+					<span>Reset Shop Costs</span>
+				</button>
 
-				<Button
+				<button
+					type="button"
+					class="btn preset-tonal-error flex items-center justify-center gap-2 text-xs"
 					onclick={() => {
 						game.globalHpReduction = 1;
 						toast.success('HP reduction reset to 1!');
 					}}
-					class="preset-tonal-error text-xs"
-					icon="mdi:heart"
 				>
-					Reset HP Reduction
-				</Button>
+					<Icon icon="mdi:heart" />
+					<span>Reset HP Reduction</span>
+				</button>
 
-				<Button
+				<button
+					type="button"
+					class="btn preset-tonal-surface flex items-center justify-center gap-2 text-xs"
 					onclick={() => {
 						game.skippedNextTurns = [];
 						toast.success('Skipped turns cleared!');
 					}}
-					class="preset-tonal-surface text-xs"
-					icon="mdi:skip-next-outline"
 				>
-					Clear Skipped Turns
-				</Button>
+					<Icon icon="mdi:skip-next-outline" />
+					<span>Clear Skipped Turns</span>
+				</button>
 			</div>
 		</div>
 	</PullOutMenu>
