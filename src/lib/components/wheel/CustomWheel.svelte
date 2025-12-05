@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { WheelBase } from '$lib/game/wheels/wheels';
 	import type { WheelTheme } from '$lib/components/wheel/types';
+	import type { WheelBase } from '$lib/game/wheels/wheels';
+	import { untrack } from 'svelte';
 	import SpinWheel from './SpinWheel.svelte';
 
 	interface Props {
@@ -35,16 +36,19 @@
 	});
 
 	// Theme configurations
-	const themes: Record<WheelTheme, {
-		icon: string;
-		title: string;
-		subtitle: string;
-		borderColor: string;
-		glowColor: string;
-		bgGradient: string;
-		accentColor: string;
-		pulseColor: string;
-	}> = {
+	const themes: Record<
+		WheelTheme,
+		{
+			icon: string;
+			title: string;
+			subtitle: string;
+			borderColor: string;
+			glowColor: string;
+			bgGradient: string;
+			accentColor: string;
+			pulseColor: string;
+		}
+	> = {
 		win: {
 			icon: 'mdi:trophy',
 			title: 'VICTORY SPOILS',
@@ -57,7 +61,7 @@
 		},
 		lose: {
 			icon: 'mdi:skull',
-			title: 'FATE\'S PENALTY',
+			title: "FATE'S PENALTY",
 			subtitle: 'Accept your consequence',
 			borderColor: 'border-error-500/50',
 			glowColor: 'shadow-[0_0_60px_rgba(220,38,38,0.3)]',
@@ -97,7 +101,7 @@
 		},
 		gambler: {
 			icon: 'mdi:cards-playing',
-			title: 'GAMBLER\'S FATE',
+			title: "GAMBLER'S FATE",
 			subtitle: 'All in or nothing',
 			borderColor: 'border-warning-500/50',
 			glowColor: 'shadow-[0_0_60px_rgba(234,179,8,0.35)]',
@@ -158,7 +162,9 @@
 	// If the wheel is empty, we can just complete the wheel, no need to spin it, happens if there is a bug
 	$effect(() => {
 		if (wheel.length == 0) {
-			onComplete();
+			untrack(() => {
+				onComplete();
+			});
 		}
 	});
 
@@ -174,11 +180,17 @@
 </script>
 
 <div class="relative flex min-h-full flex-col overflow-y-auto">
-	<!-- Cancel/Close Button (top right, sticky) -->
+	<!-- Global animated background glow (covers entire modal) -->
+	<div
+		class="pointer-events-none absolute inset-0 animate-pulse bg-[radial-gradient(ellipse_at_top_center,var(--pulse-color)_0%,transparent_60%)]"
+		style="--pulse-color: {currentTheme.pulseColor}"
+	></div>
+
+	<!-- Cancel/Close Button (top right, absolute) -->
 	{#if onCancel}
 		<button
 			onclick={() => onCancel()}
-			class="sticky top-4 right-4 z-50 ml-auto mr-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/50 text-surface-400 transition-all hover:border-error-500/50 hover:bg-error-500/20 hover:text-white"
+			class="text-surface-400 hover:border-error-500/50 hover:bg-error-500/20 absolute top-4 right-4 z-50 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/50 transition-all hover:text-white"
 			title="Cancel wheel"
 			aria-label="Cancel wheel"
 		>
@@ -187,51 +199,62 @@
 	{/if}
 
 	<!-- Epic Header Section -->
-	<div class="relative mb-6 px-4 pt-8 text-center">
-		<!-- Animated background glow -->
-		<div
-			class="absolute inset-0 animate-pulse bg-[radial-gradient(ellipse_at_center,var(--pulse-color)_0%,transparent_70%)]"
-			style="--pulse-color: {currentTheme.pulseColor}"
-		></div>
-
+	<div class="relative mb-6 px-4 pt-6 text-center">
 		<!-- Decorative top line -->
-		<div class="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-current to-transparent {currentTheme.accentColor} opacity-50"></div>
+		<div
+			class="absolute top-0 left-1/2 h-px w-3/4 -translate-x-1/2 bg-gradient-to-r from-transparent via-current to-transparent {currentTheme.accentColor} opacity-50"
+		></div>
 
 		<!-- Icon with glow -->
 		<div class="relative mx-auto mb-4 flex h-20 w-20 items-center justify-center">
-			<div class="absolute inset-0 animate-ping rounded-full bg-current opacity-20 {currentTheme.accentColor}" style="animation-duration: 2s;"></div>
-			<div class="absolute inset-0 rounded-full bg-gradient-to-br from-current/20 to-transparent {currentTheme.accentColor}"></div>
-			<iconify-icon icon={currentTheme.icon} class="relative z-10 text-5xl {currentTheme.accentColor} drop-shadow-[0_0_20px_currentColor]"></iconify-icon>
+			<div
+				class="absolute inset-0 animate-ping rounded-full bg-current opacity-20 {currentTheme.accentColor}"
+				style="animation-duration: 2s;"
+			></div>
+			<div
+				class="absolute inset-0 rounded-full bg-gradient-to-br from-current/20 to-transparent {currentTheme.accentColor}"
+			></div>
+			<iconify-icon
+				icon={currentTheme.icon}
+				class="relative z-10 text-5xl {currentTheme.accentColor} drop-shadow-[0_0_20px_currentColor]"
+			></iconify-icon>
 		</div>
 
 		<!-- Title -->
-		<h1 class="mb-1 font-mono text-3xl font-black uppercase tracking-[0.2em] text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+		<h1
+			class="mb-1 font-mono text-3xl font-black tracking-[0.2em] text-white uppercase drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+		>
 			{currentTheme.title}
 		</h1>
 
 		<!-- Subtitle -->
-		<p class="text-sm font-medium uppercase tracking-widest {currentTheme.accentColor}">
+		<p class="text-sm font-medium tracking-widest uppercase {currentTheme.accentColor}">
 			{currentTheme.subtitle}
 		</p>
 
 		<!-- Player name badge -->
 		{#if playerName}
-			<div class="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 backdrop-blur-sm">
+			<div
+				class="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 backdrop-blur-sm"
+			>
 				<iconify-icon icon="mdi:account" class="text-surface-400"></iconify-icon>
-				<span class="font-mono text-sm font-bold uppercase tracking-wider text-white">{playerName}</span>
+				<span class="font-mono text-sm font-bold tracking-wider text-white uppercase"
+					>{playerName}</span
+				>
 			</div>
 		{/if}
 
 		<!-- Decorative bottom corners -->
-		<div class="absolute bottom-0 left-4 h-4 w-4 border-b border-l {currentTheme.borderColor}"></div>
-		<div class="absolute right-4 bottom-0 h-4 w-4 border-r border-b {currentTheme.borderColor}"></div>
+		<div
+			class="absolute bottom-0 left-4 h-4 w-4 border-b border-l {currentTheme.borderColor}"
+		></div>
+		<div
+			class="absolute right-4 bottom-0 h-4 w-4 border-r border-b {currentTheme.borderColor}"
+		></div>
 	</div>
 
 	<!-- Wheel Section -->
 	<div class="relative flex-1 px-4">
-		<!-- Background gradient based on theme -->
-		<div class="pointer-events-none absolute inset-0 bg-gradient-to-b {currentTheme.bgGradient}"></div>
-
 		<SpinWheel
 			items={wheel}
 			buttonText="SPIN"
@@ -247,24 +270,50 @@
 	{#if hasWon}
 		<div bind:this={resultSection} class="relative mt-6 px-4 pb-8">
 			<!-- Result announcement -->
-			<div class="relative mx-auto mb-6 max-w-md overflow-hidden rounded-lg border-2 {currentTheme.borderColor} bg-gradient-to-br from-surface-900 to-surface-950 p-6 {currentTheme.glowColor}">
+			<div
+				class="relative mx-auto mb-6 max-w-md overflow-hidden rounded-lg border-2 {currentTheme.borderColor} from-surface-900 to-surface-950 bg-gradient-to-br p-6 {currentTheme.glowColor}"
+			>
 				<!-- Sparkle effects -->
 				<div class="pointer-events-none absolute inset-0 overflow-hidden">
-					<div class="absolute top-2 left-1/4 h-1.5 w-1.5 animate-ping rounded-full bg-warning-400/60" style="animation-delay: 0s;"></div>
-					<div class="absolute top-4 right-1/3 h-1 w-1 animate-ping rounded-full bg-white/40" style="animation-delay: 0.3s;"></div>
-					<div class="absolute bottom-3 left-1/3 h-1.5 w-1.5 animate-ping rounded-full {currentTheme.accentColor.replace('text-', 'bg-')}/60" style="animation-delay: 0.6s;"></div>
+					<div
+						class="bg-warning-400/60 absolute top-2 left-1/4 h-1.5 w-1.5 animate-ping rounded-full"
+						style="animation-delay: 0s;"
+					></div>
+					<div
+						class="absolute top-4 right-1/3 h-1 w-1 animate-ping rounded-full bg-white/40"
+						style="animation-delay: 0.3s;"
+					></div>
+					<div
+						class="absolute bottom-3 left-1/3 h-1.5 w-1.5 animate-ping rounded-full {currentTheme.accentColor.replace(
+							'text-',
+							'bg-'
+						)}/60"
+						style="animation-delay: 0.6s;"
+					></div>
 				</div>
 
 				<!-- Inner glow -->
-				<div class="pointer-events-none absolute inset-0 bg-gradient-to-b {currentTheme.bgGradient}"></div>
+				<div
+					class="pointer-events-none absolute inset-0 bg-gradient-to-b {currentTheme.bgGradient}"
+				></div>
 
 				<div class="relative text-center">
 					<div class="mb-2 flex items-center justify-center gap-2">
-						<iconify-icon icon="mdi:star-four-points" class="{currentTheme.accentColor} animate-pulse text-xl"></iconify-icon>
-						<span class="text-xs font-bold uppercase tracking-[0.3em] {currentTheme.accentColor}">Result</span>
-						<iconify-icon icon="mdi:star-four-points" class="{currentTheme.accentColor} animate-pulse text-xl"></iconify-icon>
+						<iconify-icon
+							icon="mdi:star-four-points"
+							class="{currentTheme.accentColor} animate-pulse text-xl"
+						></iconify-icon>
+						<span class="text-xs font-bold tracking-[0.3em] uppercase {currentTheme.accentColor}"
+							>Result</span
+						>
+						<iconify-icon
+							icon="mdi:star-four-points"
+							class="{currentTheme.accentColor} animate-pulse text-xl"
+						></iconify-icon>
 					</div>
-					<p class="font-mono text-xl font-black uppercase tracking-wide text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+					<p
+						class="font-mono text-xl font-black tracking-wide text-white uppercase drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+					>
 						{winningLabel}
 					</p>
 				</div>
@@ -273,13 +322,18 @@
 			<!-- Continue button -->
 			<button
 				onclick={() => onComplete()}
-				class="group relative mx-auto flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-lg border-2 {currentTheme.borderColor} bg-gradient-to-br from-surface-800 to-surface-900 px-8 py-4 font-mono text-lg font-black uppercase tracking-widest text-white transition-all duration-300 hover:scale-[1.02] hover:from-surface-700 hover:to-surface-800 {currentTheme.glowColor}"
+				class="group relative mx-auto flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-lg border-2 {currentTheme.borderColor} from-surface-800 to-surface-900 hover:from-surface-700 hover:to-surface-800 bg-gradient-to-br px-8 py-4 font-mono text-lg font-black tracking-widest text-white uppercase transition-all duration-300 hover:scale-[1.02] {currentTheme.glowColor}"
 			>
 				<!-- Shine effect on hover -->
-				<div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full"></div>
+				<div
+					class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full"
+				></div>
 
 				<span class="relative z-10">Continue</span>
-				<iconify-icon icon="mdi:chevron-right" class="relative z-10 text-2xl transition-transform group-hover:translate-x-1"></iconify-icon>
+				<iconify-icon
+					icon="mdi:chevron-right"
+					class="relative z-10 text-2xl transition-transform group-hover:translate-x-1"
+				></iconify-icon>
 			</button>
 		</div>
 	{/if}
