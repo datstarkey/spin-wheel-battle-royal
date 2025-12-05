@@ -190,15 +190,15 @@
 	<div class={layout === 'side-by-side' ? 'flex flex-col gap-4' : ''}>
 		<!-- Selected Item Display -->
 		{#if hasSpun && selected}
-			<div class={layout === 'side-by-side' ? 'w-64' : 'mx-auto mt-6 max-w-sm'}>
+			<div class={layout === 'side-by-side' ? '' : 'mx-auto mt-6'}>
 				<div
 					class="border-primary-500/30 bg-surface-900/95 relative overflow-hidden rounded border px-4 py-3 shadow-[0_0_20px_rgba(220,38,38,0.15)]"
 				>
 					<div
 						class="from-primary-500/5 to-primary-500/5 pointer-events-none absolute inset-0 bg-gradient-to-r via-transparent"
 					></div>
-					<div class="flex items-center justify-center gap-2">
-						<Icon icon="mdi:trophy" class="text-warning-400 text-lg" />
+					<div class="flex items-center justify-center gap-2 whitespace-nowrap">
+						<Icon icon="mdi:trophy" class="text-warning-400 shrink-0 text-lg" />
 						<span class="text-surface-100 text-lg font-bold tracking-wide uppercase"
 							>{selected.label}</span
 						>
@@ -212,7 +212,7 @@
 			<div
 				class={layout === 'side-by-side'
 					? 'flex flex-col items-stretch gap-3'
-					: 'mx-auto mt-6 flex max-w-sm flex-col items-center gap-3'}
+					: 'mx-auto mt-6 mb-4 flex max-w-sm flex-col items-center gap-3'}
 			>
 				{#if children}{@render children({ spin })}{/if}
 
