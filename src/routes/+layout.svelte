@@ -4,8 +4,7 @@
 	import GlobalGameStats from '$lib/components/game/GlobalGameStats.svelte';
 	import ClassesHelpModal from '$lib/components/help/ClassesHelpModal.svelte';
 	import { currentGame, resetGame } from '$lib/stores/gameStore.svelte';
-	import { toaster } from '$lib/stores/toaster.svelte';
-	import { Toast } from '@skeletonlabs/skeleton-svelte';
+	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
 
 	interface Props {
@@ -27,17 +26,7 @@
 <SoundCloudPlayer />
 
 <!-- Toast notifications -->
-<Toast.Group {toaster}>
-	{#snippet children(toast)}
-		<Toast {toast}>
-			<Toast.Message>
-				<Toast.Title>{toast.title}</Toast.Title>
-				<Toast.Description>{toast.description}</Toast.Description>
-			</Toast.Message>
-			<Toast.CloseTrigger />
-		</Toast>
-	{/snippet}
-</Toast.Group>
+<Toaster richColors position="bottom-right" />
 
 <!-- Modal portal target - renders above everything -->
 <div id="modal-portal" class="contents"></div>
