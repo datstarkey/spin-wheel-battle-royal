@@ -55,8 +55,11 @@ This is a **SvelteKit 5** web-based battle royale game with a spinning wheel mec
    - Reusable UI components (buttons, forms, wheels)
    - Custom wheel implementation using the `spin-wheel` library
 
-4. **Persistence**: 
-   - Game state serialization/deserialization for save/load functionality
+4. **Persistence** (`src/lib/game/serialization.ts`):
+   - Type-safe game state serialization/deserialization with validation
+   - `SerializedGame`, `SerializedPlayer`, `SerializedPlayerGear`, `SerializedPlayerStatuses` interfaces
+   - `validateGame()`, `validatePlayer()` functions validate JSON data before deserialization
+   - Prevents corrupted saves from breaking game state
    - Local storage integration via `localStorageStore.svelte.ts`
 
 5. **Event System**: Players and items respond to game events:
