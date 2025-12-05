@@ -10,12 +10,21 @@
 
 	let { icon = undefined, children, ...rest }: Props = $props();
 
-	let type = $derived(!icon ? 'btn' : 'btn-icon');
+	let isIconOnly = $derived(!!icon && !children);
+	let isSmall = $derived(rest.class?.includes('btn-icon-sm'));
 </script>
 
-<button type="button" {...rest} class="{type} preset-filled {rest.class}">
+<button
+	type="button"
+	{...rest}
+	class="{isIconOnly
+		? isSmall
+			? 'flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100'
+			: 'btn-icon preset-filled'
+		: 'btn preset-filled'} {rest.class?.replace('btn-icon-sm', '') ?? ''}"
+>
 	{#if icon}
-		<Icon {icon} size="xl" />
+		<Icon {icon} size={isSmall ? 'md' : 'xl'} />
 	{/if}
 	{@render children?.()}
 </button>
