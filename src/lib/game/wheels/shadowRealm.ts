@@ -63,10 +63,20 @@ export function generateShadowRealmWheel(playerName: string) {
 			label: 'Swap Places with someone',
 			onWin: () => {
 				generateRandomPlayerWheel(`${player.name} Swaps Places with someone`, (winner) => {
-					if (winner.inShadowRealm != player.inShadowRealm) {
-						player.inShadowRealm = !player.inShadowRealm;
-						winner.inShadowRealm = !winner.inShadowRealm;
-					}
+					// Store original states
+					const playerPosition = player.position;
+					const playerWasInShadowRealm = player.inShadowRealm;
+					const winnerPosition = winner.position;
+					const winnerWasInShadowRealm = winner.inShadowRealm;
+
+					// Swap board positions
+					player.position = winnerPosition;
+					winner.position = playerPosition;
+
+					// Swap shadow realm status (always swap)
+					player.inShadowRealm = winnerWasInShadowRealm;
+					winner.inShadowRealm = playerWasInShadowRealm;
+
 					addAuditTrail(`${player.name} swaps places with ${winner.name}`);
 				});
 			}
