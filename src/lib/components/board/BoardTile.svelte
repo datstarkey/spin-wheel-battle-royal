@@ -1,17 +1,34 @@
 <script lang="ts">
 	import type { Tile, Position } from '$lib/game/board/types';
-	import { TILE_SVGS, TILE_NAMES, TILE_DESCRIPTIONS } from '$lib/game/board/tiles';
+	import { TILE_NAMES, TILE_DESCRIPTIONS } from '$lib/game/board/tiles';
 
 	interface Props {
 		tile: Tile;
+		tileSize: number;
 		isHighlighted?: boolean;
 		isSelected?: boolean;
 		hasPlayer?: boolean;
 		onClick?: (position: Position) => void;
 	}
 
-	let { tile, isHighlighted = false, isSelected = false, hasPlayer = false, onClick }: Props =
-		$props();
+	let {
+		tile,
+		tileSize,
+		isHighlighted = false,
+		isSelected = false,
+		hasPlayer = false,
+		onClick
+	}: Props = $props();
+
+	// Each logical tile is 16x16 pixels in the original SVG (30x30 grid)
+	// We show that section of the Map.svg using background-position
+	const SVG_PIXELS_PER_TILE = 16;
+	const bgPosX = $derived(tile.position.x * SVG_PIXELS_PER_TILE);
+	const bgPosY = $derived(tile.position.y * SVG_PIXELS_PER_TILE);
+
+	// The background size needs to scale with tile size
+	// Original SVG is 480x480, we scale it to fit our tile grid
+	const bgSize = $derived((480 / SVG_PIXELS_PER_TILE) * tileSize); // 30 * tileSize
 
 	function handleClick() {
 		if (tile.walkable && onClick) {
@@ -37,8 +54,12 @@
 	title={tile.walkable ? `${TILE_NAMES[tile.type]}: ${TILE_DESCRIPTIONS[tile.type]}` : ''}
 	onclick={handleClick}
 	onkeydown={handleKeydown}
+	style:width="{tileSize}px"
+	style:height="{tileSize}px"
+	style:background-image="url('/Map.svg')"
+	style:background-position="-{bgPosX * (tileSize / SVG_PIXELS_PER_TILE)}px -{bgPosY * (tileSize / SVG_PIXELS_PER_TILE)}px"
+	style:background-size="{bgSize}px {bgSize}px"
 >
-	<img src={TILE_SVGS[tile.type]} alt={TILE_NAMES[tile.type]} class="tile-image" />
 	{#if isHighlighted}
 		<div class="highlight-overlay"></div>
 	{/if}
@@ -49,17 +70,17 @@
 
 <style>
 	.board-tile {
-		width: 100%;
-		height: 100%;
 		padding: 0;
 		margin: 0;
 		border: none;
-		background: transparent;
+		box-sizing: border-box;
 		cursor: default;
 		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		image-rendering: pixelated;
+		background-repeat: no-repeat;
 	}
 
 	.board-tile.walkable {
@@ -72,13 +93,6 @@
 
 	.board-tile.blocked {
 		cursor: not-allowed;
-	}
-
-	.tile-image {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		image-rendering: pixelated;
 	}
 
 	.highlight-overlay {
