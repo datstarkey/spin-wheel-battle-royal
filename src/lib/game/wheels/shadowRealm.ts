@@ -85,6 +85,8 @@ export function generateShadowRealmWheel(playerName: string) {
 			label: 'Teleport to someone',
 			onWin: () => {
 				generateRandomPlayerWheel(`${player.name} Teleports to someone`, (winner) => {
+					// Teleport to target's position and shadow realm status
+					player.position = winner.position;
 					player.inShadowRealm = winner.inShadowRealm;
 					addAuditTrail(`${player.name} teleports to ${winner.name}`);
 				});

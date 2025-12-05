@@ -2,10 +2,12 @@ import {
 	addAuditTrail,
 	currentGame,
 	getGlobalHpReduction,
+	getHasShoppedThisTurn,
 	getItemCost,
 	increaseGlobalHpReduction,
 	increaseShopConsumableCostModifier,
 	increaseShopCostModifier,
+	setHasShoppedThisTurn,
 	teleportFromShadowRealm,
 	teleportToShadowRealm
 } from '$lib/stores/gameStore.svelte';
@@ -422,6 +424,11 @@ export class Player {
 	}
 
 	canBuyItem(item: AllItems): boolean {
+		// Can only buy one item per turn
+		if (getHasShoppedThisTurn()) {
+			return false;
+		}
+
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			return false;
@@ -467,6 +474,9 @@ export class Player {
 		addAuditTrail(`${this.name} buys ${item}!`);
 		this.gear.addItem(item);
 		this.gold -= cost;
+
+		// Mark that the player has shopped this turn
+		setHasShoppedThisTurn(true);
 
 		if (actualItem.type == 'consumables') {
 			increaseShopConsumableCostModifier(1);

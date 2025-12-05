@@ -13,7 +13,6 @@ export function generateWinWheel(playerName: string) {
 
 	if (player.dead) return;
 
-	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 2;
 	const wheel = [
 		{
 			//1
@@ -43,11 +42,10 @@ export function generateWinWheel(playerName: string) {
 				player.gold += 10;
 			}
 		},
-		//Todo - add when turn system is implemented
 		{
 			//5
 			label: 'Take another turn',
-			onWin: () => currentGame.value?.startTurn()
+			onWin: () => currentGame.value?.gainAnotherTurn()
 		},
 		{
 			//6
@@ -92,7 +90,6 @@ export function generateWinWheel(playerName: string) {
 				});
 			}
 		}
-		
 	];
 
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);
