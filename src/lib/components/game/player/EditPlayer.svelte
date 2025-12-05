@@ -18,6 +18,7 @@
 	} from '$lib/game/items/itemTypes';
 	import type { Player } from '$lib/game/player/player.svelte';
 	import statusEffects, { type StatusType } from '$lib/game/statuses/statusTypes';
+	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
 	interface Props {
@@ -240,8 +241,70 @@
 			</div>
 		</div>
 
-		<!-- Resources (if any) -->
-		{#if Object.keys(player.resources).length > 0}
+		<!-- Class-Specific Resources -->
+		{#if player.classType === 'magicman'}
+			<!-- Magic Man: Always show Mana -->
+			{@const mana = player.resources[MANA_RESOURCE] ?? 0}
+			<div class="grid grid-cols-1 gap-3">
+				<div class="group relative overflow-hidden rounded border border-tertiary-500/30 bg-tertiary-500/10 transition-all hover:border-tertiary-500/50">
+					<div class="flex items-center">
+						<button
+							type="button"
+							class="flex h-10 w-10 items-center justify-center border-r border-tertiary-500/20 text-tertiary-400 transition-all hover:bg-tertiary-500/20 hover:text-white active:scale-95"
+							onclick={() => (player.resources[MANA_RESOURCE] = Math.max(0, mana - 10))}
+						>
+							<Icon icon="mdi:minus" />
+						</button>
+						<div class="flex flex-1 flex-col items-center justify-center px-3 py-1.5">
+							<div class="flex items-center gap-1.5">
+								<Icon icon="mdi:wizard-hat" class="text-tertiary-400 text-sm" />
+								<span class="text-surface-100 text-lg font-bold tabular-nums">{mana}</span>
+								<span class="text-tertiary-500 text-xs">/ {MAX_MANA}</span>
+							</div>
+							<span class="text-tertiary-400 text-[0.6rem] font-semibold tracking-widest uppercase">Mana</span>
+						</div>
+						<button
+							type="button"
+							class="flex h-10 w-10 items-center justify-center border-l border-tertiary-500/20 text-tertiary-400 transition-all hover:bg-tertiary-500/20 hover:text-white active:scale-95"
+							onclick={() => (player.resources[MANA_RESOURCE] = Math.min(MAX_MANA, mana + 10))}
+						>
+							<Icon icon="mdi:plus" />
+						</button>
+					</div>
+				</div>
+			</div>
+		{:else if player.classType === 'swe'}
+			<!-- SWE: Always show SWEnergy -->
+			{@const swenergy = player.resources['SWEnergy'] ?? 0}
+			<div class="grid grid-cols-1 gap-3">
+				<div class="group relative overflow-hidden rounded border border-secondary-500/30 bg-secondary-500/10 transition-all hover:border-secondary-500/50">
+					<div class="flex items-center">
+						<button
+							type="button"
+							class="flex h-10 w-10 items-center justify-center border-r border-secondary-500/20 text-secondary-400 transition-all hover:bg-secondary-500/20 hover:text-white active:scale-95"
+							onclick={() => (player.resources['SWEnergy'] = Math.max(0, swenergy - 1))}
+						>
+							<Icon icon="mdi:minus" />
+						</button>
+						<div class="flex flex-1 flex-col items-center justify-center px-3 py-1.5">
+							<div class="flex items-center gap-1.5">
+								<Icon icon="mdi:code-braces" class="text-secondary-400 text-sm" />
+								<span class="text-surface-100 text-lg font-bold tabular-nums">{swenergy}</span>
+							</div>
+							<span class="text-secondary-400 text-[0.6rem] font-semibold tracking-widest uppercase">SWEnergy</span>
+						</div>
+						<button
+							type="button"
+							class="flex h-10 w-10 items-center justify-center border-l border-secondary-500/20 text-secondary-400 transition-all hover:bg-secondary-500/20 hover:text-white active:scale-95"
+							onclick={() => (player.resources['SWEnergy'] = swenergy + 1)}
+						>
+							<Icon icon="mdi:plus" />
+						</button>
+					</div>
+				</div>
+			</div>
+		{:else if Object.keys(player.resources).length > 0}
+			<!-- Other classes: Show generic resources if any -->
 			<div class="grid grid-cols-2 gap-3">
 				{#each Object.entries(player.resources) as [resource, amount] (resource)}
 					{@render stepper(

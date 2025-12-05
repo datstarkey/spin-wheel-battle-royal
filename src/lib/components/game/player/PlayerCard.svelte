@@ -282,43 +282,51 @@
 	</div>
 
 	<!-- Resources -->
-	{#if Object.keys(player.resources).length > 0}
+	{#if player.classType === 'magicman' || player.classType === 'swe' || Object.keys(player.resources).length > 0}
 		<div class="mb-3 {isDead ? 'opacity-40' : ''}">
+			<!-- Always show Mana bar for Magic Man -->
+			{#if player.classType === 'magicman'}
+				{@const manaAmount = player.resources['Mana'] ?? 0}
+				<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
+					<span class="text-surface-300 flex min-w-[50px] items-center gap-1 text-[0.65rem]">
+						<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
+						Mana
+					</span>
+					<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
+						<div
+							class="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-300 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+							style:width="{(manaAmount / MAX_MANA) * 100}%"
+						></div>
+					</div>
+					<span class="text-violet-300 min-w-[45px] text-right text-[0.65rem] font-semibold"
+						>{manaAmount}/{MAX_MANA}</span
+					>
+				</div>
+			{/if}
+
+			<!-- Always show SWEnergy bar for SWE -->
+			{#if player.classType === 'swe'}
+				{@const swenergyAmount = player.resources['SWEnergy'] ?? 0}
+				<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
+					<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
+						<Icon icon="mdi:code-braces" class="text-xs text-secondary-400" />
+						SWEnergy
+					</span>
+					<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
+						<div
+							class="h-full bg-gradient-to-r from-secondary-500 to-secondary-400 transition-all duration-300"
+							style:width="{(swenergyAmount / 10) * 100}%"
+						></div>
+					</div>
+					<span class="text-secondary-300 min-w-[30px] text-right text-[0.65rem] font-semibold"
+						>{swenergyAmount}/10</span
+					>
+				</div>
+			{/if}
+
+			<!-- Other resources (excluding class-specific ones already shown) -->
 			{#each Object.entries(player.resources) as [resource, amount] (resource)}
-				{#if resource === 'Swenergy'}
-					<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
-						<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
-							<Icon icon="mdi:cube-outline" class="text-xs text-teal-400" />
-							{resource}
-						</span>
-						<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
-							<div
-								class="h-full bg-gradient-to-r from-teal-500 to-teal-400 transition-all duration-300"
-								style:width="{(amount / 10) * 100}%"
-							></div>
-						</div>
-						<span class="text-surface-300 min-w-[30px] text-right text-[0.65rem] font-semibold"
-							>{amount}/10</span
-						>
-					</div>
-				{:else if resource === 'Mana'}
-					<!-- Mana Bar for Magic Man -->
-					<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
-						<span class="text-surface-300 flex min-w-[50px] items-center gap-1 text-[0.65rem]">
-							<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
-							Mana
-						</span>
-						<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
-							<div
-								class="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-300 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
-								style:width="{(amount / MAX_MANA) * 100}%"
-							></div>
-						</div>
-						<span class="text-violet-300 min-w-[45px] text-right text-[0.65rem] font-semibold"
-							>{amount}/{MAX_MANA}</span
-						>
-					</div>
-				{:else if resource !== 'RuneOfPowerTurns'}
+				{#if resource !== 'Mana' && resource !== 'SWEnergy' && resource !== 'RuneOfPowerTurns'}
 					<div class="mt-1 flex items-center gap-1.5 rounded-sm bg-black/20 px-2 py-1 text-xs">
 						<Icon icon="mdi:cube-outline" class="text-teal-400" />
 						<span>{resource}</span>
