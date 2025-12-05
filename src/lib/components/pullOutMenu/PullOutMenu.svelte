@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import Button from '../Button.svelte';
+	import Portal from '../Portal.svelte';
 
 	interface Props {
 		position: 'left' | 'right' | 'top' | 'bottom';
@@ -51,23 +52,17 @@
 
 {@render trigger?.(onTrigger)}
 
-<div
-	class="menu-container bg-surface-50 dark:bg-surface-900 overflow-hidden"
-	style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
->
-	<div class="absolute top-0 right-0 m-8">
-		<Button icon="mdi:close" onclick={() => (isOpen = false)}></Button>
-	</div>
+<Portal>
+	<div
+		class="fixed z-1000 overflow-hidden bg-surface-50 transition-transform duration-300 ease-in-out dark:bg-surface-900"
+		style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
+	>
+		<div class="absolute top-0 right-0 m-8">
+			<Button icon="mdi:close" onclick={() => (isOpen = false)}></Button>
+		</div>
 
-	<div class="p-8">
-		{@render children()}
+		<div class="p-8">
+			{@render children()}
+		</div>
 	</div>
-</div>
-
-<style>
-	.menu-container {
-		position: fixed;
-		transition: transform 0.3s ease-in-out;
-		z-index: 1000;
-	}
-</style>
+</Portal>
