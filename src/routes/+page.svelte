@@ -12,6 +12,6 @@
 {:else if !currentGame.value.started}
 	<GameOnboarding />
 {:else}
-	<CustomWheels />
 	<Players />
+	<CustomWheels />
 {/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
+	import SoundCloudPlayer from '$lib/components/audio/SoundCloudPlayer.svelte';
 	import GlobalGameStats from '$lib/components/game/GlobalGameStats.svelte';
+	import ClassesHelpModal from '$lib/components/help/ClassesHelpModal.svelte';
 	import { currentGame, resetGame } from '$lib/stores/gameStore.svelte';
 	import { toaster } from '$lib/stores/toaster.svelte';
 	import { Toast } from '@skeletonlabs/skeleton-svelte';
@@ -12,27 +14,17 @@
 
 	let { children }: Props = $props();
 
-	// Theme toggle - check initial state from localStorage or system preference
-	let isDark = $state(
-		typeof window !== 'undefined'
-			? localStorage.getItem('theme') === 'dark' ||
-					(!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
-			: true
-	);
-
-	// Apply initial theme on mount
+	// Force dark mode only
 	$effect(() => {
 		if (typeof document !== 'undefined') {
 			document.documentElement.dataset.theme = 'battle-arena';
-			document.documentElement.dataset.mode = isDark ? 'dark' : 'light';
-			localStorage.setItem('theme', isDark ? 'dark' : 'light');
+			document.documentElement.dataset.mode = 'dark';
 		}
 	});
-
-	function toggleTheme() {
-		isDark = !isDark;
-	}
 </script>
+
+<!-- SoundCloud Battle Music Player -->
+<SoundCloudPlayer />
 
 <!-- Toast notifications -->
 <Toast.Group {toaster}>
@@ -47,6 +39,9 @@
 	{/snippet}
 </Toast.Group>
 
+<!-- Modal portal target - renders above everything -->
+<div id="modal-portal" class="contents"></div>
+
 <!-- Custom layout replacing AppShell -->
 <div class="flex h-full flex-col">
 	<!-- Header/AppBar -->
@@ -59,12 +54,7 @@
 			{#if currentGame.value}
 				<Button class="preset-filled-error-500" onclick={resetGame}>Reset Game</Button>
 			{/if}
-			<Button
-				class="btn-icon-sm"
-				icon={isDark ? 'mdi:weather-sunny' : 'mdi:weather-night'}
-				onclick={toggleTheme}
-				aria-label="Toggle theme"
-			></Button>
+			<ClassesHelpModal />
 		</div>
 	</header>
 

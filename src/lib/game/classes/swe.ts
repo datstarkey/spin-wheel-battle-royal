@@ -11,6 +11,7 @@ export const Swe: ClassBase = {
 	defense: 15,
 	attackRange: 1,
 	name: 'Swe',
+	description: 'Masters of Swenergy, gaining and utilizing it to become the Swe Supreme.',
 	onWinAbility: 'Generate Swesupreme energy (spin swheel)',
 	onAttackWin(player) {
 		const wheel: WheelBase = [];

@@ -1,5 +1,4 @@
-import { hasPlayerAttacked } from '$lib/components/game/AttackPlayer.svelte';
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { generateLootWheel } from './lootWheel';
 import type { WheelBase } from './wheels';
@@ -26,7 +25,7 @@ export function generateButtonWheel(playerName: string) {
 		{
 			label: 'Attack Someone',
 			onWin: () => {
-				hasPlayerAttacked.value = false;
+				if (currentGame.value) currentGame.value.hasFought = false;
 			}
 		},
 		{
