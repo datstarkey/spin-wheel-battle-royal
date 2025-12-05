@@ -3,6 +3,7 @@
  * Provides validation to prevent corrupted saves from breaking the game
  */
 
+import type { Position } from './board/types';
 import type { ClassType } from './classes/classType';
 import { classMap } from './classes/classType';
 import type { AllItems, Chests, Consumables, Helms, MainHands, OffHands } from './items/itemTypes';
@@ -118,6 +119,7 @@ export interface SerializedPlayer {
 	gear: SerializedPlayerGear;
 	statuses: SerializedPlayerStatuses;
 	statModifiers: SerializedStatModifiers;
+	position: Position | null;
 }
 
 export interface SerializedGame {
@@ -134,6 +136,8 @@ export interface SerializedGame {
 	shopConsumableCostModifier: number;
 	hasTurnStarted: boolean;
 	skippedNextTurns: string[];
+	hasMoved: boolean;
+	hasFought: boolean;
 }
 
 // ============================================================================
@@ -240,6 +244,12 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 	// Class must be valid
 	const classType = isClassType(data.class) ? data.class : 'none';
 
+	// Validate position
+	let position: Position | null = null;
+	if (isObject(data.position) && isNumber(data.position.x) && isNumber(data.position.y)) {
+		position = { x: data.position.x, y: data.position.y };
+	}
+
 	return {
 		name: data.name,
 		hp: isNumber(data.hp) ? data.hp : 0,
@@ -262,7 +272,8 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 		resources: validateNumberRecord(data.resources),
 		gear: validatePlayerGear(data.gear),
 		statuses: validatePlayerStatuses(data.statuses),
-		statModifiers: validateStatModifiers(data.statModifiers)
+		statModifiers: validateStatModifiers(data.statModifiers),
+		position
 	};
 }
 
@@ -358,6 +369,8 @@ export function validateGame(data: unknown): SerializedGame | null {
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,
 		shopConsumableCostModifier: isNumber(data.shopConsumableCostModifier) ? data.shopConsumableCostModifier : 0,
 		hasTurnStarted: isBoolean(data.hasTurnStarted) ? data.hasTurnStarted : false,
-		skippedNextTurns
+		skippedNextTurns,
+		hasMoved: isBoolean(data.hasMoved) ? data.hasMoved : false,
+		hasFought: isBoolean(data.hasFought) ? data.hasFought : false
 	};
 }

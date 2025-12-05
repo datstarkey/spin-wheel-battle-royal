@@ -5,9 +5,12 @@ import {
 	getItemCost,
 	increaseGlobalHpReduction,
 	increaseShopConsumableCostModifier,
-	increaseShopCostModifier
+	increaseShopCostModifier,
+	teleportFromShadowRealm,
+	teleportToShadowRealm
 } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
+import type { Position } from '../board/types';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
 import type { SerializedPlayer } from '../serialization';
@@ -140,8 +143,30 @@ export class Player {
 	public get inShadowRealm() {
 		return this._inShadowRealm;
 	}
-	public set inShadowRealm(value) {
+	public set inShadowRealm(value: boolean) {
+		const wasInShadowRealm = this._inShadowRealm;
 		this._inShadowRealm = value;
+
+		// Handle teleportation when entering/leaving shadow realm
+		if (value && !wasInShadowRealm) {
+			// Entering shadow realm - teleport to nearest shadow realm tile
+			teleportToShadowRealm(this);
+		} else if (!value && wasInShadowRealm) {
+			// Leaving shadow realm - teleport to random spawn
+			teleportFromShadowRealm(this);
+		}
+	}
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Board Position
+	 */
+	private _position = $state<Position | null>(null);
+	public get position(): Position | null {
+		return this._position;
+	}
+	public set position(value: Position | null) {
+		this._position = value;
 	}
 
 	/**
@@ -543,7 +568,7 @@ export class Player {
 			brassKnucklesMultiplier: this._brassKnucklesMultiplier,
 			baseDefense: this._baseDefense,
 			bonusDefense: this._bonusDefense,
-			defenseMultipliers: this.defenseMultipliers, // Fixed: was 'defenseMultiplier'
+			defenseMultipliers: this.defenseMultipliers,
 			gold: this._gold,
 			resources: this.resources,
 			gear: this.gear.serialize(),
@@ -554,7 +579,8 @@ export class Player {
 				movement: this._statModifiersMovement,
 				attackRange: this._statModifiersAttackRange,
 				hp: this._statModifiersHp
-			}
+			},
+			position: this._position
 		};
 	}
 
@@ -574,7 +600,7 @@ export class Player {
 		player._brassKnucklesMultiplier = data.brassKnucklesMultiplier;
 		player._baseDefense = data.baseDefense;
 		player._bonusDefense = data.bonusDefense;
-		player.defenseMultipliers = data.defenseMultipliers; // Fixed: was 'defenseMultiplier'
+		player.defenseMultipliers = data.defenseMultipliers;
 		player._gold = data.gold;
 		player.resources = data.resources;
 		player._statModifiersAttack = data.statModifiers.attack;
@@ -582,6 +608,7 @@ export class Player {
 		player._statModifiersMovement = data.statModifiers.movement;
 		player._statModifiersAttackRange = data.statModifiers.attackRange;
 		player._statModifiersHp = data.statModifiers.hp;
+		player._position = data.position;
 		player.gear = PlayerGear.deserialize(data.gear, player);
 		player.statuses = PlayerStatuses.deserialize(data.statuses, player);
 		player.statuses.applyDeserializedStatuses();

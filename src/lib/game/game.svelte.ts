@@ -1,5 +1,3 @@
-import { hasPlayerAttacked } from '$lib/components/game/AttackPlayer.svelte';
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { AllItems } from './items/itemTypes';
@@ -23,6 +21,19 @@ export class Game {
 
 	//playerNames
 	skippedNextTurns = $state<string[]>([]);
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Turn Action State - Tracks what the current player has done this turn
+	 */
+	hasMoved = $state(false);
+	hasFought = $state(false);
+
+	/** Reset turn action state for a new turn */
+	resetTurnActions() {
+		this.hasMoved = false;
+		this.hasFought = false;
+	}
 
 	shopCostModifier = $state(0);
 	shopConsumableCostModifier = $state(0);
@@ -161,7 +172,7 @@ export class Game {
 	gainAnotherTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} gets another turn`);
 		this.hasTurnStarted = true;
-		hasPlayerAttacked.value = false;
+		this.resetTurnActions();
 	}
 
 	finishTurn() {
@@ -169,7 +180,7 @@ export class Game {
 		this.currentPlayer?.onTurnEnd();
 		this.incrementTurn();
 		this.hasTurnStarted = false;
-		hasPlayerAttacked.value = false;
+		this.resetTurnActions();
 		// Note: startTurn is called here but it's now safe because startTurn
 		// no longer calls finishTurn recursively - it just returns early if needed
 		this.startTurn();
@@ -203,7 +214,7 @@ export class Game {
 			toast.error(`${player.name} is already in the Shadow Realm!`);
 			return;
 		}
-		addAuditTrail(`${player.name} has been sent to the Shadow Realm!`);
+		this.addAuditTrail(`${player.name} has been sent to the Shadow Realm!`);
 		this.shadowRealm.push(player);
 	}
 
@@ -211,7 +222,7 @@ export class Game {
 	removePlayerFromShadowRealm(player: Player) {
 		if (this._shadowRealm.includes(player)) {
 			this._shadowRealm = this._shadowRealm.filter((p) => p !== player);
-			addAuditTrail(`${player.name} has been removed from the Shadow Realm!`);
+			this.addAuditTrail(`${player.name} has been removed from the Shadow Realm!`);
 		}
 	}
 
@@ -238,7 +249,9 @@ export class Game {
 			shopCostModifier: this.shopCostModifier,
 			shopConsumableCostModifier: this.shopConsumableCostModifier,
 			hasTurnStarted: this.hasTurnStarted,
-			skippedNextTurns: this.skippedNextTurns
+			skippedNextTurns: this.skippedNextTurns,
+			hasMoved: this.hasMoved,
+			hasFought: this.hasFought
 		});
 	}
 
@@ -269,6 +282,8 @@ export class Game {
 		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
 		game.hasTurnStarted = data.hasTurnStarted;
 		game.skippedNextTurns = data.skippedNextTurns;
+		game.hasMoved = data.hasMoved;
+		game.hasFought = data.hasFought;
 		return game;
 	}
 }
