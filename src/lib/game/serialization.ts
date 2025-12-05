@@ -139,6 +139,8 @@ export interface SerializedGame {
 	hasMoved: boolean;
 	hasFought: boolean;
 	hasShopped: boolean;
+	hasUsedCasino: boolean;
+	lootedTreasures: string[];
 }
 
 // ============================================================================
@@ -357,6 +359,16 @@ export function validateGame(data: unknown): SerializedGame | null {
 		}
 	}
 
+	// Validate looted treasures (defaults to empty array for existing saves)
+	const lootedTreasures: string[] = [];
+	if (isArray(data.lootedTreasures)) {
+		for (const entry of data.lootedTreasures) {
+			if (isString(entry)) {
+				lootedTreasures.push(entry);
+			}
+		}
+	}
+
 	return {
 		players,
 		started: isBoolean(data.started) ? data.started : false,
@@ -373,6 +385,8 @@ export function validateGame(data: unknown): SerializedGame | null {
 		skippedNextTurns,
 		hasMoved: isBoolean(data.hasMoved) ? data.hasMoved : false,
 		hasFought: isBoolean(data.hasFought) ? data.hasFought : false,
-		hasShopped: isBoolean(data.hasShopped) ? data.hasShopped : false
+		hasShopped: isBoolean(data.hasShopped) ? data.hasShopped : false,
+		hasUsedCasino: isBoolean(data.hasUsedCasino) ? data.hasUsedCasino : false,
+		lootedTreasures
 	};
 }

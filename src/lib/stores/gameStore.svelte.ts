@@ -1,12 +1,14 @@
 import { page } from '$app/state';
 import { gameBoard, getValidMoves } from '$lib/game/board/board.svelte';
 import { SHADOW_REALM_TILES, SPAWN_ZONES } from '$lib/game/board/boardData';
+import { executeTileAction } from '$lib/game/board/tileActions';
 import type { Position } from '$lib/game/board/types';
 import { positionsEqual } from '$lib/game/board/types';
 import { Game } from '$lib/game/game.svelte';
 import { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import { Player } from '$lib/game/player/player.svelte';
-import type { WheelBase } from '$lib/game/wheels/wheels';
+import type { WheelBase, CustomWheelData } from '$lib/game/wheels/wheels';
+import type { WheelTheme } from '$lib/components/wheel/types';
 import toast from '$lib/stores/toaster.svelte';
 import { localStorageStore } from './localStorageStore.svelte';
 
@@ -32,6 +34,15 @@ export function getHasShoppedThisTurn() {
 export function setHasShoppedThisTurn(value: boolean) {
 	if (!currentGame.value) return;
 	currentGame.value.hasShopped = value;
+}
+
+export function getHasUsedCasinoThisTurn() {
+	return currentGame.value?.hasUsedCasino ?? false;
+}
+
+export function setHasUsedCasinoThisTurn(value: boolean) {
+	if (!currentGame.value) return;
+	currentGame.value.hasUsedCasino = value;
 }
 
 /**
@@ -100,6 +111,9 @@ export function moveCurrentPlayerTo(position: Position): boolean {
 	currentGame.value.hasMoved = true;
 	exitMovementMode();
 
+	// Execute tile action at the new position (treasure chests, shops, etc.)
+	executeTileAction(currentPlayer, position);
+
 	return true;
 }
 
@@ -121,6 +135,18 @@ export function isCurrentPlayerOnShop(): boolean {
 
 	const tile = gameBoard.getPlayerTileType(player.name);
 	return tile === 'shop';
+}
+
+/**
+ * Check if the current player is on a casino tile
+ */
+export function isCurrentPlayerOnCasino(): boolean {
+	if (!currentGame.value) return false;
+	const player = currentGame.value.currentPlayer;
+	if (!player?.position) return false;
+
+	const tile = gameBoard.getPlayerTileType(player.name);
+	return tile === 'casino';
 }
 
 /**
@@ -394,11 +420,12 @@ export function startGame() {
 /**
  * @description Adds a custom wheel to the game, which will have to be spun before the game can continue
  * @param key The key to use to reference the wheel
- * @param wheel The wheel to add
+ * @param wheel The wheel items to add
+ * @param theme Optional theme for the wheel display
  */
-export function addCustomWheel(key: string, wheel: WheelBase) {
+export function addCustomWheel(key: string, wheel: WheelBase, theme?: WheelTheme) {
 	if (!currentGame.value) return;
-	currentGame.value.customWheels.set(key, wheel);
+	currentGame.value.customWheels.set(key, { items: wheel, theme });
 }
 
 export function removeCustomWheel(key: string) {

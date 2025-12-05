@@ -8,13 +8,15 @@ import type { Player } from '../player/player.svelte';
 import type { Position, TileType } from './types';
 import { getTileAt, isOuterTeleporter, getOtherOuterTeleporters, getInnerTeleporter } from './board.svelte';
 import { generateButtonWheel } from '../wheels/buttonWheel';
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
+import { generateCasinoWheel } from '../wheels/casinoWheel';
+import { generateLootWheel } from '../wheels/lootWheel';
+import { addAuditTrail, currentGame } from '$lib/stores/gameStore.svelte';
 
 export interface TileActionResult {
 	/** Whether the action was handled */
 	handled: boolean;
-	/** Whether to open a UI modal (e.g., shop, teleporter selection) */
-	openModal?: 'shop' | 'teleporter';
+	/** Whether to open a UI modal (e.g., shop, teleporter selection, casino) */
+	openModal?: 'shop' | 'teleporter' | 'casino';
 	/** For teleporter: available destinations */
 	teleporterDestinations?: Position[];
 	/** Message to display */
@@ -45,6 +47,12 @@ export function executeTileAction(player: Player, position: Position): TileActio
 
 		case 'button':
 			return handleButtonTile(player);
+
+		case 'casino':
+			return handleCasinoTile(player);
+
+		case 'treasure':
+			return handleTreasureTile(player, position);
 
 		case 'spawn_entry':
 			return handleSpawnEntry(player);
@@ -117,6 +125,46 @@ function handleButtonTile(player: Player): TileActionResult {
 	return {
 		handled: true,
 		message: `${player.name} pressed THE BUTTON! Spin the Button Wheel!`
+	};
+}
+
+/**
+ * Handle landing on a casino tile
+ */
+function handleCasinoTile(player: Player): TileActionResult {
+	addAuditTrail(`${player.name} entered the Casino!`);
+	return {
+		handled: true,
+		openModal: 'casino',
+		message: `${player.name} can gamble at the casino!`
+	};
+}
+
+/**
+ * Handle landing on a treasure chest tile
+ */
+function handleTreasureTile(player: Player, position: Position): TileActionResult {
+	const game = currentGame.value;
+	if (!game) {
+		return { handled: false };
+	}
+
+	// Check if this treasure has already been looted
+	if (game.isTreasureLooted(position.x, position.y)) {
+		return {
+			handled: true,
+			message: `This treasure chest has already been looted.`
+		};
+	}
+
+	// Mark the treasure as looted and generate the loot wheel
+	game.lootTreasure(position.x, position.y);
+	addAuditTrail(`${player.name} found a treasure chest!`);
+	generateLootWheel(player.name);
+
+	return {
+		handled: true,
+		message: `${player.name} found a treasure chest! Spin the Loot Wheel!`
 	};
 }
 

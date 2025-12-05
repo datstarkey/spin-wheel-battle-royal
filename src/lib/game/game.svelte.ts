@@ -1,9 +1,9 @@
 import toast from '$lib/stores/toaster.svelte';
-import { SvelteMap } from 'svelte/reactivity';
+import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import type { AllItems } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
-import type { WheelBase } from './wheels/wheels';
+import type { WheelBase, CustomWheelConfig } from './wheels/wheels';
 
 export class Game {
 	players: Player[] = $state([]);
@@ -15,9 +15,29 @@ export class Game {
 
 	globalHpReduction = $state(1);
 
-	customWheels = new SvelteMap<string, WheelBase>();
+	customWheels = new SvelteMap<string, CustomWheelConfig>();
 
 	itemCostModifiers = new SvelteMap<AllItems, number>();
+
+	/**
+	 * --------------------------------------------------------------------------
+	 * Treasure Chests - tracks which treasure chests have been looted
+	 * Stored as "x,y" strings for easy serialization
+	 */
+	lootedTreasures = new SvelteSet<string>();
+
+	isTreasureLooted(x: number, y: number): boolean {
+		return this.lootedTreasures.has(`${x},${y}`);
+	}
+
+	lootTreasure(x: number, y: number): boolean {
+		const key = `${x},${y}`;
+		if (this.lootedTreasures.has(key)) {
+			return false; // Already looted
+		}
+		this.lootedTreasures.add(key);
+		return true;
+	}
 
 	//playerNames
 	skippedNextTurns = $state<string[]>([]);
@@ -29,12 +49,14 @@ export class Game {
 	hasMoved = $state(false);
 	hasFought = $state(false);
 	hasShopped = $state(false);
+	hasUsedCasino = $state(false);
 
 	/** Reset turn action state for a new turn */
 	resetTurnActions() {
 		this.hasMoved = false;
 		this.hasFought = false;
 		this.hasShopped = false;
+		this.hasUsedCasino = false;
 	}
 
 	shopCostModifier = $state(0);
@@ -254,7 +276,9 @@ export class Game {
 			skippedNextTurns: this.skippedNextTurns,
 			hasMoved: this.hasMoved,
 			hasFought: this.hasFought,
-			hasShopped: this.hasShopped
+			hasShopped: this.hasShopped,
+			hasUsedCasino: this.hasUsedCasino,
+			lootedTreasures: Array.from(this.lootedTreasures)
 		});
 	}
 
@@ -272,7 +296,16 @@ export class Game {
 		game.players = data.players.map((p) => Player.deserialize(p));
 		game.started = data.started;
 		game.globalHpReduction = data.globalHpReduction;
-		game.customWheels = new SvelteMap(data.customWheels) as SvelteMap<string, WheelBase>;
+		// Normalize wheel data to handle both old (array) and new (config object) formats
+		const normalizedWheels = data.customWheels.map(([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
+			if (Array.isArray(value)) {
+				// Old format: just an array of items
+				return [key, { items: value }];
+			}
+			// New format: already a CustomWheelConfig
+			return [key, value as CustomWheelConfig];
+		});
+		game.customWheels = new SvelteMap(normalizedWheels);
 		game.playerOrder = data.playerOrder;
 		game._currentTurn = data._currentTurn;
 		// Shadow realm players need to be references to actual player objects
@@ -288,6 +321,8 @@ export class Game {
 		game.hasMoved = data.hasMoved ?? false;
 		game.hasFought = data.hasFought ?? false;
 		game.hasShopped = data.hasShopped ?? false;
+		game.hasUsedCasino = data.hasUsedCasino ?? false;
+		game.lootedTreasures = new SvelteSet(data.lootedTreasures ?? []);
 		return game;
 	}
 }
