@@ -27,6 +27,18 @@
 		currentOrder[order] = player.name;
 		order++;
 
+		// If only one player remains, auto-assign them to the last position
+		if (Object.keys(currentOrder).length === maxPlayers - 1) {
+			const assignedNames = Object.values(currentOrder);
+			const remainingPlayer = currentGame.value?.players.find(
+				(p) => !assignedNames.includes(p.name)
+			);
+			if (remainingPlayer) {
+				currentOrder[order] = remainingPlayer.name;
+				order++;
+			}
+		}
+
 		// Auto-save when complete
 		if (Object.keys(currentOrder).length === maxPlayers) {
 			save();
