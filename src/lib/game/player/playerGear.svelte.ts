@@ -8,16 +8,30 @@ import items, {
 	type MainHands,
 	type OffHands
 } from '../items/itemTypes';
+import type { SerializedPlayerGear } from '../serialization';
 import type { Player } from './player.svelte';
 
 export class PlayerGear {
+	private _player: Player | null = null;
 	private _playerName: string;
 
-	constructor(playerName: string) {
-		this._playerName = playerName;
+	constructor(playerNameOrPlayer: string | Player) {
+		if (typeof playerNameOrPlayer === 'string') {
+			this._playerName = playerNameOrPlayer;
+		} else {
+			this._player = playerNameOrPlayer;
+			this._playerName = playerNameOrPlayer.name;
+		}
+	}
+
+	setPlayer(player: Player) {
+		this._player = player;
 	}
 
 	private get player(): Player {
+		if (this._player) {
+			return this._player;
+		}
 		const player = getPlayerByName(this._playerName);
 		if (!player) {
 			throw new Error(`Player ${this._playerName} not found`);
@@ -319,7 +333,7 @@ export class PlayerGear {
 	 * Serialization
 	 */
 
-	serialize(): Record<string, any> {
+	serialize(): SerializedPlayerGear {
 		return {
 			playerName: this._playerName,
 			mainHand: this._mainHand,
@@ -330,10 +344,10 @@ export class PlayerGear {
 		};
 	}
 
-	static deserialize(data: Record<string, any>): PlayerGear {
-		const gear = new PlayerGear(data.playerName);
-		gear._consumables = data.consumables || [];
-		
+	static deserialize(data: SerializedPlayerGear, player: Player): PlayerGear {
+		const gear = new PlayerGear(player);
+		gear._consumables = data.consumables;
+
 		// Re-equip items to trigger onEquip callbacks
 		if (data.mainHand) {
 			gear.addMainHand(data.mainHand);
@@ -347,7 +361,7 @@ export class PlayerGear {
 		if (data.chest) {
 			gear.addChest(data.chest);
 		}
-		
+
 		return gear;
 	}
 }

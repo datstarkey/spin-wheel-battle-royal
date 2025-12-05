@@ -10,11 +10,11 @@ export const Box: Item = {
 	image: '/Items/HelmEquipables/Box.jpg',
 
 	onEquip: (player: Player) => {
-		player.bonusAttack -= 10
-		player.bonusDefense += 20;
+		player.addStatModifier('A Box', 'attack', -10);
+		player.addStatModifier('A Box', 'defense', 20);
 	},
 	onUnequip: (player: Player) => {
-		player.bonusAttack += 10;
-		player.bonusDefense -= 20;
+		player.removeStatModifier('A Box', 'attack');
+		player.removeStatModifier('A Box', 'defense');
 	}
 };

@@ -4,6 +4,7 @@ import toast from 'svelte-french-toast';
 import { SvelteMap } from 'svelte/reactivity';
 import type { AllItems } from './items/itemTypes';
 import { Player } from './player/player.svelte';
+import { validateGame } from './serialization';
 import type { WheelBase } from './wheels/wheels';
 
 export class Game {
@@ -53,8 +54,12 @@ export class Game {
 	public get currentTurn(): number {
 		return this._currentTurn;
 	}
-	private set currentTurn(value: number) {
+	public set currentTurn(value: number) {
 		this._currentTurn = value;
+	}
+
+	public get playerOrderLength(): number {
+		return Object.keys(this.playerOrder).length;
 	}
 
 	private incrementTurn() {
@@ -71,7 +76,10 @@ export class Game {
 			return;
 		}
 		if (alivePlayers.length === 1) {
-			// addAuditTrail(`${alivePlayers[0].name} has won the game!`);
+			if (!this.winner) {
+				this.winner = alivePlayers[0];
+				this.addAuditTrail(`${alivePlayers[0].name} has won the game!`);
+			}
 			return alivePlayers[0];
 		}
 
@@ -83,35 +91,71 @@ export class Game {
 			return;
 		}
 
-		// if (player.dead) {
-
-		// 	this.incrementTurn();
-		// 	return this.currentPlayer;
-		// }
 		return player;
 	}
 
-	startTurn() {
-		if (!this.hasTurnStarted) {
-			this.currentPlayer?.onTurnStart();
-			this.addAuditTrail(`${this.currentPlayer?.name} starts their turn!`);
-			this.hasTurnStarted = true;
+	/**
+	 * Advances to the next alive player's turn.
+	 * Uses iterative approach to avoid stack overflow from recursive calls.
+	 */
+	private advanceToNextAlivePlayer(): Player | undefined {
+		const totalPlayers = Object.entries(this.playerOrder).length;
+		if (totalPlayers === 0) return undefined;
 
-			//skip the turn if the player has skipped the next turn
-			if (this.skippedNextTurns.includes(this.currentPlayer?.name ?? '')) {
-				this.skippedNextTurns = this.skippedNextTurns.filter(
-					(name) => name !== this.currentPlayer?.name
-				);
-				this.startTurn();
-			}
-
-			if (this.currentPlayer?.dead) {
-				toast.success('player is dead');
-				this.finishTurn();
-			} else {
-				toast.success('player is not dead');
+		// Safety limit to prevent infinite loops
+		for (let attempts = 0; attempts < totalPlayers; attempts++) {
+			this.incrementTurn();
+			const nextPlayer = this.getPlayerByName(this.playerOrder[this.currentTurn]);
+			if (nextPlayer && !nextPlayer.dead) {
+				return nextPlayer;
 			}
 		}
+
+		// All players are dead
+		return undefined;
+	}
+
+	startTurn() {
+		if (this.hasTurnStarted) return;
+
+		const player = this.currentPlayer;
+		if (!player) return;
+
+		// Check for winner
+		if (this.winner) {
+			toast.success(`${this.winner.name} has won the game!`);
+			return;
+		}
+
+		// Skip dead players iteratively (not recursively)
+		if (player.dead) {
+			const nextAlive = this.advanceToNextAlivePlayer();
+			if (!nextAlive) {
+				toast.error('No alive players remaining!');
+				return;
+			}
+			// Don't recurse - just set up for the alive player and return
+			// The UI should call startTurn again
+			return;
+		}
+
+		// Skip players who have their turn skipped
+		if (this.skippedNextTurns.includes(player.name)) {
+			this.skippedNextTurns = this.skippedNextTurns.filter((name) => name !== player.name);
+			this.addAuditTrail(`${player.name}'s turn was skipped!`);
+			const nextAlive = this.advanceToNextAlivePlayer();
+			if (!nextAlive) {
+				toast.error('No alive players remaining!');
+				return;
+			}
+			// Don't recurse - UI should call startTurn again
+			return;
+		}
+
+		// Actually start the turn
+		player.onTurnStart();
+		this.addAuditTrail(`${player.name} starts their turn!`);
+		this.hasTurnStarted = true;
 	}
 
 	gainAnotherTurn() {
@@ -126,6 +170,8 @@ export class Game {
 		this.incrementTurn();
 		this.hasTurnStarted = false;
 		hasPlayerAttacked.value = false;
+		// Note: startTurn is called here but it's now safe because startTurn
+		// no longer calls finishTurn recursively - it just returns early if needed
 		this.startTurn();
 	}
 
@@ -198,18 +244,29 @@ export class Game {
 
 	// Deserialize a JSON string to create a Game instance
 	public static deserialize(json: string): Game {
-		const data = JSON.parse(json);
+		const rawData = JSON.parse(json);
+		const data = validateGame(rawData);
+
+		if (!data) {
+			toast.error('Failed to load game: invalid save data');
+			throw new Error('Invalid game data');
+		}
+
 		const game = new Game();
-		game.players = data.players.map((p: any) => Player.deserialize(p));
+		game.players = data.players.map((p) => Player.deserialize(p));
 		game.started = data.started;
 		game.globalHpReduction = data.globalHpReduction;
-		game.customWheels = new SvelteMap(data.customWheels); // Convert array back to SvelteMap
+		game.customWheels = new SvelteMap(data.customWheels) as SvelteMap<string, WheelBase>;
 		game.playerOrder = data.playerOrder;
 		game._currentTurn = data._currentTurn;
-		game._shadowRealm = data._shadowRealm;
+		// Shadow realm players need to be references to actual player objects
+		game._shadowRealm = data._shadowRealm
+			.map((sr) => game.players.find((p) => p.name === sr.name))
+			.filter((p): p is Player => p !== undefined);
 		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
 		game.auditTrail = data.auditTrail;
 		game.shopCostModifier = data.shopCostModifier;
+		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
 		game.hasTurnStarted = data.hasTurnStarted;
 		game.skippedNextTurns = data.skippedNextTurns;
 		return game;

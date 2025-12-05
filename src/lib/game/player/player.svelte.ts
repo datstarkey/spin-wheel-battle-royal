@@ -10,6 +10,7 @@ import {
 import toast from 'svelte-french-toast';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
+import type { SerializedPlayer } from '../serialization';
 import { generateDamageTakenWheel } from '../wheels/damageTakenWheel';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
@@ -20,8 +21,8 @@ import { PlayerStatuses } from './playerStatuses.svelte';
 export class Player {
 	constructor(name: string) {
 		this._name = name;
-		this.gear = new PlayerGear(name);
-		this.statuses = new PlayerStatuses(name);
+		this.gear = new PlayerGear(this);
+		this.statuses = new PlayerStatuses(this);
 	}
 	private _name = $state<string>('');
 	public get name(): string {
@@ -38,38 +39,101 @@ export class Player {
 	 * Stat Modifiers System
 	 */
 	// Track all stat modifiers by source (item name or status name)
-	private statModifiers = $state<{
-		attack: Record<string, number>;
-		defense: Record<string, number>;
-		movement: Record<string, number>;
-		attackRange: Record<string, number>;
-		hp: Record<string, number>;
-	}>({
-		attack: {},
-		defense: {},
-		movement: {},
-		attackRange: {},
-		hp: {}
-	});
+	private _statModifiersAttack = $state<Record<string, number>>({});
+	private _statModifiersDefense = $state<Record<string, number>>({});
+	private _statModifiersMovement = $state<Record<string, number>>({});
+	private _statModifiersAttackRange = $state<Record<string, number>>({});
+	private _statModifiersHp = $state<Record<string, number>>({});
+	
+	private get statModifiers() {
+		return {
+			attack: this._statModifiersAttack,
+			defense: this._statModifiersDefense,
+			movement: this._statModifiersMovement,
+			attackRange: this._statModifiersAttackRange,
+			hp: this._statModifiersHp
+		};
+	}
+	
+	// Public getters for UI display
+	get activeModifiers() {
+		return {
+			attack: { ...this._statModifiersAttack },
+			defense: { ...this._statModifiersDefense },
+			movement: { ...this._statModifiersMovement },
+			attackRange: { ...this._statModifiersAttackRange },
+			hp: { ...this._statModifiersHp }
+		};
+	}
 
 	// Add or update a stat modifier
-	addStatModifier(source: string, stat: keyof typeof this.statModifiers, value: number) {
-		this.statModifiers[stat][source] = value;
+	addStatModifier(source: string, stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp', value: number) {
+		switch(stat) {
+			case 'attack':
+				this._statModifiersAttack[source] = value;
+				break;
+			case 'defense':
+				this._statModifiersDefense[source] = value;
+				break;
+			case 'movement':
+				this._statModifiersMovement[source] = value;
+				break;
+			case 'attackRange':
+				this._statModifiersAttackRange[source] = value;
+				break;
+			case 'hp':
+				this._statModifiersHp[source] = value;
+				break;
+		}
 		addAuditTrail(`${this.name} gains ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
 	}
 
 	// Remove a stat modifier
-	removeStatModifier(source: string, stat: keyof typeof this.statModifiers) {
-		const value = this.statModifiers[stat][source];
+	removeStatModifier(source: string, stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp') {
+		let value: number | undefined;
+		switch(stat) {
+			case 'attack':
+				value = this._statModifiersAttack[source];
+				if (value !== undefined) delete this._statModifiersAttack[source];
+				break;
+			case 'defense':
+				value = this._statModifiersDefense[source];
+				if (value !== undefined) delete this._statModifiersDefense[source];
+				break;
+			case 'movement':
+				value = this._statModifiersMovement[source];
+				if (value !== undefined) delete this._statModifiersMovement[source];
+				break;
+			case 'attackRange':
+				value = this._statModifiersAttackRange[source];
+				if (value !== undefined) delete this._statModifiersAttackRange[source];
+				break;
+			case 'hp':
+				value = this._statModifiersHp[source];
+				if (value !== undefined) delete this._statModifiersHp[source];
+				break;
+		}
 		if (value !== undefined) {
-			delete this.statModifiers[stat][source];
 			addAuditTrail(`${this.name} loses ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
 		}
 	}
 
 	// Get total modifier for a stat
-	getTotalStatModifier(stat: keyof typeof this.statModifiers): number {
-		return Object.values(this.statModifiers[stat]).reduce((sum, value) => sum + value, 0);
+	getTotalStatModifier(stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp'): number {
+		switch(stat) {
+			case 'attack':
+				return Object.values(this._statModifiersAttack).reduce((sum, value) => sum + value, 0);
+			case 'defense':
+				return Object.values(this._statModifiersDefense).reduce((sum, value) => sum + value, 0);
+			case 'movement':
+				return Object.values(this._statModifiersMovement).reduce((sum, value) => sum + value, 0);
+			case 'attackRange':
+				return Object.values(this._statModifiersAttackRange).reduce((sum, value) => sum + value, 0);
+			case 'hp':
+				return Object.values(this._statModifiersHp).reduce((sum, value) => sum + value, 0);
+			default:
+				return 0;
+		}
 	}
 
 	private _inShadowRealm = $state(false);
@@ -143,7 +207,7 @@ export class Player {
 	private _baseMovement = $state(1);
 	private _bonusMovement = $state(0);
 	public get movement(): number {
-		return Math.max(1, this._baseMovement + this._bonusMovement);
+		return Math.max(1, this._baseMovement + this.bonusMovement);
 	}
 	public get baseMovement(): number {
 		return this._baseMovement;
@@ -187,7 +251,7 @@ export class Player {
 		addAuditTrail(`${this.name} attack range is now ${this.attackRange}!`);
 	}
 	public get attackRange(): number {
-		return this._baseAttackRange + this._bonusAttackRange;
+		return this._baseAttackRange + this.bonusAttackRange;
 	}
 
 	/**
@@ -462,7 +526,7 @@ export class Player {
 	 * Serialization
 	 */
 
-	serialize(): Record<string, any> {
+	serialize(): SerializedPlayer {
 		return {
 			name: this.name,
 			hp: this._hp,
@@ -479,16 +543,22 @@ export class Player {
 			brassKnucklesMultiplier: this._brassKnucklesMultiplier,
 			baseDefense: this._baseDefense,
 			bonusDefense: this._bonusDefense,
-			defenseMultiplier: this.defenseMultipliers,
+			defenseMultipliers: this.defenseMultipliers, // Fixed: was 'defenseMultiplier'
 			gold: this._gold,
 			resources: this.resources,
 			gear: this.gear.serialize(),
 			statuses: this.statuses.serialize(),
-			statModifiers: this.statModifiers
+			statModifiers: {
+				attack: this._statModifiersAttack,
+				defense: this._statModifiersDefense,
+				movement: this._statModifiersMovement,
+				attackRange: this._statModifiersAttackRange,
+				hp: this._statModifiersHp
+			}
 		};
 	}
 
-	static deserialize(data: Record<string, any>): Player {
+	static deserialize(data: SerializedPlayer): Player {
 		const player = new Player(data.name);
 		player._hp = data.hp;
 		player._class = data.class;
@@ -504,18 +574,17 @@ export class Player {
 		player._brassKnucklesMultiplier = data.brassKnucklesMultiplier;
 		player._baseDefense = data.baseDefense;
 		player._bonusDefense = data.bonusDefense;
-		player.defenseMultipliers = data.defenseMultiplier;
+		player.defenseMultipliers = data.defenseMultipliers; // Fixed: was 'defenseMultiplier'
 		player._gold = data.gold;
 		player.resources = data.resources;
-		player.statModifiers = data.statModifiers || {
-			attack: {},
-			defense: {},
-			movement: {},
-			attackRange: {},
-			hp: {}
-		};
-		player.gear = PlayerGear.deserialize(data.gear);
-		player.statuses = PlayerStatuses.deserialize(data.statuses);
+		player._statModifiersAttack = data.statModifiers.attack;
+		player._statModifiersDefense = data.statModifiers.defense;
+		player._statModifiersMovement = data.statModifiers.movement;
+		player._statModifiersAttackRange = data.statModifiers.attackRange;
+		player._statModifiersHp = data.statModifiers.hp;
+		player.gear = PlayerGear.deserialize(data.gear, player);
+		player.statuses = PlayerStatuses.deserialize(data.statuses, player);
+		player.statuses.applyDeserializedStatuses();
 		return player;
 	}
 }

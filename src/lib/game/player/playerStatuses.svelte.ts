@@ -1,17 +1,31 @@
 import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from 'svelte-french-toast';
+import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
 import type { Player } from './player.svelte';
 
 export class PlayerStatuses {
+	private _player: Player | null = null;
 	private _playerName: string;
 
-	constructor(playerName: string) {
-		this._playerName = playerName;
+	constructor(playerNameOrPlayer: string | Player) {
+		if (typeof playerNameOrPlayer === 'string') {
+			this._playerName = playerNameOrPlayer;
+		} else {
+			this._player = playerNameOrPlayer;
+			this._playerName = playerNameOrPlayer.name;
+		}
+	}
+
+	setPlayer(player: Player) {
+		this._player = player;
 	}
 
 	private get player(): Player {
+		if (this._player) {
+			return this._player;
+		}
 		const player = getPlayerByName(this._playerName);
 		if (!player) {
 			throw new Error(`Player ${this._playerName} not found`);
@@ -133,7 +147,7 @@ export class PlayerStatuses {
 	 * Serialization
 	 */
 
-	serialize(): Record<string, any> {
+	serialize(): SerializedPlayerStatuses {
 		return {
 			playerName: this._playerName,
 			statuses: this._statuses.map((status) => ({
@@ -143,19 +157,23 @@ export class PlayerStatuses {
 		};
 	}
 
-	static deserialize(data: Record<string, any>): PlayerStatuses {
-		const statuses = new PlayerStatuses(data.playerName);
+	static deserialize(data: SerializedPlayerStatuses, player: Player): PlayerStatuses {
+		const statuses = new PlayerStatuses(player);
 
-		statuses._statuses =
-			data.statuses?.map((statusData: { statusName: StatusType; duration: number }) => {
-				const status = new PlayerStatusEffect(statusData.statusName);
-				status.duration = statusData.duration;
-				// Trigger onApply callbacks
-				status.status.onApply?.(statuses.player);
-				return status;
-			}) ?? [];
+		statuses._statuses = data.statuses.map((statusData) => {
+			const status = new PlayerStatusEffect(statusData.statusName);
+			status.duration = statusData.duration;
+			return status;
+		});
 
 		return statuses;
+	}
+	
+	// Call this after setPlayer to apply status effects
+	applyDeserializedStatuses() {
+		this._statuses.forEach(status => {
+			status.status.onApply?.(this.player);
+		});
 	}
 }
 
