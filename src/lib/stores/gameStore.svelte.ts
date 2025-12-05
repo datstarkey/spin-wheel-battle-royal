@@ -3,14 +3,14 @@ import { Game } from '$lib/game/game.svelte';
 import { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import { Player } from '$lib/game/player/player.svelte';
 import type { WheelBase } from '$lib/game/wheels/wheels';
-import toast from 'svelte-french-toast';
-import { indexDbStore } from './localStorageStore.svelte';
+import toast from '$lib/stores/toaster.svelte';
+import { localStorageStore } from './localStorageStore.svelte';
 
 if (page.url.searchParams.get('clear') == 'true') {
 	resetGame();
 }
 
-export const currentGame = indexDbStore<Game | null>('currentGame', null);
+export const currentGame = localStorageStore<Game | null>('currentGame', null);
 
 export function getGlobalHpReduction() {
 	return currentGame.value?.globalHpReduction ?? 0;

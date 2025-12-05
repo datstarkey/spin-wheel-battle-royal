@@ -46,8 +46,12 @@ export class LocalStorageStore<T> {
 	value: T = $state<T>()!;
 
 	constructor(key: string, initialValue: T) {
-		const localValue = localStorage.getItem(key);
-		this.value = localValue ? (superjson.parse<T>(localValue) as T) : (initialValue as T);
+		if (browser) {
+			const localValue = localStorage.getItem(key);
+			this.value = localValue ? (superjson.parse<T>(localValue) as T) : (initialValue as T);
+		} else {
+			this.value = initialValue as T;
+		}
 
 		$effect.root(() => {
 			$effect(() => {
