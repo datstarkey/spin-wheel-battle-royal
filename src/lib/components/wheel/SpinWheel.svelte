@@ -32,7 +32,7 @@
 		items = $bindable(),
 		maxSpeed = 2000,
 		minSpeed = 500,
-		rotationResistance = (maxSpeed / minSpeed) * 50 * -1,
+		rotationResistance: rotationResistanceProp,
 		removeOnWinner = false,
 		onSpin = () => {},
 		onWinner = () => {},
@@ -41,6 +41,8 @@
 		layout = 'stacked',
 		children
 	}: Props = $props();
+
+	let rotationResistance = $derived(rotationResistanceProp ?? (maxSpeed / minSpeed) * 50 * -1);
 
 	items = shuffle(items);
 
