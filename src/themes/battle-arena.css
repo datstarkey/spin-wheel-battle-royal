@@ -1,0 +1,232 @@
+/* Battle Arena Theme for Spin Wheel Battle Royale
+ * A dark, tactical gaming aesthetic with crimson accents
+ * Supports both light and dark modes
+ */
+
+[data-theme='battle-arena'] {
+	/* Typography - Monospace for tactical feel */
+	--text-scaling: 1;
+	--base-font-color: var(--color-surface-900);
+	--base-font-color-dark: var(--color-surface-100);
+	--base-font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco,
+		Consolas, monospace;
+	--base-font-size: inherit;
+	--base-line-height: inherit;
+	--base-font-weight: normal;
+	--base-font-style: normal;
+	--base-letter-spacing: 0.025em;
+
+	--heading-font-color: var(--color-surface-950);
+	--heading-font-color-dark: var(--color-surface-50);
+	--heading-font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+	--heading-font-weight: 700;
+	--heading-font-style: normal;
+	--heading-letter-spacing: 0.05em;
+
+	--anchor-font-color: var(--color-primary-600);
+	--anchor-font-color-dark: var(--color-primary-400);
+	--anchor-font-family: inherit;
+	--anchor-font-size: inherit;
+	--anchor-line-height: inherit;
+	--anchor-font-weight: inherit;
+	--anchor-font-style: inherit;
+	--anchor-letter-spacing: inherit;
+	--anchor-text-decoration: none;
+	--anchor-text-decoration-hover: underline;
+	--anchor-text-decoration-active: none;
+	--anchor-text-decoration-focus: none;
+
+	/* Spacing and Borders - Sharp, minimal */
+	--spacing: 0.25rem;
+	--radius-base: 2px;
+	--radius-container: 4px;
+	--default-border-width: 1px;
+	--default-divide-width: 1px;
+	--default-ring-width: 2px;
+
+	/* Body Background */
+	--body-background-color: oklch(96% 0.005 240deg);
+	--body-background-color-dark: oklch(12% 0.01 260deg);
+
+	/* Primary - Crimson Red (Attack/Danger/Active) */
+	--color-primary-50: oklch(97% 0.02 15deg);
+	--color-primary-100: oklch(93% 0.05 15deg);
+	--color-primary-200: oklch(85% 0.1 15deg);
+	--color-primary-300: oklch(75% 0.15 15deg);
+	--color-primary-400: oklch(65% 0.19 18deg);
+	--color-primary-500: oklch(55% 0.22 22deg);
+	--color-primary-600: oklch(50% 0.2 22deg);
+	--color-primary-700: oklch(45% 0.18 22deg);
+	--color-primary-800: oklch(38% 0.15 22deg);
+	--color-primary-900: oklch(30% 0.12 22deg);
+	--color-primary-950: oklch(22% 0.08 22deg);
+	--color-primary-contrast-dark: var(--color-primary-950);
+	--color-primary-contrast-light: var(--color-primary-50);
+	--color-primary-contrast-50: var(--color-primary-contrast-dark);
+	--color-primary-contrast-100: var(--color-primary-contrast-dark);
+	--color-primary-contrast-200: var(--color-primary-contrast-dark);
+	--color-primary-contrast-300: var(--color-primary-contrast-dark);
+	--color-primary-contrast-400: var(--color-primary-contrast-light);
+	--color-primary-contrast-500: var(--color-primary-contrast-light);
+	--color-primary-contrast-600: var(--color-primary-contrast-light);
+	--color-primary-contrast-700: var(--color-primary-contrast-light);
+	--color-primary-contrast-800: var(--color-primary-contrast-light);
+	--color-primary-contrast-900: var(--color-primary-contrast-light);
+	--color-primary-contrast-950: var(--color-primary-contrast-light);
+
+	/* Secondary - Cool Blue (Defense/Shield) */
+	--color-secondary-50: oklch(97% 0.02 240deg);
+	--color-secondary-100: oklch(93% 0.04 240deg);
+	--color-secondary-200: oklch(87% 0.07 240deg);
+	--color-secondary-300: oklch(78% 0.1 240deg);
+	--color-secondary-400: oklch(68% 0.13 240deg);
+	--color-secondary-500: oklch(60% 0.14 240deg);
+	--color-secondary-600: oklch(52% 0.12 240deg);
+	--color-secondary-700: oklch(45% 0.1 240deg);
+	--color-secondary-800: oklch(38% 0.08 240deg);
+	--color-secondary-900: oklch(30% 0.06 240deg);
+	--color-secondary-950: oklch(22% 0.04 240deg);
+	--color-secondary-contrast-dark: var(--color-secondary-950);
+	--color-secondary-contrast-light: var(--color-secondary-50);
+	--color-secondary-contrast-50: var(--color-secondary-contrast-dark);
+	--color-secondary-contrast-100: var(--color-secondary-contrast-dark);
+	--color-secondary-contrast-200: var(--color-secondary-contrast-dark);
+	--color-secondary-contrast-300: var(--color-secondary-contrast-dark);
+	--color-secondary-contrast-400: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-500: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-600: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-700: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-800: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-900: var(--color-secondary-contrast-light);
+	--color-secondary-contrast-950: var(--color-secondary-contrast-light);
+
+	/* Tertiary - Violet Purple (Shadow Realm/Magic) */
+	--color-tertiary-50: oklch(97% 0.02 290deg);
+	--color-tertiary-100: oklch(93% 0.05 290deg);
+	--color-tertiary-200: oklch(86% 0.1 290deg);
+	--color-tertiary-300: oklch(77% 0.15 290deg);
+	--color-tertiary-400: oklch(65% 0.18 290deg);
+	--color-tertiary-500: oklch(55% 0.2 290deg);
+	--color-tertiary-600: oklch(48% 0.18 290deg);
+	--color-tertiary-700: oklch(40% 0.15 290deg);
+	--color-tertiary-800: oklch(32% 0.12 290deg);
+	--color-tertiary-900: oklch(25% 0.09 290deg);
+	--color-tertiary-950: oklch(18% 0.06 290deg);
+	--color-tertiary-contrast-dark: var(--color-tertiary-950);
+	--color-tertiary-contrast-light: var(--color-tertiary-50);
+	--color-tertiary-contrast-50: var(--color-tertiary-contrast-dark);
+	--color-tertiary-contrast-100: var(--color-tertiary-contrast-dark);
+	--color-tertiary-contrast-200: var(--color-tertiary-contrast-dark);
+	--color-tertiary-contrast-300: var(--color-tertiary-contrast-dark);
+	--color-tertiary-contrast-400: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-500: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-600: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-700: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-800: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-900: var(--color-tertiary-contrast-light);
+	--color-tertiary-contrast-950: var(--color-tertiary-contrast-light);
+
+	/* Success - Emerald Green (Health/Healing) */
+	--color-success-50: oklch(98% 0.03 145deg);
+	--color-success-100: oklch(94% 0.06 145deg);
+	--color-success-200: oklch(88% 0.1 145deg);
+	--color-success-300: oklch(80% 0.14 150deg);
+	--color-success-400: oklch(72% 0.17 150deg);
+	--color-success-500: oklch(64% 0.18 155deg);
+	--color-success-600: oklch(55% 0.15 155deg);
+	--color-success-700: oklch(46% 0.12 155deg);
+	--color-success-800: oklch(38% 0.1 155deg);
+	--color-success-900: oklch(30% 0.07 155deg);
+	--color-success-950: oklch(22% 0.05 155deg);
+	--color-success-contrast-dark: var(--color-success-950);
+	--color-success-contrast-light: var(--color-success-50);
+	--color-success-contrast-50: var(--color-success-contrast-dark);
+	--color-success-contrast-100: var(--color-success-contrast-dark);
+	--color-success-contrast-200: var(--color-success-contrast-dark);
+	--color-success-contrast-300: var(--color-success-contrast-dark);
+	--color-success-contrast-400: var(--color-success-contrast-dark);
+	--color-success-contrast-500: var(--color-success-contrast-dark);
+	--color-success-contrast-600: var(--color-success-contrast-light);
+	--color-success-contrast-700: var(--color-success-contrast-light);
+	--color-success-contrast-800: var(--color-success-contrast-light);
+	--color-success-contrast-900: var(--color-success-contrast-light);
+	--color-success-contrast-950: var(--color-success-contrast-light);
+
+	/* Warning - Amber Gold (Gold/Currency/Caution) */
+	--color-warning-50: oklch(98% 0.03 85deg);
+	--color-warning-100: oklch(95% 0.06 85deg);
+	--color-warning-200: oklch(90% 0.1 85deg);
+	--color-warning-300: oklch(85% 0.14 85deg);
+	--color-warning-400: oklch(78% 0.17 80deg);
+	--color-warning-500: oklch(72% 0.17 75deg);
+	--color-warning-600: oklch(62% 0.15 70deg);
+	--color-warning-700: oklch(52% 0.12 65deg);
+	--color-warning-800: oklch(42% 0.1 60deg);
+	--color-warning-900: oklch(34% 0.07 55deg);
+	--color-warning-950: oklch(26% 0.05 50deg);
+	--color-warning-contrast-dark: var(--color-warning-950);
+	--color-warning-contrast-light: var(--color-warning-50);
+	--color-warning-contrast-50: var(--color-warning-contrast-dark);
+	--color-warning-contrast-100: var(--color-warning-contrast-dark);
+	--color-warning-contrast-200: var(--color-warning-contrast-dark);
+	--color-warning-contrast-300: var(--color-warning-contrast-dark);
+	--color-warning-contrast-400: var(--color-warning-contrast-dark);
+	--color-warning-contrast-500: var(--color-warning-contrast-dark);
+	--color-warning-contrast-600: var(--color-warning-contrast-dark);
+	--color-warning-contrast-700: var(--color-warning-contrast-light);
+	--color-warning-contrast-800: var(--color-warning-contrast-light);
+	--color-warning-contrast-900: var(--color-warning-contrast-light);
+	--color-warning-contrast-950: var(--color-warning-contrast-light);
+
+	/* Error - Blood Red (Death/Critical) */
+	--color-error-50: oklch(97% 0.02 25deg);
+	--color-error-100: oklch(92% 0.05 25deg);
+	--color-error-200: oklch(85% 0.1 25deg);
+	--color-error-300: oklch(75% 0.14 25deg);
+	--color-error-400: oklch(62% 0.18 25deg);
+	--color-error-500: oklch(52% 0.2 25deg);
+	--color-error-600: oklch(45% 0.18 25deg);
+	--color-error-700: oklch(38% 0.15 25deg);
+	--color-error-800: oklch(30% 0.12 25deg);
+	--color-error-900: oklch(24% 0.09 25deg);
+	--color-error-950: oklch(18% 0.06 25deg);
+	--color-error-contrast-dark: var(--color-error-950);
+	--color-error-contrast-light: var(--color-error-50);
+	--color-error-contrast-50: var(--color-error-contrast-dark);
+	--color-error-contrast-100: var(--color-error-contrast-dark);
+	--color-error-contrast-200: var(--color-error-contrast-dark);
+	--color-error-contrast-300: var(--color-error-contrast-dark);
+	--color-error-contrast-400: var(--color-error-contrast-light);
+	--color-error-contrast-500: var(--color-error-contrast-light);
+	--color-error-contrast-600: var(--color-error-contrast-light);
+	--color-error-contrast-700: var(--color-error-contrast-light);
+	--color-error-contrast-800: var(--color-error-contrast-light);
+	--color-error-contrast-900: var(--color-error-contrast-light);
+	--color-error-contrast-950: var(--color-error-contrast-light);
+
+	/* Surface - Deep charcoal with slight blue undertone */
+	--color-surface-50: oklch(97% 0.005 260deg);
+	--color-surface-100: oklch(93% 0.008 260deg);
+	--color-surface-200: oklch(88% 0.01 260deg);
+	--color-surface-300: oklch(78% 0.012 260deg);
+	--color-surface-400: oklch(62% 0.015 260deg);
+	--color-surface-500: oklch(45% 0.018 260deg);
+	--color-surface-600: oklch(35% 0.02 260deg);
+	--color-surface-700: oklch(26% 0.018 260deg);
+	--color-surface-800: oklch(20% 0.015 260deg);
+	--color-surface-900: oklch(14% 0.012 260deg);
+	--color-surface-950: oklch(10% 0.01 260deg);
+	--color-surface-contrast-dark: var(--color-surface-950);
+	--color-surface-contrast-light: var(--color-surface-50);
+	--color-surface-contrast-50: var(--color-surface-contrast-dark);
+	--color-surface-contrast-100: var(--color-surface-contrast-dark);
+	--color-surface-contrast-200: var(--color-surface-contrast-dark);
+	--color-surface-contrast-300: var(--color-surface-contrast-dark);
+	--color-surface-contrast-400: var(--color-surface-contrast-light);
+	--color-surface-contrast-500: var(--color-surface-contrast-light);
+	--color-surface-contrast-600: var(--color-surface-contrast-light);
+	--color-surface-contrast-700: var(--color-surface-contrast-light);
+	--color-surface-contrast-800: var(--color-surface-contrast-light);
+	--color-surface-contrast-900: var(--color-surface-contrast-light);
+	--color-surface-contrast-950: var(--color-surface-contrast-light);
+}
