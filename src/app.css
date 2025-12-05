@@ -1,36 +1,76 @@
-/* Write your global styles here, in PostCSS syntax */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton-svelte';
+@import './themes/battle-arena.css';
+
+/* Load JetBrains Mono for the tactical aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Enable dark mode with data-mode attribute */
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
+/* Ensure canvas elements display properly */
+canvas {
+	display: block;
+}
+
 html,
 body {
-	@apply h-full overflow-hidden;
+	height: 100%;
+	overflow: hidden;
 }
 
 h1 {
-	@apply h1;
+	font-size: 2.25rem;
+	line-height: 2.5rem;
+	font-weight: 700;
 }
 
 h2 {
-	@apply h2;
+	font-size: 1.875rem;
+	line-height: 2.25rem;
+	font-weight: 700;
 }
 
 h3 {
-	@apply h3;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	font-weight: 600;
 }
 
 h4 {
-	@apply h4;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	font-weight: 600;
 }
 
 h5 {
-	@apply h5;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	font-weight: 500;
 }
 
 h6 {
-	@apply h6;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	font-weight: 500;
 }
 
 code {
-	@apply code;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+		'Courier New', monospace;
+	font-size: 0.875rem;
+	background-color: var(--color-surface-200);
+	padding: 0.125rem 0.25rem;
+	border-radius: 0.25rem;
+}
+
+.select,
+.input,
+.textarea,
+.ig-input,
+.ig-select {
+	background-color: var(--color-surface-50-950);
+	color: var(--color-surface-950-50);
 }
