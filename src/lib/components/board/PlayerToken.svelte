@@ -31,83 +31,33 @@
 </script>
 
 <div
-	class="player-token"
-	class:current={isCurrentPlayer}
-	class:dead={player.dead}
-	class:shadow-realm={player.inShadowRealm}
-	style:--player-color={color}
-	style:--size={`${size}px`}
+	class="rounded-full border-2 border-white flex items-center justify-center relative font-bold text-white z-10
+		{player.dead ? 'opacity-40 grayscale' : ''}
+		{player.inShadowRealm ? 'border-[#430067] shadow-[0_0_8px_#6a00a3,0_2px_4px_rgba(0,0,0,0.3)]' : 'shadow-[0_2px_4px_rgba(0,0,0,0.3)]'}"
+	style:background-color={color}
+	style:width="{size}px"
+	style:height="{size}px"
+	style:font-size="{size * 0.4}px"
+	style:text-shadow="0 1px 2px rgba(0,0,0,0.5)"
 	title={`${player.name} (${player.hp} HP)`}
 >
-	<span class="initials">{initials}</span>
+	{#if player.class.icon}
+		<img
+			src={player.class.icon}
+			alt=""
+			class="rounded-full"
+			style="width: {size * 0.8}px; height: {size * 0.8}px; image-rendering: pixelated;"
+		/>
+	{:else}
+		<span class="select-none">{initials}</span>
+	{/if}
 	{#if isCurrentPlayer}
-		<div class="current-indicator"></div>
+		<div class="absolute -inset-1 border-2 border-yellow-400 rounded-full animate-pulse"></div>
 	{/if}
 	{#if player.inShadowRealm}
-		<div class="shadow-realm-indicator"></div>
+		<div
+			class="absolute -inset-0.5 rounded-full pointer-events-none"
+			style="background: radial-gradient(circle, transparent 60%, rgba(106, 0, 163, 0.4) 100%);"
+		></div>
 	{/if}
 </div>
-
-<style>
-	.player-token {
-		width: var(--size);
-		height: var(--size);
-		border-radius: 50%;
-		background: var(--player-color);
-		border: 2px solid white;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: relative;
-		font-size: calc(var(--size) * 0.4);
-		font-weight: bold;
-		color: white;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-		z-index: 10;
-	}
-
-	.player-token.dead {
-		opacity: 0.4;
-		filter: grayscale(1);
-	}
-
-	.player-token.shadow-realm {
-		border-color: #430067;
-		box-shadow:
-			0 0 8px #6a00a3,
-			0 2px 4px rgba(0, 0, 0, 0.3);
-	}
-
-	.current-indicator {
-		position: absolute;
-		inset: -4px;
-		border: 2px solid gold;
-		border-radius: 50%;
-		animation: current-pulse 1.5s ease-in-out infinite;
-	}
-
-	.shadow-realm-indicator {
-		position: absolute;
-		inset: -2px;
-		border-radius: 50%;
-		background: radial-gradient(circle, transparent 60%, rgba(106, 0, 163, 0.4) 100%);
-		pointer-events: none;
-	}
-
-	.initials {
-		user-select: none;
-	}
-
-	@keyframes current-pulse {
-		0%,
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-		50% {
-			transform: scale(1.1);
-			opacity: 0.7;
-		}
-	}
-</style>

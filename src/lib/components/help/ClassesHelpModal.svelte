@@ -11,16 +11,6 @@
 			...classData
 		}));
 
-	// Class icons/emojis mapping for visual flair
-	const classIcons: Record<string, string> = {
-		swe: 'mdi:code-braces',
-		poopmaster: 'mdi:emoticon-poop',
-		gambler: 'mdi:cards-playing',
-		gigachad: 'mdi:arm-flex',
-		absoluteUnit: 'mdi:shield',
-		shadeweaver: 'mdi:ghost'
-	};
-
 	// Class color themes
 	const classColors: Record<string, { border: string; glow: string; icon: string }> = {
 		swe: {
@@ -117,9 +107,18 @@
 								<!-- Class header -->
 								<div class="mb-3 flex items-center gap-3">
 									<div
-										class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-700/50 {colors.icon}"
+										class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-700/50"
 									>
-										<Icon icon={classIcons[classData.id] || 'mdi:account'} size="xl" />
+										{#if classData.icon}
+											<img
+												src={classData.icon}
+												alt=""
+												class="h-8 w-8"
+												style="image-rendering: pixelated;"
+											/>
+										{:else}
+											<Icon icon="mdi:account" size="xl" class={colors.icon} />
+										{/if}
 									</div>
 									<div>
 										<h3 class="text-lg font-bold text-surface-100">{classData.name}</h3>

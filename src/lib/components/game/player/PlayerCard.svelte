@@ -139,7 +139,10 @@
 					: 'from-surface-400 to-surface-600 bg-gradient-to-br'}
 				{player.inShadowRealm ? 'from-tertiary-500 to-tertiary-700 bg-gradient-to-br' : ''}"
 			>
-				<span class="text-[0.65rem] font-semibold tracking-widest text-white uppercase"
+				{#if player.class.icon}
+				<img src={player.class.icon} alt="" class="h-4 w-4" style="image-rendering: pixelated;" />
+			{/if}
+			<span class="text-[0.65rem] font-semibold tracking-widest text-white uppercase"
 					>{player.class.name}</span
 				>
 			</div>

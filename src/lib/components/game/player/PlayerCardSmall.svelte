@@ -139,7 +139,10 @@
 					<Icon icon="mdi:star-four-points" class="text-tertiary-400 shrink-0 text-xs" />
 				{/if}
 			</div>
-			<span class="text-[0.6rem] tracking-widest uppercase text-surface-400">
+			<span class="text-[0.6rem] tracking-widest uppercase text-surface-400 flex items-center gap-1">
+				{#if player.class.icon}
+					<img src={player.class.icon} alt="" class="h-3 w-3" style="image-rendering: pixelated;" />
+				{/if}
 				{player.class.name}
 			</span>
 		</div>
