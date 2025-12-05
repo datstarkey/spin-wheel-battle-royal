@@ -6,7 +6,7 @@
 	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
 	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
 	import { generateWinWheel } from '$lib/game/wheels/winWheel';
-	import toast from 'svelte-french-toast';
+	import toast from '$lib/stores/toaster.svelte';
 
 	interface Props {
 		player: Player;

@@ -5,7 +5,7 @@
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { classMap } from '$lib/game/classes/classType';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { SlideToggle } from '@skeletonlabs/skeleton';
+	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import EditPlayerSpinWheel from './EditPlayerSpinWheel.svelte';
 	import EditPlayerStats from './EditPlayerStats.svelte';
 
@@ -27,19 +27,24 @@
 	<div class="max-h-[85vh] space-y-4 overflow-y-auto p-8">
 		<div class="grid grid-cols-2 gap-2">
 			<Select label="Class" bind:value={player.class}>
-				{#each Object.entries(classMap) as [name, playerClass]}
+				{#each Object.entries(classMap) as [name, playerClass] (name)}
 					<option value={playerClass}>{name}</option>
 				{/each}
 			</Select>
 
-			<SlideToggle
-				name="Shadow Realm"
-				bind:checked={player.inShadowRealm}
-				active="bg-purple-500"
-				class="mb-2 mt-auto">(Shadow Realm)</SlideToggle
-			>
+			<div class="mb-2 mt-auto flex items-center gap-2">
+				<Switch
+					checked={player.inShadowRealm}
+					onCheckedChange={(details) => (player.inShadowRealm = details.checked)}
+				>
+					<Switch.Control class="data-[state=checked]:bg-purple-500">
+						<Switch.Thumb />
+					</Switch.Control>
+					<Switch.Label>Shadow Realm</Switch.Label>
+				</Switch>
+			</div>
 
-			{#each Object.entries(player.resources) as [resource]}
+			{#each Object.entries(player.resources) as [resource] (resource)}
 				<Input label={resource} bind:value={player.resources[resource]} />
 			{/each}
 		</div>

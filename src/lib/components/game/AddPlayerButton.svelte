@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { addPlayer, currentGame } from '$lib/stores/gameStore.svelte';
-	import toast from 'svelte-french-toast';
+	import toast from '$lib/stores/toaster.svelte';
 	import { z } from 'zod';
 	import Button from '../Button.svelte';
 	import { createForm, errorClass } from '../forms/utils.svelte';
@@ -46,5 +46,5 @@
 		/>
 	</label>
 
-	<Button class="variant-filled-success ml-3 mt-6" icon="mdi:plus" onclick={submit}></Button>
+	<Button class="preset-filled-success mt-6 ml-3" icon="mdi:plus" onclick={submit}></Button>
 </form>

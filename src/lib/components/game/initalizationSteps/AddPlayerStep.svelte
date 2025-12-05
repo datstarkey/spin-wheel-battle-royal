@@ -21,11 +21,11 @@
 								{player.name}
 							</h2>
 						</td>
-						<!-- <td> <span class="variant-filled chip">{classMap[player.class].name}</span></td> -->
+						<!-- <td> <span class="preset-filled chip">{classMap[player.class].name}</span></td> -->
 						<td>
 							<Button
 								icon="mdi:delete"
-								class="variant-filled-error"
+								class="preset-filled-error"
 								onclick={() => removePlayer(player)}
 							></Button>
 						</td>

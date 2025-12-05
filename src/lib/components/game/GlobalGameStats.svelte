@@ -3,7 +3,7 @@
 	import Input from '$lib/components/forms/Input.svelte';
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { currentGame } from '$lib/stores/gameStore.svelte';
-	import toast from 'svelte-french-toast';
+	import toast from '$lib/stores/toaster.svelte';
 
 	let game = $derived(currentGame.value);
 </script>
@@ -29,7 +29,7 @@
 								type="number"
 								min="0"
 							/>
-							<p class="mt-1 text-xs text-surface-600">Added to all non-consumable items</p>
+							<p class="text-surface-600 mt-1 text-xs">Added to all non-consumable items</p>
 						</div>
 						<div>
 							<Input
@@ -38,7 +38,7 @@
 								type="number"
 								min="0"
 							/>
-							<p class="mt-1 text-xs text-surface-600">Added to all consumable items</p>
+							<p class="text-surface-600 mt-1 text-xs">Added to all consumable items</p>
 						</div>
 					</div>
 				</div>
@@ -52,7 +52,7 @@
 							type="number"
 							min="1"
 						/>
-						<p class="mt-1 text-xs text-surface-600">Damage taken when losing an attack</p>
+						<p class="text-surface-600 mt-1 text-xs">Damage taken when losing an attack</p>
 					</div>
 				</div>
 
@@ -67,7 +67,7 @@
 								min="0"
 								max={game.playerOrderLength - 1}
 							/>
-							<p class="mt-1 text-xs text-surface-600">Current player index</p>
+							<p class="text-surface-600 mt-1 text-xs">Current player index</p>
 						</div>
 						<div>
 							<Input
@@ -76,7 +76,7 @@
 								type="number"
 								min="0"
 							/>
-							<p class="mt-1 text-xs text-surface-600">Number of turns to skip</p>
+							<p class="text-surface-600 mt-1 text-xs">Number of turns to skip</p>
 						</div>
 					</div>
 				</div>
@@ -88,7 +88,7 @@
 							game.shopConsumableCostModifier = 0;
 							toast.success('Shop modifiers reset!');
 						}}
-						class="variant-soft-warning"
+						class="preset-tonal-warning"
 					>
 						Reset Shop Modifiers
 					</Button>
@@ -98,7 +98,7 @@
 							game.globalHpReduction = 1;
 							toast.success('Global HP reduction reset!');
 						}}
-						class="variant-soft-warning"
+						class="preset-tonal-warning"
 					>
 						Reset HP Reduction
 					</Button>

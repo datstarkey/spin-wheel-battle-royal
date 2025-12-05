@@ -52,10 +52,10 @@
 {@render trigger?.(onTrigger)}
 
 <div
-	class="menu-container bg-surface-100-800-token overflow-hidden"
+	class="menu-container bg-surface-50 dark:bg-surface-900 overflow-hidden"
 	style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
 >
-	<div class="absolute right-0 top-0 m-8">
+	<div class="absolute top-0 right-0 m-8">
 		<Button icon="mdi:close" onclick={() => (isOpen = false)}></Button>
 	</div>
 

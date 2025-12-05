@@ -37,7 +37,7 @@
 </script>
 
 <div
-	class="bg-surface-100-800-token fixed bottom-0 left-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[80vw] {position}"
+	class="bg-surface-50 dark:bg-surface-900 fixed bottom-0 left-0 top-0 z-50 w-full rounded border border-white p-4 transition-all lg:w-[80vw] {position}"
 >
 	{#key currentWheel}
 		{#if currentWheel}

@@ -5,7 +5,7 @@
 
 <div class="fixed bottom-4 left-4 flex w-full max-w-md flex-col">
 	<button
-		class="variant-filled-primary flex items-center justify-between rounded-t-lg px-4 py-2 font-medium"
+		class="preset-filled-primary flex items-center justify-between rounded-t-lg px-4 py-2 font-medium"
 		onclick={() => (isExpanded = !isExpanded)}
 	>
 		<span>Game History</span>
@@ -13,14 +13,14 @@
 	</button>
 
 	{#if isExpanded}
-		<div class="variant-glass-surface overflow-hidden rounded-b-lg shadow-lg">
+		<div class="preset-glass-surface overflow-hidden rounded-b-lg shadow-lg">
 			<div class="max-h-[60vh] space-y-2 overflow-y-auto p-4">
 				{#each currentGame.value?.auditTrail.toReversed() ?? [] as item}
 					{#if item.includes('finishes their turn!')}
 						<div class="h-8"></div>
 					{/if}
 
-					<div class="variant-soft-primary rounded-lg p-3 text-sm">
+					<div class="preset-tonal-primary rounded-lg p-3 text-sm">
 						<p>{item}</p>
 					</div>
 				{/each}

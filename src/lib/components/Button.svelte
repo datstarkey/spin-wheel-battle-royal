@@ -13,7 +13,7 @@
 	let type = $derived(!icon ? 'btn' : 'btn-icon');
 </script>
 
-<button type="button" {...rest} class="{type} variant-filled {rest.class}">
+<button type="button" {...rest} class="{type} preset-filled {rest.class}">
 	{#if icon}
 		<Icon {icon} size="xl" />
 	{/if}

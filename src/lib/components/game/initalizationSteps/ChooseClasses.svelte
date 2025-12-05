@@ -4,7 +4,7 @@
 	import { classSpinItems } from '$lib/components/wheel/utils';
 	import { type ClassType } from '$lib/game/classes/classType';
 	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
-	import toast from 'svelte-french-toast';
+	import toast from '$lib/stores/toaster.svelte';
 
 	let order = $state(0);
 
@@ -54,7 +54,7 @@
 					<tr>
 						<td>{Number(order) + 1}</td>
 						<td>{player.name}</td>
-						<td> <span class="variant-filled chip">{player.class.name}</span></td>
+						<td> <span class="preset-filled chip">{player.class.name}</span></td>
 					</tr>
 				{/if}
 			{/each}
