@@ -48,6 +48,7 @@ export const Gorf: ClassBase = {
 	attack: 12,
 	defense: 8,
 	name: 'Gorf',
+	icon: '/Classes/Gorf.svg',
 	attackRange: 1,
 	description:
 		'A scrappy two-tapper who amplifies all combat. Deals and takes 50% bonus damage. Holds a Grudge against whoever last attacked them (+25% damage).',
@@ -82,12 +83,12 @@ export const Gorf: ClassBase = {
 	},
 
 	// When Gorf defends, apply Double Tap (50% more damage taken)
-	onDefenseStart(player, attackingPlayer) {
+	onDefenseStart(_player, attackingPlayer) {
 		// Double Tap: +50% damage taken (reduce our defense effectiveness)
 		attackingPlayer.attackMultipliers[DOUBLE_TAP_DEFENSE] = 1.5;
 	},
 
-	onDefenseEnd(player, attackingPlayer) {
+	onDefenseEnd(_player, attackingPlayer) {
 		// Clean up multiplier
 		delete attackingPlayer.attackMultipliers[DOUBLE_TAP_DEFENSE];
 	},
