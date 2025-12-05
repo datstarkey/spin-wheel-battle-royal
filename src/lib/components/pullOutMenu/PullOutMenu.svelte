@@ -8,6 +8,7 @@
 		isOpen?: boolean;
 		width?: string;
 		height?: string;
+		hideCloseButton?: boolean;
 		children: Snippet;
 		trigger?: Snippet<[() => void]>;
 	}
@@ -17,6 +18,7 @@
 		isOpen = $bindable(false),
 		width = '100%',
 		height = '100%',
+		hideCloseButton = false,
 		children,
 		trigger
 	}: Props = $props();
@@ -57,11 +59,13 @@
 		class="fixed z-1000 overflow-hidden bg-surface-50 transition-transform duration-300 ease-in-out dark:bg-surface-900"
 		style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
 	>
-		<div class="absolute top-0 right-0 m-8">
-			<Button icon="mdi:close" onclick={() => (isOpen = false)}></Button>
-		</div>
+		{#if !hideCloseButton}
+			<div class="absolute top-0 right-0 m-8">
+				<Button icon="mdi:close" onclick={() => (isOpen = false)}></Button>
+			</div>
+		{/if}
 
-		<div class="p-8">
+		<div class="h-full p-8">
 			{@render children()}
 		</div>
 	</div>
