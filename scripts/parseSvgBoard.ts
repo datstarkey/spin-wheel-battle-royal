@@ -27,7 +27,8 @@ type TileType =
 	| 'teleporter_outer'
 	| 'teleporter_inner'
 	| 'button'
-	| 'treasure';
+	| 'treasure'
+	| 'casino';
 
 type Direction = 'north' | 'south' | 'east' | 'west';
 
@@ -59,9 +60,9 @@ const COLOR_TO_TILE_TYPE: Record<string, TileType> = {
 	'#fffc40': 'shop', // Yellow
 	'#ffd541': 'shop', // Also yellow
 	'#285cc4': 'teleporter_outer', // Blue teleporter
-	'#df3e23': 'button', // Red center
-	'#b4202a': 'button', // Red shadow
-	'#fa6a0a': 'path', // Orange arrows near center
+	'#df3e23': 'casino', // Orange/red casino
+	'#b4202a': 'casino', // Red casino shadow
+	'#fa6a0a': 'casino', // Orange casino
 	'#8b93af': 'blocked', // Gray details - structural
 	'#ffffff': 'blocked' // White details - blocked for now
 };
@@ -81,9 +82,9 @@ const PATH_COLORS = [
 	'#fffc40', // Yellow shop
 	'#ffd541', // Yellow shop alt
 	'#285cc4', // Blue teleporter
-	'#df3e23', // Red button
-	'#b4202a', // Red button shadow
-	'#fa6a0a', // Orange arrows
+	'#df3e23', // Orange/red casino
+	'#b4202a', // Red casino shadow
+	'#fa6a0a', // Orange casino
 ];
 
 // Tiles that players can walk on
@@ -97,7 +98,8 @@ const WALKABLE_TYPES: TileType[] = [
 	'teleporter_outer',
 	'teleporter_inner',
 	'button',
-	'treasure'
+	'treasure',
+	'casino'
 ];
 
 // Yellow colors that indicate treasure chest borders
@@ -145,8 +147,8 @@ function getDominantTileType(
 	tileY: number
 ): TileType {
 	const typeCounts = new Map<TileType, number>();
-	let hasYellowBorder = false;
-	let hasPathPixels = false;
+	let yellowPixelCount = 0;
+	let pathPixelCount = 0;
 
 	// Sample all pixels in the 16x16 region
 	const startX = tileX * PIXELS_PER_LOGICAL_TILE;
@@ -158,13 +160,13 @@ function getDominantTileType(
 			const tileType = COLOR_TO_TILE_TYPE[color] || 'blocked';
 			typeCounts.set(tileType, (typeCounts.get(tileType) || 0) + 1);
 
-			// Check for yellow border pixels (treasure chest indicator)
+			// Count yellow pixels (could be shop or treasure border)
 			if (YELLOW_COLORS.includes(color)) {
-				hasYellowBorder = true;
+				yellowPixelCount++;
 			}
-			// Check for blue path pixels
+			// Count blue path pixels
 			if (color === '#249fde') {
-				hasPathPixels = true;
+				pathPixelCount++;
 			}
 		}
 	}
@@ -172,7 +174,19 @@ function getDominantTileType(
 	// Total pixels in region
 	const totalPixels = PIXELS_PER_LOGICAL_TILE * PIXELS_PER_LOGICAL_TILE; // 256
 
-	// Special case: if tile has both path pixels and yellow border, it's a treasure chest
+	// Distinguish between shop (mostly yellow) and treasure (yellow outline on path)
+	// Shop tiles are nearly all yellow (>40% yellow pixels)
+	// Treasure tiles have yellow outlines but are mostly path (<40% yellow, has both yellow and path)
+	const yellowRatio = yellowPixelCount / totalPixels;
+	const hasYellowBorder = yellowPixelCount > 0;
+	const hasPathPixels = pathPixelCount > 0;
+
+	// If mostly yellow (>40%), it's a shop
+	if (yellowRatio > 0.4) {
+		return 'shop';
+	}
+
+	// If has yellow border AND path pixels (but not mostly yellow), it's a treasure chest
 	if (hasPathPixels && hasYellowBorder) {
 		return 'treasure';
 	}
@@ -184,6 +198,7 @@ function getDominantTileType(
 	// Priority order for special tiles (they should win even with fewer pixels)
 	const priorityTypes: TileType[] = [
 		'button',
+		'casino',
 		'teleporter_outer',
 		'shop',
 		'shadow_realm',

@@ -16,7 +16,8 @@ export type TileType =
 	| 'teleporter_outer' // Blue/purple - outer teleporters (entry/exit)
 	| 'teleporter_inner' // Blue/purple - center teleporter (exit only)
 	| 'button' // Red center - triggers button wheel
-	| 'treasure'; // Blue with yellow outline - treasure chest
+	| 'treasure' // Blue with yellow outline - treasure chest
+	| 'casino'; // Orange/red - triggers casino gambling
 
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
@@ -91,9 +92,9 @@ export const COLOR_TO_TILE_TYPE: Record<string, TileType> = {
 	'#fffc40': 'shop', // Yellow
 	'#ffd541': 'shop', // Also yellow
 	'#285cc4': 'teleporter_outer', // Blue teleporter
-	'#df3e23': 'button', // Red center
-	'#b4202a': 'button', // Red shadow
-	'#fa6a0a': 'path', // Orange arrows near center
+	'#df3e23': 'casino', // Orange/red casino
+	'#b4202a': 'casino', // Red casino shadow
+	'#fa6a0a': 'casino', // Orange casino
 	'#8b93af': 'blocked', // Gray details - structure
 	'#ffffff': 'spawn_zone' // White details
 };

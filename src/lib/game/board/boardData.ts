@@ -1,6 +1,6 @@
 /**
  * Auto-generated board data from Map.svg
- * Generated on: 2025-12-05T14:44:30.005Z
+ * Generated on: 2025-12-05T16:42:00.261Z
  *
  * DO NOT EDIT MANUALLY - regenerate using: npx tsx scripts/parseSvgBoard.ts
  *
@@ -2723,7 +2723,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				]
 			},
 			{
-				"type": "button",
+				"type": "casino",
 				"position": {
 					"x": 9,
 					"y": 9
@@ -2851,7 +2851,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"connections": []
 			},
 			{
-				"type": "button",
+				"type": "casino",
 				"position": {
 					"x": 20,
 					"y": 9
@@ -3049,7 +3049,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"connections": []
 			},
 			{
-				"type": "treasure",
+				"type": "shop",
 				"position": {
 					"x": 10,
 					"y": 10
@@ -3153,7 +3153,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				]
 			},
 			{
-				"type": "treasure",
+				"type": "shop",
 				"position": {
 					"x": 19,
 					"y": 10
@@ -5991,7 +5991,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"connections": []
 			},
 			{
-				"type": "treasure",
+				"type": "shop",
 				"position": {
 					"x": 10,
 					"y": 19
@@ -6095,7 +6095,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				]
 			},
 			{
-				"type": "treasure",
+				"type": "shop",
 				"position": {
 					"x": 19,
 					"y": 19
@@ -6293,7 +6293,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				]
 			},
 			{
-				"type": "button",
+				"type": "casino",
 				"position": {
 					"x": 9,
 					"y": 20
@@ -6421,7 +6421,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"connections": []
 			},
 			{
-				"type": "button",
+				"type": "casino",
 				"position": {
 					"x": 20,
 					"y": 20
@@ -9308,7 +9308,24 @@ export const BOARD_CONFIG: BoardConfig = {
 			]
 		}
 	],
-	"shops": [],
+	"shops": [
+		{
+			"x": 10,
+			"y": 10
+		},
+		{
+			"x": 19,
+			"y": 10
+		},
+		{
+			"x": 10,
+			"y": 19
+		},
+		{
+			"x": 19,
+			"y": 19
+		}
+	],
 	"teleporters": {
 		"outer": [],
 		"inner": {
@@ -9383,8 +9400,8 @@ export const BOARD_CONFIG: BoardConfig = {
 		}
 	],
 	"buttonTile": {
-		"x": 20,
-		"y": 20
+		"x": 240,
+		"y": 240
 	},
 	"treasureChests": [
 		{
@@ -9421,14 +9438,6 @@ export const BOARD_CONFIG: BoardConfig = {
 		},
 		{
 			"x": 8,
-			"y": 10
-		},
-		{
-			"x": 10,
-			"y": 10
-		},
-		{
-			"x": 19,
 			"y": 10
 		},
 		{
@@ -9517,14 +9526,6 @@ export const BOARD_CONFIG: BoardConfig = {
 		},
 		{
 			"x": 8,
-			"y": 19
-		},
-		{
-			"x": 10,
-			"y": 19
-		},
-		{
-			"x": 19,
 			"y": 19
 		},
 		{
