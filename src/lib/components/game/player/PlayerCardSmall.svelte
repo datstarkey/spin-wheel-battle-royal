@@ -184,7 +184,7 @@
 
 	<!-- Expanded Panel -->
 	<div
-		class="absolute left-0 right-0 top-full z-50 origin-top rounded-b-lg border border-t-0 bg-surface-950 transition-all duration-300 ease-out
+		class="absolute left-0 right-0 top-full z-20 origin-top rounded-b-lg border border-t-0 bg-surface-950 transition-all duration-300 ease-out
 			{borderStateClass}
 			{isExpanded ? 'opacity-100' : 'pointer-events-none h-0 overflow-hidden opacity-0'}"
 	>

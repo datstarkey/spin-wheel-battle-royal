@@ -8,9 +8,19 @@
 	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
 	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
 	import { generateWinWheel } from '$lib/game/wheels/winWheel';
+	import {
+		enterMovementMode,
+		exitMovementMode,
+		getHasMovedThisTurn,
+		getIsMovementMode
+	} from '$lib/stores/gameStore.svelte';
 	import toast from '$lib/stores/toaster.svelte';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
+
+	// Derive movement state
+	let isMovementMode = $derived(getIsMovementMode());
+	let hasMovedThisTurn = $derived(getHasMovedThisTurn());
 
 	interface Props {
 		player: Player;
@@ -413,6 +423,28 @@
 	<!-- Action Panel (only for active player) -->
 	{#if isActiveTurn}
 		<div class="border-primary-500/20 mt-3 border-t pt-3">
+			<!-- Movement Button -->
+			<div class="mb-3">
+				{#if isMovementMode}
+					<button
+						class="from-warning-600 to-warning-700 hover:from-warning-500 hover:to-warning-600 flex w-full items-center justify-center gap-2 rounded-sm border-none bg-gradient-to-br px-3 py-2 text-xs font-bold tracking-widest text-white uppercase transition-all"
+						onclick={() => exitMovementMode()}
+					>
+						<Icon icon="mdi:close" />
+						Cancel Move
+					</button>
+				{:else}
+					<button
+						class="from-success-600 to-success-700 hover:from-success-500 hover:to-success-600 flex w-full items-center justify-center gap-2 rounded-sm border-none bg-gradient-to-br px-3 py-2 text-xs font-bold tracking-widest text-white uppercase transition-all disabled:cursor-not-allowed disabled:opacity-30"
+						disabled={hasMovedThisTurn}
+						onclick={() => enterMovementMode()}
+					>
+						<Icon icon="ion:footsteps" />
+						{hasMovedThisTurn ? 'Already Moved' : `Move (${player.movement} tiles)`}
+					</button>
+				{/if}
+			</div>
+
 			<AttackPlayer bind:showWheel={isAttackWindowOpen} {player} />
 		</div>
 	{/if}
