@@ -93,5 +93,5 @@ export function generateWinWheel(playerName: string) {
 	];
 
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);
-	else addCustomWheel(`Win Wheel - ${player.name}`, wheel);
+	else addCustomWheel(`Win Wheel - ${player.name}`, wheel, 'win');
 }

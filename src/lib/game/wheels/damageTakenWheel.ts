@@ -85,5 +85,5 @@ export function generateDamageTakenWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Damage Taken Wheel - ${player.name}`, wheel);
+	addCustomWheel(`Damage Taken Wheel - ${player.name}`, wheel, 'damage');
 }

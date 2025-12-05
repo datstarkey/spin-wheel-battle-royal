@@ -88,5 +88,5 @@ export function generateGamblerWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Gambler Wheel - ${player.name}`, wheel);
+	addCustomWheel(`Gambler Wheel - ${player.name}`, wheel, 'gambler');
 }

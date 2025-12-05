@@ -133,5 +133,5 @@ export function generateButtonWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`${player.name} Button Wheel`, wheel);
+	addCustomWheel(`${player.name} Button Wheel`, wheel, 'button');
 }

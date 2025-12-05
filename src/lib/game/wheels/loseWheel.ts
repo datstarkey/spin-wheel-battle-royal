@@ -99,5 +99,5 @@ export function generateLoseWheel(playerName: string) {
 		},
 	];
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);
-	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel);
+	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel, 'lose');
 }

@@ -111,5 +111,5 @@ export function generateShadowRealmWheel(playerName: string) {
 			label: 'Nothing'
 		}
 	];
-	addCustomWheel(`Shadow Realm Wheel for ${player.name}`, wheel);
+	addCustomWheel(`Shadow Realm Wheel for ${player.name}`, wheel, 'shadow');
 }

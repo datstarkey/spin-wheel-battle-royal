@@ -97,5 +97,5 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 		}
 	];
 
-	addCustomWheel(`Loot Wheel for ${player.name} - ${index}`, wheel);
+	addCustomWheel(`Loot Wheel for ${player.name} - ${index}`, wheel, 'loot');
 }
