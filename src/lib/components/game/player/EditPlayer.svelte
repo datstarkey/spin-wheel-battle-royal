@@ -198,7 +198,7 @@
 	</div>
 {/snippet}
 
-<PullOutMenu position="bottom" width="600px">
+<PullOutMenu position="left" width="600px">
 	{#snippet trigger(open)}
 		<Button onclick={open} icon="mdi:cog" class="btn-icon-sm"></Button>
 	{/snippet}
@@ -214,7 +214,7 @@
 		</div>
 	</div>
 
-	<div class="max-h-[70vh] space-y-4 overflow-y-auto pr-2">
+	<div class="space-y-4 overflow-y-auto pr-2">
 		<!-- Class & Shadow Realm Row -->
 		<div class="grid grid-cols-2 gap-3">
 			<Select label="Class" bind:value={player.class}>
