@@ -111,7 +111,7 @@
 	></div>
 
 	<!-- Card Header -->
-	<header class="relative mb-3 flex items-start justify-between">
+	<header class="relative mb-3 flex items-center justify-between">
 		<div class="flex flex-col gap-1">
 			<h3
 				class="text-surface-100 flex items-center gap-2 text-lg font-bold tracking-wide uppercase
@@ -136,10 +136,10 @@
 			</div>
 		</div>
 
-		<div class="flex gap-1">
+		<div class="flex items-center gap-1">
 			<div class="relative">
 				<button
-					class="text-surface-300 hover:border-primary-500 hover:text-surface-100 flex h-7 w-7 items-center justify-center rounded-sm border border-white/10 bg-white/5 transition-all hover:bg-white/10"
+					class="text-surface-300 hover:border-primary-500 hover:text-surface-100 flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 transition-all hover:bg-white/10"
 					onclick={() => (wheelDropdownOpen = !wheelDropdownOpen)}
 					title="Add Wheel"
 				>
