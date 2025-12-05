@@ -138,6 +138,7 @@ export interface SerializedGame {
 	skippedNextTurns: string[];
 	hasMoved: boolean;
 	hasFought: boolean;
+	hasShopped: boolean;
 }
 
 // ============================================================================
@@ -371,6 +372,7 @@ export function validateGame(data: unknown): SerializedGame | null {
 		hasTurnStarted: isBoolean(data.hasTurnStarted) ? data.hasTurnStarted : false,
 		skippedNextTurns,
 		hasMoved: isBoolean(data.hasMoved) ? data.hasMoved : false,
-		hasFought: isBoolean(data.hasFought) ? data.hasFought : false
+		hasFought: isBoolean(data.hasFought) ? data.hasFought : false,
+		hasShopped: isBoolean(data.hasShopped) ? data.hasShopped : false
 	};
 }

@@ -28,11 +28,13 @@ export class Game {
 	 */
 	hasMoved = $state(false);
 	hasFought = $state(false);
+	hasShopped = $state(false);
 
 	/** Reset turn action state for a new turn */
 	resetTurnActions() {
 		this.hasMoved = false;
 		this.hasFought = false;
+		this.hasShopped = false;
 	}
 
 	shopCostModifier = $state(0);
@@ -251,7 +253,8 @@ export class Game {
 			hasTurnStarted: this.hasTurnStarted,
 			skippedNextTurns: this.skippedNextTurns,
 			hasMoved: this.hasMoved,
-			hasFought: this.hasFought
+			hasFought: this.hasFought,
+			hasShopped: this.hasShopped
 		});
 	}
 
@@ -280,10 +283,11 @@ export class Game {
 		game.auditTrail = data.auditTrail;
 		game.shopCostModifier = data.shopCostModifier;
 		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
-		game.hasTurnStarted = data.hasTurnStarted;
-		game.skippedNextTurns = data.skippedNextTurns;
-		game.hasMoved = data.hasMoved;
-		game.hasFought = data.hasFought;
+		game.hasTurnStarted = data.hasTurnStarted ?? false;
+		game.skippedNextTurns = data.skippedNextTurns ?? [];
+		game.hasMoved = data.hasMoved ?? false;
+		game.hasFought = data.hasFought ?? false;
+		game.hasShopped = data.hasShopped ?? false;
 		return game;
 	}
 }

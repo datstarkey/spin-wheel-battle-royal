@@ -25,6 +25,15 @@ export function getHasMovedThisTurn() {
 	return currentGame.value?.hasMoved ?? false;
 }
 
+export function getHasShoppedThisTurn() {
+	return currentGame.value?.hasShopped ?? false;
+}
+
+export function setHasShoppedThisTurn(value: boolean) {
+	if (!currentGame.value) return;
+	currentGame.value.hasShopped = value;
+}
+
 /**
  * Enter movement mode - highlights valid moves for the current player
  */
