@@ -2,6 +2,7 @@ import type { Player } from '../player/player.svelte';
 import { AbsoluteUnit } from './absoluteUnit';
 import { Gambler } from './gambler';
 import { GigaChad } from './gigaChad';
+import { Magicman } from './magicman';
 import { None } from './none';
 import { Poopmaster } from './poopmaster';
 import { Swe } from './swe';
@@ -40,10 +41,10 @@ export const classMap = {
 	gambler: Gambler,
 	gigachad: GigaChad,
 	absoluteUnit: AbsoluteUnit,
-	shadeweaver: Shadeweaver
+	shadeweaver: Shadeweaver,
+	magicman: Magicman
 	// stoner: Stoner
 	// gorf: Gorf,
-	// magicman: Magicman
 };
 
 export type ClassType = keyof typeof classMap;
