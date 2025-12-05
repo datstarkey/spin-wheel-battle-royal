@@ -8,12 +8,13 @@ import { Swe } from './swe';
 // import { Stoner } from './stoner';
 import { Shadeweaver } from './shadeweaver';
 
-
 export interface ClassBase {
 	hp: number;
 	attack: number;
 	defense: number;
 	name: string;
+
+	description?: string;
 
 	startingGold?: number;
 
