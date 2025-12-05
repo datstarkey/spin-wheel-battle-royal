@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Giga Chad Class Icon: Muscular flexing arm -->
+
+  <!-- Bicep - main muscle mass -->
+  <rect x="18" y="20" width="2" height="1" fill="#E8B88A"/>
+  <rect x="16" y="21" width="6" height="1" fill="#E8B88A"/>
+  <rect x="14" y="22" width="10" height="1" fill="#E8B88A"/>
+  <rect x="12" y="23" width="14" height="1" fill="#D4A574"/>
+  <rect x="10" y="24" width="18" height="1" fill="#D4A574"/>
+  <rect x="9" y="25" width="20" height="1" fill="#E8B88A"/>
+  <rect x="8" y="26" width="22" height="1" fill="#E8B88A"/>
+  <rect x="7" y="27" width="24" height="1" fill="#E8B88A"/>
+  <rect x="7" y="28" width="25" height="1" fill="#D4A574"/>
+  <rect x="7" y="29" width="26" height="1" fill="#D4A574"/>
+  <rect x="8" y="30" width="26" height="1" fill="#C49464"/>
+  <rect x="8" y="31" width="25" height="1" fill="#C49464"/>
+  <rect x="9" y="32" width="24" height="1" fill="#D4A574"/>
+  <rect x="10" y="33" width="22" height="1" fill="#D4A574"/>
+  <rect x="11" y="34" width="20" height="1" fill="#E8B88A"/>
+
+  <!-- Bicep highlight/peak -->
+  <rect x="12" y="24" width="4" height="1" fill="#F5D4B8"/>
+  <rect x="10" y="25" width="6" height="1" fill="#F5D4B8"/>
+  <rect x="9" y="26" width="7" height="1" fill="#F5D4B8"/>
+  <rect x="9" y="27" width="6" height="1" fill="#F5D4B8"/>
+
+  <!-- Muscle definition line -->
+  <rect x="16" y="28" width="1" height="4" fill="#B08050"/>
+  <rect x="17" y="27" width="1" height="1" fill="#B08050"/>
+  <rect x="15" y="32" width="1" height="1" fill="#B08050"/>
+
+  <!-- Forearm going down -->
+  <rect x="28" y="28" width="8" height="1" fill="#E8B88A"/>
+  <rect x="30" y="29" width="8" height="1" fill="#D4A574"/>
+  <rect x="32" y="30" width="8" height="1" fill="#D4A574"/>
+  <rect x="34" y="31" width="8" height="1" fill="#E8B88A"/>
+  <rect x="36" y="32" width="8" height="1" fill="#E8B88A"/>
+  <rect x="38" y="33" width="8" height="1" fill="#D4A574"/>
+  <rect x="40" y="34" width="8" height="1" fill="#D4A574"/>
+  <rect x="42" y="35" width="7" height="1" fill="#E8B88A"/>
+  <rect x="44" y="36" width="6" height="1" fill="#E8B88A"/>
+  <rect x="45" y="37" width="6" height="1" fill="#D4A574"/>
+  <rect x="46" y="38" width="6" height="1" fill="#D4A574"/>
+
+  <!-- Forearm highlight -->
+  <rect x="30" y="29" width="3" height="1" fill="#F5D4B8"/>
+  <rect x="34" y="31" width="3" height="1" fill="#F5D4B8"/>
+  <rect x="38" y="33" width="3" height="1" fill="#F5D4B8"/>
+
+  <!-- Fist -->
+  <rect x="46" y="39" width="8" height="1" fill="#E8B88A"/>
+  <rect x="45" y="40" width="10" height="1" fill="#D4A574"/>
+  <rect x="44" y="41" width="12" height="1" fill="#D4A574"/>
+  <rect x="44" y="42" width="12" height="1" fill="#E8B88A"/>
+  <rect x="44" y="43" width="12" height="1" fill="#E8B88A"/>
+  <rect x="44" y="44" width="12" height="1" fill="#D4A574"/>
+  <rect x="44" y="45" width="12" height="1" fill="#D4A574"/>
+  <rect x="45" y="46" width="10" height="1" fill="#C49464"/>
+  <rect x="46" y="47" width="8" height="1" fill="#C49464"/>
+
+  <!-- Fist knuckle highlights -->
+  <rect x="46" y="42" width="2" height="1" fill="#F5D4B8"/>
+  <rect x="49" y="42" width="2" height="1" fill="#F5D4B8"/>
+  <rect x="52" y="42" width="2" height="1" fill="#F5D4B8"/>
+
+  <!-- Finger lines -->
+  <rect x="46" y="44" width="1" height="2" fill="#B08050"/>
+  <rect x="49" y="44" width="1" height="2" fill="#B08050"/>
+  <rect x="52" y="44" width="1" height="2" fill="#B08050"/>
+
+  <!-- Power/energy lines around bicep -->
+  <rect x="4" y="25" width="2" height="1" fill="#FFD700"/>
+  <rect x="3" y="27" width="3" height="1" fill="#FFD700"/>
+  <rect x="4" y="29" width="2" height="1" fill="#FFD700"/>
+
+  <rect x="6" y="18" width="1" height="2" fill="#FFD700"/>
+  <rect x="8" y="16" width="1" height="3" fill="#FFD700"/>
+  <rect x="10" y="15" width="1" height="2" fill="#FFD700"/>
+
+  <rect x="14" y="14" width="2" height="1" fill="#FFD700"/>
+  <rect x="18" y="13" width="2" height="1" fill="#FFD700"/>
+  <rect x="22" y="14" width="2" height="1" fill="#FFD700"/>
+
+  <!-- Sparkle effects -->
+  <rect x="5" y="20" width="1" height="1" fill="#FFFFFF"/>
+  <rect x="12" y="17" width="1" height="1" fill="#FFFFFF"/>
+  <rect x="20" y="16" width="1" height="1" fill="#FFFFFF"/>
+  <rect x="25" y="19" width="1" height="1" fill="#FFFFFF"/>
+</svg>

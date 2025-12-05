@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Absolute Unit Class Icon: Tank -->
+
+  <!-- Tank treads - left -->
+  <rect x="4" y="44" width="20" height="16" fill="#2C2C2C"/>
+  <rect x="6" y="46" width="16" height="12" fill="#1C1C1C"/>
+  <!-- Tread wheels -->
+  <rect x="6" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="7" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <rect x="12" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="13" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <rect x="18" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="19" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <!-- Tread texture -->
+  <rect x="5" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="9" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="13" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="17" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="21" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="5" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="9" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="13" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="17" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="21" y="58" width="2" height="2" fill="#404040"/>
+
+  <!-- Tank treads - right -->
+  <rect x="40" y="44" width="20" height="16" fill="#2C2C2C"/>
+  <rect x="42" y="46" width="16" height="12" fill="#1C1C1C"/>
+  <!-- Tread wheels -->
+  <rect x="42" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="43" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <rect x="48" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="49" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <rect x="54" y="48" width="4" height="4" fill="#3C3C3C"/>
+  <rect x="55" y="49" width="2" height="2" fill="#4C4C4C"/>
+  <!-- Tread texture -->
+  <rect x="41" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="45" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="49" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="53" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="57" y="44" width="2" height="2" fill="#404040"/>
+  <rect x="41" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="45" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="49" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="53" y="58" width="2" height="2" fill="#404040"/>
+  <rect x="57" y="58" width="2" height="2" fill="#404040"/>
+
+  <!-- Tank body/hull - olive drab green -->
+  <rect x="8" y="32" width="48" height="14" fill="#4A5D23"/>
+  <rect x="6" y="34" width="52" height="10" fill="#556B2F"/>
+  <rect x="10" y="32" width="44" height="2" fill="#667F3D"/>
+
+  <!-- Body highlights -->
+  <rect x="8" y="34" width="10" height="2" fill="#6B8E23"/>
+  <rect x="8" y="36" width="6" height="2" fill="#6B8E23"/>
+
+  <!-- Tank turret base -->
+  <rect x="16" y="22" width="32" height="12" fill="#4A5D23"/>
+  <rect x="14" y="24" width="36" height="8" fill="#556B2F"/>
+  <rect x="18" y="22" width="28" height="2" fill="#667F3D"/>
+
+  <!-- Turret highlight -->
+  <rect x="16" y="24" width="8" height="2" fill="#6B8E23"/>
+
+  <!-- Tank cannon -->
+  <rect x="48" y="26" width="14" height="4" fill="#3C3C3C"/>
+  <rect x="50" y="25" width="12" height="6" fill="#4C4C4C"/>
+  <rect x="48" y="27" width="2" height="2" fill="#2C2C2C"/>
+  <!-- Cannon muzzle -->
+  <rect x="60" y="25" width="4" height="6" fill="#2C2C2C"/>
+  <rect x="62" y="26" width="2" height="4" fill="#1C1C1C"/>
+
+  <!-- Turret top hatch -->
+  <rect x="26" y="18" width="12" height="6" fill="#4A5D23"/>
+  <rect x="28" y="16" width="8" height="4" fill="#556B2F"/>
+  <rect x="29" y="17" width="6" height="2" fill="#667F3D"/>
+  <!-- Hatch detail -->
+  <rect x="30" y="18" width="4" height="2" fill="#3C3C3C"/>
+
+  <!-- Periscope/viewport -->
+  <rect x="20" y="24" width="4" height="3" fill="#1A1A2E"/>
+  <rect x="21" y="24" width="2" height="2" fill="#4080C0"/>
+
+  <!-- Armor panels/rivets -->
+  <rect x="12" y="36" width="2" height="2" fill="#3A4D13"/>
+  <rect x="50" y="36" width="2" height="2" fill="#3A4D13"/>
+  <rect x="12" y="40" width="2" height="2" fill="#3A4D13"/>
+  <rect x="50" y="40" width="2" height="2" fill="#3A4D13"/>
+
+  <!-- Star emblem on turret -->
+  <rect x="38" y="26" width="1" height="1" fill="#FFFFFF"/>
+  <rect x="36" y="27" width="5" height="1" fill="#FFFFFF"/>
+  <rect x="37" y="28" width="3" height="1" fill="#FFFFFF"/>
+  <rect x="36" y="29" width="2" height="1" fill="#FFFFFF"/>
+  <rect x="39" y="29" width="2" height="1" fill="#FFFFFF"/>
+
+  <!-- Ground/dust effect -->
+  <rect x="2" y="60" width="4" height="2" fill="#8B7355" opacity="0.5"/>
+  <rect x="58" y="60" width="4" height="2" fill="#8B7355" opacity="0.5"/>
+</svg>

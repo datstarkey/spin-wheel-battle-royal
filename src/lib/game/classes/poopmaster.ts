@@ -23,6 +23,7 @@ export const Poopmaster: ClassBase = {
 	attack: 8,
 	defense: 10,
 	name: 'PoopMaster',
+	icon: '/Classes/Poopmaster.svg',
 	description:
 		'A chaotic disruptor who destroys enemy items. Gets +2 ATK for each item destroyed (Poop Pile). Reduces attacker damage by 20%.',
 	onWinAbility: 'Shit on one of their items (or steal gold if they have none)',

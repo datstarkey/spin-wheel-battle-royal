@@ -5,6 +5,7 @@ export const GigaChad: ClassBase = {
 	attack: 20,
 	defense: 5,
 	name: 'Giga Chad',
+	icon: '/Classes/GigaChad.svg',
 	description: 'An unstoppable force. Gets 30% of base attack as bonus defense.',
 	onWinAbility: 'Gain 3 attack permanently',
 	attackRange: 1,

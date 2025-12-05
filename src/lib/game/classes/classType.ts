@@ -2,6 +2,7 @@ import type { Player } from '../player/player.svelte';
 import { AbsoluteUnit } from './absoluteUnit';
 import { Gambler } from './gambler';
 import { GigaChad } from './gigaChad';
+import { Gorf } from './gorf';
 import { Intern } from './intern';
 import { Magicman } from './magicman';
 import { None } from './none';
@@ -17,6 +18,7 @@ export interface ClassBase {
 	name: string;
 
 	description?: string;
+	icon?: string;
 
 	startingGold?: number;
 
@@ -48,9 +50,9 @@ export const classMap = {
 	absoluteUnit: AbsoluteUnit,
 	shadeweaver: Shadeweaver,
 	magicman: Magicman,
-	intern: Intern
+	intern: Intern,
+	gorf: Gorf
 	// stoner: Stoner
-	// gorf: Gorf,
 };
 
 export type ClassType = keyof typeof classMap;

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Gorf Class Icon: Scrappy two-tapper with crossed fists and target -->
+
+  <!-- Angry face silhouette in background -->
+  <rect x="22" y="4" width="20" height="2" fill="#8B0000"/>
+  <rect x="18" y="6" width="28" height="2" fill="#A00000"/>
+  <rect x="16" y="8" width="32" height="4" fill="#B00000"/>
+  <rect x="14" y="12" width="36" height="8" fill="#C00000"/>
+  <rect x="16" y="20" width="32" height="4" fill="#B00000"/>
+  <rect x="18" y="24" width="28" height="2" fill="#A00000"/>
+  <rect x="22" y="26" width="20" height="2" fill="#8B0000"/>
+
+  <!-- Angry eyes -->
+  <rect x="20" y="12" width="6" height="4" fill="#FFFFFF"/>
+  <rect x="38" y="12" width="6" height="4" fill="#FFFFFF"/>
+  <!-- Pupils (looking mean) -->
+  <rect x="22" y="13" width="3" height="3" fill="#1A1A1A"/>
+  <rect x="39" y="13" width="3" height="3" fill="#1A1A1A"/>
+  <!-- Angry eyebrows -->
+  <rect x="18" y="10" width="8" height="2" fill="#1A1A1A"/>
+  <rect x="38" y="10" width="8" height="2" fill="#1A1A1A"/>
+  <rect x="26" y="11" width="2" height="1" fill="#1A1A1A"/>
+  <rect x="36" y="11" width="2" height="1" fill="#1A1A1A"/>
+
+  <!-- Gritted teeth -->
+  <rect x="26" y="20" width="12" height="3" fill="#FFFFFF"/>
+  <rect x="27" y="21" width="1" height="2" fill="#1A1A1A"/>
+  <rect x="29" y="21" width="1" height="2" fill="#1A1A1A"/>
+  <rect x="31" y="21" width="2" height="2" fill="#1A1A1A"/>
+  <rect x="34" y="21" width="1" height="2" fill="#1A1A1A"/>
+  <rect x="36" y="21" width="1" height="2" fill="#1A1A1A"/>
+
+  <!-- Left fist -->
+  <rect x="6" y="32" width="16" height="12" fill="#E8B88A"/>
+  <rect x="4" y="34" width="2" height="8" fill="#D4A574"/>
+  <rect x="8" y="30" width="12" height="2" fill="#E8B88A"/>
+  <!-- Knuckles -->
+  <rect x="8" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <rect x="12" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <rect x="16" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <!-- Finger lines -->
+  <rect x="10" y="36" width="1" height="6" fill="#C49464"/>
+  <rect x="14" y="36" width="1" height="6" fill="#C49464"/>
+  <rect x="18" y="36" width="1" height="6" fill="#C49464"/>
+
+  <!-- Right fist -->
+  <rect x="42" y="32" width="16" height="12" fill="#E8B88A"/>
+  <rect x="58" y="34" width="2" height="8" fill="#D4A574"/>
+  <rect x="44" y="30" width="12" height="2" fill="#E8B88A"/>
+  <!-- Knuckles -->
+  <rect x="44" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <rect x="48" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <rect x="52" y="34" width="3" height="2" fill="#F5D4B8"/>
+  <!-- Finger lines -->
+  <rect x="46" y="36" width="1" height="6" fill="#C49464"/>
+  <rect x="50" y="36" width="1" height="6" fill="#C49464"/>
+  <rect x="54" y="36" width="1" height="6" fill="#C49464"/>
+
+  <!-- "x2" Double tap indicator -->
+  <rect x="26" y="34" width="2" height="1" fill="#FFD700"/>
+  <rect x="28" y="35" width="2" height="1" fill="#FFD700"/>
+  <rect x="30" y="36" width="2" height="1" fill="#FFD700"/>
+  <rect x="32" y="35" width="2" height="1" fill="#FFD700"/>
+  <rect x="34" y="34" width="2" height="1" fill="#FFD700"/>
+  <rect x="30" y="38" width="2" height="1" fill="#FFD700"/>
+  <rect x="33" y="38" width="1" height="1" fill="#FFD700"/>
+  <rect x="35" y="39" width="1" height="3" fill="#FFD700"/>
+  <rect x="36" y="40" width="1" height="2" fill="#FFD700"/>
+  <rect x="37" y="39" width="1" height="3" fill="#FFD700"/>
+
+  <!-- Target/crosshair (Grudge) at bottom -->
+  <rect x="28" y="48" width="8" height="1" fill="#FF0000"/>
+  <rect x="31" y="46" width="2" height="10" fill="#FF0000"/>
+  <!-- Target circle -->
+  <rect x="26" y="50" width="2" height="4" fill="#FF0000"/>
+  <rect x="36" y="50" width="2" height="4" fill="#FF0000"/>
+  <rect x="28" y="48" width="8" height="1" fill="#FF0000"/>
+  <rect x="28" y="55" width="8" height="1" fill="#FF0000"/>
+  <!-- Center dot -->
+  <rect x="31" y="51" width="2" height="2" fill="#FF0000"/>
+
+  <!-- Impact lines around fists -->
+  <rect x="2" y="36" width="2" height="1" fill="#FFD700"/>
+  <rect x="0" y="38" width="3" height="1" fill="#FFD700"/>
+  <rect x="2" y="40" width="2" height="1" fill="#FFD700"/>
+
+  <rect x="60" y="36" width="2" height="1" fill="#FFD700"/>
+  <rect x="61" y="38" width="3" height="1" fill="#FFD700"/>
+  <rect x="60" y="40" width="2" height="1" fill="#FFD700"/>
+</svg>

@@ -19,6 +19,7 @@ export const Magicman: ClassBase = {
 	defense: 10,
 	attackRange: 3, // +2 attack range (base 1 + 2)
 	name: 'Magic Man',
+	icon: '/Classes/Magicman.svg',
 	description:
 		'Master of arcane arts who casts spells instead of attacking. Manages mana (max 100) to fuel Minor (25), Major (50), and Ultimate (100) spells.',
 	onWinAbility: 'Regenerates 10 mana + 1 per unused movement',

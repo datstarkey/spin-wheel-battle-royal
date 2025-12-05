@@ -5,6 +5,7 @@ export const AbsoluteUnit: ClassBase = {
 	attack: 5,
 	defense: 15,
 	name: 'Absolute Unit',
+	icon: '/Classes/AbsoluteUnit.svg',
 	description: 'An immovable object. Gets 30% of base defense as bonus attack.',
 	onWinAbility: 'Gain 5 defense',
 	attackRange: 1,

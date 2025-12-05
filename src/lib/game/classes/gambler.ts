@@ -34,6 +34,7 @@ export const Gambler: ClassBase = {
 	attack: 15,
 	defense: 15,
 	name: 'Gambler',
+	icon: '/Classes/Gambler.svg',
 	description:
 		'A risk-taker whose HP equals Gold. Builds Lucky Streak on positive wheel outcomes (+2% ATK/DEF per stack). Free casino entry. Streak resets on bad outcomes.',
 	onWinAbility: 'Spin the Gambler wheel instead of the win and loss wheels',

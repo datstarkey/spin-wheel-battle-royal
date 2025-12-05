@@ -13,6 +13,7 @@ export const Intern: ClassBase = {
 	defense: 12,
 	attackRange: 2, // Can attack from a distance (sends emails)
 	name: 'The Intern',
+	icon: '/Classes/Intern.svg',
 	description:
 		"An overly helpful AI assistant who wandered into the wrong battle royale. Manages 'Confidence' (0-100) - high confidence unlocks powerful abilities, but losing causes existential doubt.",
 	onWinAbility: 'Spin the Helpful Suggestions wheel for mutually beneficial outcomes',

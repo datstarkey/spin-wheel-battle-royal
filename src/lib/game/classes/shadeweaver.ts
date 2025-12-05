@@ -22,6 +22,7 @@ export const Shadeweaver: ClassBase = {
 	attack: 20,
 	defense: 15,
 	name: 'Shadeweaver',
+	icon: '/Classes/Shadeweaver.svg',
 	description:
 		'Master of the Shadow Realm. Immune to the Shadow Realm wheel. Can freely move in/out of Shadow Realm tiles. Can attack anyone in the Shadow Realm from anywhere. Gains +1% ATK and DEF per Shade (earned when others spin the Shadow Realm wheel).',
 	onWinAbility: 'Make someone spin the shadow realm wheel',
