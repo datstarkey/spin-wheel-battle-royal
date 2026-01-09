@@ -34,7 +34,7 @@ function generateCombatWheel(attacker: Player, defender: Player) {
 					`${attacker.name} (ATK ${attacker.attack}) beat ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
 				attacker.onAttackWin(defender);
-				defender.onDefendWin(attacker);
+				defender.onDefendLose(attacker);
 			}
 		},
 		{
@@ -45,7 +45,7 @@ function generateCombatWheel(attacker: Player, defender: Player) {
 					`${attacker.name} (ATK ${attacker.attack}) lost to ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
 				attacker.onAttackLose(defender);
-				defender.onDefendLose(attacker);
+				defender.onDefendWin(attacker);
 			}
 		}
 	];
