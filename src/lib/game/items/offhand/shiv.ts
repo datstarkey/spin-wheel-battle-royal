@@ -19,6 +19,6 @@ export const Shiv: Item = {
 		player.gold += goldToGive;
 		attackingPlayer.gold -= goldToGive;
 
-		addAuditTrail(`${player.name} shivved ${attackingPlayer.name} and stole 1 gold!`);
+		addAuditTrail(`${player.name} shivved ${attackingPlayer.name} and stole 5 gold!`);
 	}
 };
