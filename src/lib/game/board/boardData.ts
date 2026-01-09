@@ -1519,7 +1519,8 @@ export const BOARD_CONFIG: BoardConfig = {
 				"walkable": true,
 				"connections": [
 					"south",
-					"west"
+					"west",
+					"east"
 				]
 			},
 			{
@@ -1531,6 +1532,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"walkable": true,
 				"connections": [
 					"south",
+					"west",
 					"east"
 				]
 			},
@@ -7629,7 +7631,8 @@ export const BOARD_CONFIG: BoardConfig = {
 				"walkable": true,
 				"connections": [
 					"north",
-					"west"
+					"west",
+					"east"
 				]
 			},
 			{
@@ -7641,6 +7644,7 @@ export const BOARD_CONFIG: BoardConfig = {
 				"walkable": true,
 				"connections": [
 					"north",
+					"west",
 					"east"
 				]
 			},
