@@ -136,5 +136,5 @@ export function generateGamblerWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Gambler Wheel - ${player.name}`, wheel, 'gambler');
+	addCustomWheel(`Gambler Wheel - ${player.name} - ${Date.now()}`, wheel, 'gambler');
 }

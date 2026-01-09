@@ -202,7 +202,7 @@ export function generateCasinoWheel(playerName: string) {
 		}
 	];
 
-	addCustomWheel(`Casino - ${player.name}`, wheel, 'casino');
+	addCustomWheel(`Casino - ${player.name} - ${Date.now()}`, wheel, 'casino');
 }
 
 /**
