@@ -38,6 +38,7 @@
 		currentGame.value?.players.filter((p) => {
 			if (p.name === player.name) return false;
 			if (player.hp <= 0) return false;
+			if (p.dead) return false; // Can't attack dead players
 			if (!isPlayerInAttackRange(p.name)) return false;
 
 			// Shadeweaver can attack anyone in the Shadow Realm from anywhere
