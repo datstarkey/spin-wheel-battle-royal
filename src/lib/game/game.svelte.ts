@@ -81,6 +81,12 @@ export class Game {
 	);
 	shopRerollCost = $state(Game.INITIAL_REROLL_COST);
 
+	randomizeShopCategory() {
+		this.unlockedShopCategory =
+			Game.SHOP_CATEGORIES[Math.floor(Math.random() * Game.SHOP_CATEGORIES.length)];
+		this.shopRerollCost = Game.INITIAL_REROLL_COST;
+	}
+
 	rerollShopCategory(): boolean {
 		const player = this.currentPlayer;
 		if (!player) return false;
@@ -236,6 +242,7 @@ export class Game {
 		}
 
 		// Actually start the turn
+		this.randomizeShopCategory();
 		player.onTurnStart();
 		this.addAuditTrail(`${player.name} starts their turn!`);
 		this.hasTurnStarted = true;
