@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      globals:
+        specifier: ^17.0.0
+        version: 17.0.0
       iconify-icon:
         specifier: 2.3.0
         version: 2.3.0
@@ -1589,6 +1592,10 @@ packages:
 
   globals@14.0.0:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
+    engines: {node: '>=18'}
+
+  globals@17.0.0:
+    resolution: {integrity: sha512-gv5BeD2EssA793rlFWVPMMCqefTlpusw6/2TbAVMy0FzcG8wKJn4O+NqJ4+XWmmwrayJgw5TzrmWjFgmz1XPqw==}
     engines: {node: '>=18'}
 
   graceful-fs@4.2.11:
@@ -4004,6 +4011,8 @@ snapshots:
     optional: true
 
   globals@14.0.0: {}
+
+  globals@17.0.0: {}
 
   graceful-fs@4.2.11: {}
 
