@@ -10,9 +10,7 @@ export function incrementLuckyStreak(player: Player, amount: number = 1) {
 	player.resources[LUCKY_STREAK_RESOURCE] ??= 0;
 	player.resources[LUCKY_STREAK_RESOURCE] += amount;
 	const streak = player.resources[LUCKY_STREAK_RESOURCE];
-	addAuditTrail(
-		`${player.name}'s Lucky Streak grows to ${streak}! 🔥 (+${streak * 2}% ATK/DEF)`
-	);
+	addAuditTrail(`${player.name}'s Lucky Streak grows to ${streak}! 🔥 (+${streak * 10}% ATK/DEF)`);
 }
 
 // Helper to reset lucky streak on bad outcome
@@ -36,21 +34,21 @@ export const Gambler: ClassBase = {
 	name: 'Gambler',
 	icon: '/Classes/Gambler.svg',
 	description:
-		'A risk-taker whose HP equals Gold. Builds Lucky Streak on positive wheel outcomes (+2% ATK/DEF per stack). Free casino entry. Streak resets on bad outcomes.',
+		'A risk-taker whose HP equals Gold. Builds Lucky Streak on positive wheel outcomes (+10% ATK/DEF per stack). Free casino entry. Streak resets on bad outcomes.',
 	onWinAbility: 'Spin the Gambler wheel instead of the win and loss wheels',
 	attackRange: 1,
 	startingGold: 100,
 
-	// Passive: +2% ATK per Lucky Streak stack (based on base attack)
+	// Passive: +10% ATK per Lucky Streak stack (based on base attack)
 	getBonusAttack(player) {
 		const streak = player.resources[LUCKY_STREAK_RESOURCE] ?? 0;
-		return Math.floor((streak * 2 / 100) * player.baseAttack);
+		return Math.ceil(((streak * 10) / 100) * player.baseAttack);
 	},
 
-	// Passive: +2% DEF per Lucky Streak stack (based on base defense)
+	// Passive: +10% DEF per Lucky Streak stack (based on base defense)
 	getBonusDefense(player) {
 		const streak = player.resources[LUCKY_STREAK_RESOURCE] ?? 0;
-		return Math.floor((streak * 2 / 100) * player.baseDefense);
+		return Math.ceil(((streak * 10) / 100) * player.baseDefense);
 	},
 
 	onAttackWin(player, _defendingPlayer) {
