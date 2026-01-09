@@ -3,13 +3,13 @@ import type { Item } from '../itemTypes';
 
 export const Fireball: Item = {
 	name: 'Fireball',
-	description: 'Gain +1 Attack Range',
+	description: 'Gain +3 Attack Range',
 	image: '/Items/MainHandEquipables/Fireball.svg',
 	type: 'mainhand',
 	baseCost: 3,
 	maxAmount: 1,
 	onEquip: (player: Player) => {
-		player.addStatModifier('Fireball', 'attackRange', 1);
+		player.addStatModifier('Fireball', 'attackRange', 3);
 	},
 	onUnequip: (player: Player) => {
 		player.removeStatModifier('Fireball', 'attackRange');

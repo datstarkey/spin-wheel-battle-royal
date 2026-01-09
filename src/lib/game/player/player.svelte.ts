@@ -254,7 +254,7 @@ export class Player {
 	 * Movement
 	 */
 
-	private _baseMovement = $state(1);
+	private _baseMovement = $state(3);
 	private _bonusMovement = $state(0);
 	public get movement(): number {
 		return Math.max(1, this._baseMovement + this.bonusMovement);
