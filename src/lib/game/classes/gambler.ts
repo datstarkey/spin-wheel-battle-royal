@@ -7,7 +7,8 @@ export const LUCKY_STREAK_RESOURCE = 'LuckyStreak';
 const LUCKY_STREAK_MULTIPLIER_KEY = 'LuckyStreak';
 
 // Helper to update the multipliers based on current streak
-function updateLuckyStreakMultipliers(player: Player) {
+// Exported so it can be called when resources are modified externally (e.g., EditPlayer)
+export function updateLuckyStreakMultipliers(player: Player) {
 	const streak = player.resources[LUCKY_STREAK_RESOURCE] ?? 0;
 	if (streak > 0) {
 		// Each stack gives +10% multiplier (0.1 per stack)

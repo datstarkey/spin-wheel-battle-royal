@@ -19,6 +19,7 @@
 	import type { Player } from '$lib/game/player/player.svelte';
 	import statusEffects, { type StatusType } from '$lib/game/statuses/statusTypes';
 	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
+	import { LUCKY_STREAK_RESOURCE, updateLuckyStreakMultipliers } from '$lib/game/classes/gambler';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
 	interface Props {
@@ -309,7 +310,13 @@
 				{#each Object.entries(player.resources) as [resource, amount] (resource)}
 					{@render stepper(
 						amount,
-						(val) => (player.resources[resource] = val),
+						(val) => {
+							player.resources[resource] = val;
+							// Update Lucky Streak multipliers when that resource changes
+							if (resource === LUCKY_STREAK_RESOURCE) {
+								updateLuckyStreakMultipliers(player);
+							}
+						},
 						'mdi:cube-outline',
 						resource,
 						'text-teal-400',
