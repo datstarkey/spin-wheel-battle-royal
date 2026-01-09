@@ -134,11 +134,11 @@
 		if (won) {
 			addAuditTrail(`${player.name} (ATK ${player.attack}) beat ${defendingPlayer.name} (DEF ${defendingPlayer.defense}) [${attackerOddsStr}% odds]`);
 			player.onAttackWin(defendingPlayer);
-			defendingPlayer.onDefendWin(player);
+			defendingPlayer.onDefendLose(player);
 		} else {
 			addAuditTrail(`${player.name} (ATK ${player.attack}) lost to ${defendingPlayer.name} (DEF ${defendingPlayer.defense}) [${attackerOddsStr}% odds]`);
 			player.onAttackLose(defendingPlayer);
-			defendingPlayer.onDefendLose(player);
+			defendingPlayer.onDefendWin(player);
 		}
 	}
 
