@@ -148,15 +148,15 @@ export function generateButtonWheel(playerName: string) {
 		{
 			label: 'Rotate Players Clockwise',
 			onWin: () => {
-				rotatePlayersAroundCenter(true);
 				teleportToRandomSpawn(player);
+				rotatePlayersAroundCenter(true);
 			}
 		},
 		{
 			label: 'Rotate Players Counter-Clockwise',
 			onWin: () => {
-				rotatePlayersAroundCenter(false);
 				teleportToRandomSpawn(player);
+				rotatePlayersAroundCenter(false);
 			}
 		},
 		{
