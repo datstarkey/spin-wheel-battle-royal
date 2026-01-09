@@ -107,7 +107,7 @@ export function generateCasinoWheel(playerName: string) {
 					addAuditTrail(`${playerName} went ALL IN and won ${bonus}g!`);
 					if (isGambler) incrementLuckyStreak(player, 2);
 				} else {
-					const loss = Math.floor(player.gold / 2);
+					const loss = Math.min(Math.floor(player.gold / 2), 40);
 					player.gold -= loss;
 					addAuditTrail(`${playerName} went ALL IN and lost ${loss}g!`);
 					if (isGambler) resetLuckyStreak(player);
