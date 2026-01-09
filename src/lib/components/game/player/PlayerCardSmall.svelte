@@ -101,7 +101,7 @@
 			</div>
 		{/if}
 
-		<!-- Avatar Circle -->
+		<!-- Avatar Circle with Class Icon -->
 		<div
 			class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300
 				{isActiveTurn
@@ -114,6 +114,13 @@
 		>
 			{#if isDead}
 				<Icon icon="mdi:skull" class="text-error-500" />
+			{:else if player.class.icon}
+				<img
+					src={player.class.icon}
+					alt={player.class.name}
+					class="h-7 w-7 rounded-full"
+					style="image-rendering: pixelated;"
+				/>
 			{:else}
 				{avatarLetter}
 			{/if}
