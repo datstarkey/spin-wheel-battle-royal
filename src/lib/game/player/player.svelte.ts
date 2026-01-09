@@ -469,6 +469,11 @@ export class Player {
 			return false;
 		}
 
+		// Gamblers can't buy items that would reduce their gold to 0 (since HP = Gold)
+		if (this.classType === 'gambler' && this.gold - cost <= 0) {
+			return false;
+		}
+
 		if (actualItem.maxAmount && this.inventoryCount(actualItem.name) >= actualItem.maxAmount) {
 			return false;
 		}
