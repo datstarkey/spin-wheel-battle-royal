@@ -199,6 +199,16 @@ export function generateCasinoWheel(playerName: string) {
 				setHasUsedCasinoThisTurn(false); // Allow another spin
 				generateCasinoWheel(playerName);
 			}
+		},
+		{
+			// NEGATIVE - Bad Beat (stat loss)
+			label: '😵 Bad Beat: -3 ATK & DEF',
+			onWin: () => {
+				player.baseAttack = Math.max(0, player.baseAttack - 3);
+				player.baseDefense = Math.max(0, player.baseDefense - 3);
+				addAuditTrail(`${playerName} suffered a Bad Beat! -3 Base Attack and -3 Base Defense`);
+				if (isGambler) resetLuckyStreak(player);
+			}
 		}
 	];
 
