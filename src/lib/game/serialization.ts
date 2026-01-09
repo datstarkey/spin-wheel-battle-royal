@@ -135,6 +135,8 @@ export interface SerializedGame {
 	auditTrail: string[];
 	shopCostModifier: number;
 	shopConsumableCostModifier: number;
+	unlockedShopCategory?: string;
+	shopRerollCost?: number;
 	hasTurnStarted: boolean;
 	skippedNextTurns: string[];
 	hasMoved: boolean;
@@ -387,6 +389,8 @@ export function validateGame(data: unknown): SerializedGame | null {
 		auditTrail,
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,
 		shopConsumableCostModifier: isNumber(data.shopConsumableCostModifier) ? data.shopConsumableCostModifier : 0,
+		unlockedShopCategory: isString(data.unlockedShopCategory) ? data.unlockedShopCategory : undefined,
+		shopRerollCost: isNumber(data.shopRerollCost) ? data.shopRerollCost : undefined,
 		hasTurnStarted: isBoolean(data.hasTurnStarted) ? data.hasTurnStarted : false,
 		skippedNextTurns,
 		hasMoved: isBoolean(data.hasMoved) ? data.hasMoved : false,

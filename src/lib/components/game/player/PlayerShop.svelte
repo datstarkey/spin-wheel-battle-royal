@@ -4,7 +4,12 @@
 	import type { AllItems, Item } from '$lib/game/items/itemTypes';
 	import items from '$lib/game/items/itemTypes';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { getItemCost } from '$lib/stores/gameStore.svelte';
+	import {
+		getItemCost,
+		getUnlockedShopCategory,
+		getShopRerollCost,
+		rerollShopCategory
+	} from '$lib/stores/gameStore.svelte';
 
 	interface Props {
 		player: Player;
@@ -21,12 +26,20 @@
 		{ key: 'consumables', label: 'Consumables', icon: 'mdi:flask', color: 'success' }
 	] as const;
 
-	let activeCategory = $state<string>('mainhand');
+	// The active category is always the unlocked category (no switching allowed)
+	let unlockedCategory = $derived(getUnlockedShopCategory());
+	let rerollCost = $derived(getShopRerollCost());
+	let canAffordReroll = $derived(player.gold >= rerollCost);
+	let currentCat = $derived(categories.find((c) => c.key === unlockedCategory) ?? categories[0]);
 	let hoveredItem = $state<string | null>(null);
 
-	// Get items for active category
+	function handleReroll() {
+		rerollShopCategory();
+	}
+
+	// Get items for unlocked category
 	let activeItems = $derived(
-		Object.entries(items[activeCategory as keyof typeof items] || {}) as [string, Item][]
+		Object.entries(items[unlockedCategory as keyof typeof items] || {}) as [string, Item][]
 	);
 
 	// Stats that items can modify
@@ -127,37 +140,66 @@
 			</div>
 		</header>
 
-		<!-- Category Navigation -->
+		<!-- Category Display with Reroll -->
 		<nav class="border-b border-surface-500/20 bg-surface-900/60 px-4">
-			<div class="flex">
-				{#each categories as cat (cat.key)}
-					{@const isActive = activeCategory === cat.key}
-					{@const itemCount = Object.keys(items[cat.key as keyof typeof items] || {}).length}
-					<button
-						onclick={() => (activeCategory = cat.key)}
-						class="group relative flex items-center gap-2 px-5 py-3 transition-all
-							{isActive
-							? 'bg-surface-800/80 text-surface-100'
-							: 'text-surface-400 hover:bg-surface-800/40 hover:text-surface-200'}"
+			<div class="flex items-center justify-between py-3">
+				<!-- Current Unlocked Category -->
+				<div class="flex items-center gap-3">
+					<div class="text-[0.6rem] font-semibold tracking-[0.2em] text-surface-500">
+						UNLOCKED CATEGORY
+					</div>
+					<div
+						class="flex items-center gap-2 border border-{currentCat.color}-500/30 bg-{currentCat.color}-500/10 px-4 py-2"
 					>
-						<!-- Active indicator -->
-						{#if isActive}
-							<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-{cat.color}-500"></div>
-							<div class="absolute bottom-0 left-1/2 h-1 w-1 -translate-x-1/2 bg-{cat.color}-400"></div>
-						{/if}
-
-						<Icon
-							icon={cat.icon}
-							class="text-lg transition-colors
-								{isActive ? `text-${cat.color}-400` : `group-hover:text-${cat.color}-400/60`}"
-						/>
-						<span class="text-xs font-bold uppercase tracking-wider">{cat.label}</span>
-						<span
-							class="ml-1 rounded-sm bg-surface-700/50 px-1.5 py-0.5 text-[0.6rem] font-mono text-surface-500"
+						<Icon icon={currentCat.icon} class="text-lg text-{currentCat.color}-400" />
+						<span class="text-sm font-bold uppercase tracking-wider text-surface-100"
+							>{currentCat.label}</span
 						>
-							{itemCount}
+						<span
+							class="ml-1 rounded-sm bg-surface-700/50 px-1.5 py-0.5 text-[0.6rem] font-mono text-surface-400"
+						>
+							{activeItems.length} items
 						</span>
-					</button>
+					</div>
+				</div>
+
+				<!-- Reroll Button -->
+				<button
+					onclick={handleReroll}
+					disabled={!canAffordReroll}
+					class="group relative flex items-center gap-2 overflow-hidden px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all
+						{canAffordReroll
+						? 'border border-tertiary-500/50 bg-gradient-to-r from-tertiary-600 to-tertiary-700 text-white hover:from-tertiary-500 hover:to-tertiary-600 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+						: 'cursor-not-allowed border border-surface-600 bg-surface-800 text-surface-500'}"
+					title={canAffordReroll
+						? `Reroll to a different category for ${rerollCost}g`
+						: `Not enough gold (need ${rerollCost}g)`}
+				>
+					{#if canAffordReroll}
+						<div
+							class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+						></div>
+					{/if}
+					<Icon icon="mdi:dice-multiple" class="text-sm" />
+					<span>Reroll</span>
+					<div class="flex items-center gap-1 border-l border-white/20 pl-2">
+						<Icon icon="mdi:coin" class="text-xs text-warning-400" />
+						<span class="font-mono text-warning-300">{rerollCost}</span>
+					</div>
+				</button>
+			</div>
+
+			<!-- Locked Categories Preview -->
+			<div class="flex items-center gap-1 border-t border-surface-700/30 py-2">
+				<span class="mr-2 text-[0.55rem] tracking-wider text-surface-600">LOCKED:</span>
+				{#each categories.filter((c) => c.key !== unlockedCategory) as cat (cat.key)}
+					<div
+						class="flex items-center gap-1 rounded-sm bg-surface-800/50 px-2 py-1 opacity-40"
+						title="{cat.label} (locked)"
+					>
+						<Icon icon={cat.icon} class="text-xs text-surface-500" />
+						<span class="text-[0.6rem] text-surface-500">{cat.label}</span>
+					</div>
 				{/each}
 			</div>
 		</nav>
@@ -171,7 +213,7 @@
 					{@const canAfford = player.canBuyItem(itemName as AllItems)}
 					{@const isHovered = hoveredItem === itemName}
 					{@const stats = parseStats(item.description)}
-					{@const catConfig = categories.find((c) => c.key === activeCategory)}
+					{@const catConfig = categories.find((c) => c.key === unlockedCategory)}
 
 					<article
 						class="group relative flex overflow-hidden border transition-all duration-200
@@ -221,7 +263,7 @@
 											{item.name}
 										</h3>
 										<span class="text-[0.6rem] tracking-widest text-surface-500"
-											>{activeCategory.toUpperCase()}</span
+											>{unlockedCategory.toUpperCase()}</span
 										>
 									</div>
 								</div>

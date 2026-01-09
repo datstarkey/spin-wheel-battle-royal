@@ -478,6 +478,23 @@ export function getItemCost(item: AllItems): number {
 	return baseCost + modifier + getShopCostModifier();
 }
 
+// ============================================================================
+// Shop Category System
+// ============================================================================
+
+export function getUnlockedShopCategory(): string {
+	return currentGame.value?.unlockedShopCategory ?? 'mainhand';
+}
+
+export function getShopRerollCost(): number {
+	return currentGame.value?.shopRerollCost ?? 2;
+}
+
+export function rerollShopCategory(): boolean {
+	if (!currentGame.value) return false;
+	return currentGame.value.rerollShopCategory();
+}
+
 export function addAuditTrail(message: string) {
 	// Use try-catch to handle the case where currentGame is accessed during initialization
 	// (e.g., during deserialization from localStorage before currentGame is fully assigned)

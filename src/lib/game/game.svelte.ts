@@ -62,6 +62,54 @@ export class Game {
 	shopCostModifier = $state(0);
 	shopConsumableCostModifier = $state(0);
 
+	/**
+	 * --------------------------------------------------------------------------
+	 * Shop Category Lock System
+	 * Only one category is unlocked at a time, reroll cost doubles each time
+	 */
+	private static readonly SHOP_CATEGORIES = [
+		'mainhand',
+		'offHand',
+		'helm',
+		'chest',
+		'consumables'
+	] as const;
+	static readonly INITIAL_REROLL_COST = 2;
+
+	unlockedShopCategory = $state<string>(
+		Game.SHOP_CATEGORIES[Math.floor(Math.random() * Game.SHOP_CATEGORIES.length)]
+	);
+	shopRerollCost = $state(Game.INITIAL_REROLL_COST);
+
+	rerollShopCategory(): boolean {
+		const player = this.currentPlayer;
+		if (!player) return false;
+
+		if (player.gold < this.shopRerollCost) {
+			return false;
+		}
+
+		// Deduct gold
+		player.gold -= this.shopRerollCost;
+
+		// Pick a new random category (different from current)
+		const availableCategories = Game.SHOP_CATEGORIES.filter(
+			(cat) => cat !== this.unlockedShopCategory
+		);
+		this.unlockedShopCategory =
+			availableCategories[Math.floor(Math.random() * availableCategories.length)];
+
+		// Double the reroll cost
+		const previousCost = this.shopRerollCost;
+		this.shopRerollCost *= 2;
+
+		this.addAuditTrail(
+			`${player.name} rerolled shop to ${this.unlockedShopCategory} for ${previousCost}g`
+		);
+
+		return true;
+	}
+
 	auditTrail = $state<string[]>([]);
 
 	getItemCostModifier(item: AllItems): number {
@@ -272,6 +320,8 @@ export class Game {
 			auditTrail: this.auditTrail,
 			shopCostModifier: this.shopCostModifier,
 			shopConsumableCostModifier: this.shopConsumableCostModifier,
+			unlockedShopCategory: this.unlockedShopCategory,
+			shopRerollCost: this.shopRerollCost,
 			hasTurnStarted: this.hasTurnStarted,
 			skippedNextTurns: this.skippedNextTurns,
 			hasMoved: this.hasMoved,
@@ -316,6 +366,8 @@ export class Game {
 		game.auditTrail = data.auditTrail;
 		game.shopCostModifier = data.shopCostModifier;
 		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
+		game.unlockedShopCategory = data.unlockedShopCategory ?? game.unlockedShopCategory;
+		game.shopRerollCost = data.shopRerollCost ?? Game.INITIAL_REROLL_COST;
 		game.hasTurnStarted = data.hasTurnStarted ?? false;
 		game.skippedNextTurns = data.skippedNextTurns ?? [];
 		game.hasMoved = data.hasMoved ?? false;
