@@ -274,6 +274,25 @@ export function teleportFromShadowRealm(player: Player): void {
 }
 
 /**
+ * Teleport a player to a random spawn point
+ * Called when a player is defeated
+ */
+export function teleportToRandomSpawn(player: Player): void {
+	const randomSpawn = getRandomSpawnPosition();
+	if (!randomSpawn) {
+		toast.error('No spawn points found!');
+		return;
+	}
+
+	player.position = { ...randomSpawn };
+	gameBoard.setPlayerPosition(player.name, randomSpawn);
+
+	addAuditTrail(
+		`${player.name} was defeated and respawned at (${randomSpawn.x}, ${randomSpawn.y})`
+	);
+}
+
+/**
  * Check if a player can move (shadow realm players cannot move unless Shadeweaver)
  */
 export function canPlayerMove(player: Player): boolean {

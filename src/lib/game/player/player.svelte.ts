@@ -9,6 +9,7 @@ import {
 	increaseShopCostModifier,
 	setHasShoppedThisTurn,
 	teleportFromShadowRealm,
+	teleportToRandomSpawn,
 	teleportToShadowRealm
 } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
@@ -534,6 +535,10 @@ export class Player {
 		this.class.onAttackLose?.(this, defendingPlayer);
 		if (this.name) generateLoseWheel(this.name);
 		if (this.name) generateDamageTakenWheel(this.name);
+		// Teleport to random spawn on loss (unless in shadow realm)
+		if (!this.inShadowRealm) {
+			teleportToRandomSpawn(this);
+		}
 	}
 
 	onDefendWin(playerAttackingYou: Player) {
@@ -546,6 +551,10 @@ export class Player {
 		this.statuses.onDefendLose(playerAttackingYou);
 		this.gear.onDefendLose(playerAttackingYou);
 		this.class.onDefendLose?.(this, playerAttackingYou);
+		// Teleport to random spawn on loss (unless in shadow realm)
+		if (!this.inShadowRealm) {
+			teleportToRandomSpawn(this);
+		}
 	}
 
 	onDefenseStart(playerAttackingYou: Player) {
