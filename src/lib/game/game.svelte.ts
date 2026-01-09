@@ -3,7 +3,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import items, { type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
-import type { WheelBase, CustomWheelConfig } from './wheels/wheels';
+import type { CustomWheelConfig } from './wheels/wheels';
 
 export class Game {
 	players: Player[] = $state([]);
@@ -22,6 +22,8 @@ export class Game {
 	 * Every 20 global turns, HP reduction doubles (infinitely)
 	 */
 	globalTurnCount = $state(0);
+	/** Tracks how many individual player turns have been taken in the current round */
+	private turnsThisRound = $state(0);
 	static readonly TURNS_PER_MOVEMENT_INCREASE = 5;
 	static readonly MAX_GLOBAL_MOVEMENT_BONUS = 4;
 	static readonly TURNS_PER_HP_REDUCTION_INCREASE = 20;
@@ -280,18 +282,19 @@ export class Game {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 		this.currentPlayer?.onTurnEnd();
 
-		const previousTurnIndex = this._currentTurn;
 		this.incrementTurn();
 		this.hasTurnStarted = false;
 		this.resetTurnActions();
 
-		// Increment global turn count when a full round completes (everyone has had a turn)
-		// This happens when currentTurn wraps back to 0 from a higher index
-		// Note: previousTurnIndex > _currentTurn detects wrap (e.g., 3 -> 0, or 1 -> 0 with dead players)
-		const didWrapAround = this._currentTurn === 0 && previousTurnIndex > 0;
-		if (didWrapAround) {
+		// Track turns this round and check for round completion
+		// A round completes when all alive players have had a turn
+		this.turnsThisRound++;
+		const alivePlayerCount = this.alivePlayers.length;
+
+		if (alivePlayerCount > 0 && this.turnsThisRound >= alivePlayerCount) {
 			const previousBonus = this.globalMovementBonus;
 			this.globalTurnCount++;
+			this.turnsThisRound = 0; // Reset for next round
 			this.addAuditTrail(`Round ${this.globalTurnCount} complete!`);
 
 			// Check for movement speed increase (every 5 rounds, max +4)
@@ -370,6 +373,7 @@ export class Game {
 			started: this.started,
 			globalHpReduction: this.globalHpReduction,
 			globalTurnCount: this.globalTurnCount,
+			turnsThisRound: this.turnsThisRound,
 			customWheels: Array.from(this.customWheels.entries()), // Convert SvelteMap to array
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
@@ -405,6 +409,7 @@ export class Game {
 		game.started = data.started;
 		game.globalHpReduction = data.globalHpReduction;
 		game.globalTurnCount = data.globalTurnCount ?? 0;
+		game.turnsThisRound = data.turnsThisRound ?? 0;
 		// Normalize wheel data to handle both old (array) and new (config object) formats
 		const normalizedWheels = data.customWheels.map(([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
 			if (Array.isArray(value)) {
