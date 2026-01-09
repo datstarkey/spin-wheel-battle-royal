@@ -10,6 +10,8 @@ export const BarbarianHarness: Item = {
 	image: '/Items/ChestEquipables/BarbarianHarness.svg',
 
 	onEquip: (player: Player) => {
+		player.attackMultipliers["barb-harness"]=0.2
+
 		player.addStatModifier('Barbarian Harness', 'attack', 20);
 		player.addStatModifier('Barbarian Harness', 'defense', -10);
 	},

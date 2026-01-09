@@ -347,7 +347,7 @@ export class Player {
 	}
 
 	public get attackMultiplier(): number {
-		return Object.values(this.attackMultipliers).reduce((acc, cur) => acc * cur, 1);
+		return Object.values(this.attackMultipliers).reduce((acc, cur) => acc + cur, 1);
 	}
 
 	//Combine both as basic attack
