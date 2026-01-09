@@ -4,7 +4,7 @@ import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
 const poopMasterMultiplier = 'PoopReduction';
-const poopMasterMultiplierValue = 0.8;
+const poopMasterMultiplierValue = -0.2;
 
 // Resource key for tracking destroyed items
 export const POOP_PILE_RESOURCE = 'PoopPile';
