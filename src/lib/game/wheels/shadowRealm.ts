@@ -104,10 +104,17 @@ export function generateShadowRealmWheel(playerName: string) {
 			label: 'Teleport to someone',
 			onWin: () => {
 				generateRandomPlayerWheel(`${player.name} Teleports to someone`, (winner) => {
-					// Teleport to target's position but stay in shadow realm
-					player.position = winner.position;
-					// Don't copy shadow realm status - player stays trapped
-					addAuditTrail(`${player.name} teleports to ${winner.name}'s position (still in Shadow Realm)`);
+					// Store target's position before changing shadow realm status
+					const targetPosition = winner.position;
+					const targetInShadowRealm = winner.inShadowRealm;
+
+					// First change shadow realm status (this triggers auto-teleport to spawn)
+					player.inShadowRealm = targetInShadowRealm;
+
+					// Then override position to target's actual location
+					player.position = targetPosition;
+
+					addAuditTrail(`${player.name} teleports to ${winner.name}`);
 				});
 			}
 		},
