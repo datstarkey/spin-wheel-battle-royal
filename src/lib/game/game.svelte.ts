@@ -15,6 +15,24 @@ export class Game {
 
 	globalHpReduction = $state(1);
 
+	/**
+	 * --------------------------------------------------------------------------
+	 * Global Turn Counter & Movement Speed Scaling
+	 * Every 5 global turns, all players gain +1 base movement (max +4 bonus = 5 total)
+	 * Every 20 global turns, HP reduction doubles (infinitely)
+	 */
+	globalTurnCount = $state(0);
+	static readonly TURNS_PER_MOVEMENT_INCREASE = 5;
+	static readonly MAX_GLOBAL_MOVEMENT_BONUS = 4;
+	static readonly TURNS_PER_HP_REDUCTION_INCREASE = 20;
+
+	globalMovementBonus = $derived(
+		Math.min(
+			Math.floor(this.globalTurnCount / Game.TURNS_PER_MOVEMENT_INCREASE),
+			Game.MAX_GLOBAL_MOVEMENT_BONUS
+		)
+	);
+
 	customWheels = new SvelteMap<string, CustomWheelConfig>();
 
 	itemCostModifiers = new SvelteMap<AllItems, number>();
@@ -261,9 +279,37 @@ export class Game {
 	finishTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 		this.currentPlayer?.onTurnEnd();
+
+		const previousTurnIndex = this._currentTurn;
 		this.incrementTurn();
 		this.hasTurnStarted = false;
 		this.resetTurnActions();
+
+		// Increment global turn count when a full round completes (everyone has had a turn)
+		// This happens when currentTurn wraps back to 0 from a higher index
+		// Note: previousTurnIndex > _currentTurn detects wrap (e.g., 3 -> 0, or 1 -> 0 with dead players)
+		const didWrapAround = this._currentTurn === 0 && previousTurnIndex > 0;
+		if (didWrapAround) {
+			const previousBonus = this.globalMovementBonus;
+			this.globalTurnCount++;
+			this.addAuditTrail(`Round ${this.globalTurnCount} complete!`);
+
+			// Check for movement speed increase (every 5 rounds, max +4)
+			if (this.globalMovementBonus > previousBonus) {
+				this.addAuditTrail(
+					`Global movement speed increased! All players now have +${this.globalMovementBonus} movement`
+				);
+			}
+
+			// Check for HP reduction increase (every 20 rounds, doubles infinitely)
+			if (this.globalTurnCount % Game.TURNS_PER_HP_REDUCTION_INCREASE === 0) {
+				this.globalHpReduction *= 2;
+				this.addAuditTrail(
+					`Global HP reduction doubled to ${this.globalHpReduction}!`
+				);
+			}
+		}
+
 		// Note: startTurn is called here but it's now safe because startTurn
 		// no longer calls finishTurn recursively - it just returns early if needed
 		this.startTurn();
@@ -323,6 +369,7 @@ export class Game {
 			players: this.players.map((player) => player.serialize()),
 			started: this.started,
 			globalHpReduction: this.globalHpReduction,
+			globalTurnCount: this.globalTurnCount,
 			customWheels: Array.from(this.customWheels.entries()), // Convert SvelteMap to array
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
@@ -357,6 +404,7 @@ export class Game {
 		game.players = data.players.map((p) => Player.deserialize(p));
 		game.started = data.started;
 		game.globalHpReduction = data.globalHpReduction;
+		game.globalTurnCount = data.globalTurnCount ?? 0;
 		// Normalize wheel data to handle both old (array) and new (config object) formats
 		const normalizedWheels = data.customWheels.map(([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
 			if (Array.isArray(value)) {

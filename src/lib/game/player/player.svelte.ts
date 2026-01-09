@@ -2,6 +2,7 @@ import {
 	addAuditTrail,
 	currentGame,
 	getGlobalHpReduction,
+	getGlobalMovementBonus,
 	getHasShoppedThisTurn,
 	getItemCost,
 	increaseGlobalHpReduction,
@@ -258,7 +259,8 @@ export class Player {
 	private _baseMovement = $state(3);
 	private _bonusMovement = $state(0);
 	public get movement(): number {
-		return Math.max(1, this._baseMovement + this.bonusMovement);
+		// Include global movement bonus (increases every 5 global turns, max +4)
+		return Math.max(1, this._baseMovement + this.bonusMovement + getGlobalMovementBonus());
 	}
 	public get baseMovement(): number {
 		return this._baseMovement;

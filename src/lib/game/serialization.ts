@@ -127,6 +127,7 @@ export interface SerializedGame {
 	players: SerializedPlayer[];
 	started: boolean;
 	globalHpReduction: number;
+	globalTurnCount: number;
 	customWheels: [string, unknown][];
 	playerOrder: Record<number, string>;
 	_currentTurn: number;
@@ -392,6 +393,7 @@ export function validateGame(data: unknown): SerializedGame | null {
 		players,
 		started: isBoolean(data.started) ? data.started : false,
 		globalHpReduction: isNumber(data.globalHpReduction) ? data.globalHpReduction : 1,
+		globalTurnCount: isNumber(data.globalTurnCount) ? data.globalTurnCount : 0,
 		customWheels,
 		playerOrder,
 		_currentTurn: isNumber(data._currentTurn) ? data._currentTurn : 0,

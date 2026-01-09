@@ -40,6 +40,15 @@
 		<h3 class="ml-2 text-xl font-semibold">Spin-Wheel Battle Royal</h3>
 		<div class="flex items-center gap-3">
 			{#if currentGame.value?.started}
+				<!-- Round Counter -->
+				<div
+					class="flex items-center gap-2 rounded border border-secondary-500/30 bg-secondary-500/10 px-3 py-1.5 text-sm font-medium"
+					title="Global round count (movement +1 every 5 rounds)"
+				>
+					<Icon icon="mdi:rotate-right" class="text-base text-secondary-400" />
+					<span class="text-secondary-300">Round {currentGame.value.globalTurnCount}</span>
+					<span class="text-secondary-500/80 text-xs">(+{currentGame.value.globalMovementBonus} mov)</span>
+				</div>
 				<!-- Quick Mode Toggle -->
 				<button
 					onclick={() => (quickMode.value = !quickMode.value)}

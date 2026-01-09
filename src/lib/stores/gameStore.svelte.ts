@@ -314,6 +314,14 @@ export function getGlobalHpReduction() {
 	return currentGame.value?.globalHpReduction ?? 0;
 }
 
+export function getGlobalMovementBonus() {
+	return currentGame.value?.globalMovementBonus ?? 0;
+}
+
+export function getGlobalTurnCount() {
+	return currentGame.value?.globalTurnCount ?? 0;
+}
+
 export function increaseGlobalHpReduction(amount: number = 0) {
 	if (!currentGame.value) return;
 	if (amount == 0) {

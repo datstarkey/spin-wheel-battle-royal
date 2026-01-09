@@ -135,6 +135,24 @@
 				</label>
 			</div>
 
+			<!-- Global Round Counter -->
+			<div class="grid grid-cols-1 gap-3">
+				{@render stepper(
+					game.globalTurnCount,
+					(val) => {
+						game.globalTurnCount = val;
+						addAuditTrail(`Global round count set to ${val} (movement bonus: +${game.globalMovementBonus})`);
+					},
+					'mdi:rotate-right',
+					'Round',
+					'text-secondary-400',
+					0
+				)}
+				<p class="text-surface-600 -mt-2 text-center text-xs">
+					Every 5 rounds: +1 movement for all players (current: +{game.globalMovementBonus}, max +4)
+				</p>
+			</div>
+
 			<!-- Turn Actions -->
 			<div class="grid grid-cols-2 gap-3">
 				<div class="rounded border border-white/10 bg-black/20 p-3">
