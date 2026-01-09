@@ -2,13 +2,12 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
 	import type { AllItems, Item } from '$lib/game/items/itemTypes';
-	import items from '$lib/game/items/itemTypes';
 	import type { Player } from '$lib/game/player/player.svelte';
 	import {
 		getItemCost,
-		getUnlockedShopCategory,
+		getShopItems,
 		getShopRerollCost,
-		rerollShopCategory
+		rerollShopItems
 	} from '$lib/stores/gameStore.svelte';
 
 	interface Props {
@@ -17,30 +16,24 @@
 	}
 	let { player, open = $bindable(false) }: Props = $props();
 
-	// Category configuration
-	const categories = [
-		{ key: 'mainhand', label: 'Weapons', icon: 'mdi:sword', color: 'primary' },
-		{ key: 'offHand', label: 'Off-Hand', icon: 'mdi:shield-half-full', color: 'secondary' },
-		{ key: 'helm', label: 'Headgear', icon: 'game-icons:crested-helmet', color: 'tertiary' },
-		{ key: 'chest', label: 'Armor', icon: 'mdi:tshirt-crew', color: 'warning' },
-		{ key: 'consumables', label: 'Consumables', icon: 'mdi:flask', color: 'success' }
-	] as const;
+	// Category configuration for styling
+	const categoryConfig: Record<string, { label: string; icon: string; color: string }> = {
+		mainhand: { label: 'Weapon', icon: 'mdi:sword', color: 'primary' },
+		offHand: { label: 'Off-Hand', icon: 'mdi:shield-half-full', color: 'secondary' },
+		helm: { label: 'Headgear', icon: 'game-icons:crested-helmet', color: 'tertiary' },
+		chest: { label: 'Armor', icon: 'mdi:tshirt-crew', color: 'warning' },
+		consumables: { label: 'Consumable', icon: 'mdi:flask', color: 'success' }
+	};
 
-	// The active category is always the unlocked category (no switching allowed)
-	let unlockedCategory = $derived(getUnlockedShopCategory());
+	// Get current shop items (4 random items from all categories)
+	let shopItems = $derived(getShopItems());
 	let rerollCost = $derived(getShopRerollCost());
 	let canAffordReroll = $derived(player.gold >= rerollCost);
-	let currentCat = $derived(categories.find((c) => c.key === unlockedCategory) ?? categories[0]);
 	let hoveredItem = $state<string | null>(null);
 
 	function handleReroll() {
-		rerollShopCategory();
+		rerollShopItems();
 	}
-
-	// Get items for unlocked category
-	let activeItems = $derived(
-		Object.entries(items[unlockedCategory as keyof typeof items] || {}) as [string, Item][]
-	);
 
 	// Stats that items can modify
 	const statIcons: Record<string, { icon: string; color: string; label: string }> = {
@@ -140,27 +133,19 @@
 			</div>
 		</header>
 
-		<!-- Category Display with Reroll -->
+		<!-- Shop Info with Reroll -->
 		<nav class="border-b border-surface-500/20 bg-surface-900/60 px-4">
 			<div class="flex items-center justify-between py-3">
-				<!-- Current Unlocked Category -->
+				<!-- Current Stock Info -->
 				<div class="flex items-center gap-3">
 					<div class="text-[0.6rem] font-semibold tracking-[0.2em] text-surface-500">
-						UNLOCKED CATEGORY
+						TODAY'S STOCK
 					</div>
-					<div
-						class="flex items-center gap-2 border border-{currentCat.color}-500/30 bg-{currentCat.color}-500/10 px-4 py-2"
+					<span
+						class="rounded-sm bg-surface-700/50 px-2 py-1 text-[0.7rem] font-mono text-surface-300"
 					>
-						<Icon icon={currentCat.icon} class="text-lg text-{currentCat.color}-400" />
-						<span class="text-sm font-bold uppercase tracking-wider text-surface-100"
-							>{currentCat.label}</span
-						>
-						<span
-							class="ml-1 rounded-sm bg-surface-700/50 px-1.5 py-0.5 text-[0.6rem] font-mono text-surface-400"
-						>
-							{activeItems.length} items
-						</span>
-					</div>
+						{shopItems.length} items available
+					</span>
 				</div>
 
 				<!-- Reroll Button -->
@@ -172,7 +157,7 @@
 						? 'border border-tertiary-500/50 bg-gradient-to-r from-tertiary-600 to-tertiary-700 text-white hover:from-tertiary-500 hover:to-tertiary-600 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]'
 						: 'cursor-not-allowed border border-surface-600 bg-surface-800 text-surface-500'}"
 					title={canAffordReroll
-						? `Reroll to a different category for ${rerollCost}g`
+						? `Reroll shop inventory for ${rerollCost}g`
 						: `Not enough gold (need ${rerollCost}g)`}
 				>
 					{#if canAffordReroll}
@@ -188,32 +173,17 @@
 					</div>
 				</button>
 			</div>
-
-			<!-- Locked Categories Preview -->
-			<div class="flex items-center gap-1 border-t border-surface-700/30 py-2">
-				<span class="mr-2 text-[0.55rem] tracking-wider text-surface-600">LOCKED:</span>
-				{#each categories.filter((c) => c.key !== unlockedCategory) as cat (cat.key)}
-					<div
-						class="flex items-center gap-1 rounded-sm bg-surface-800/50 px-2 py-1 opacity-40"
-						title="{cat.label} (locked)"
-					>
-						<Icon icon={cat.icon} class="text-xs text-surface-500" />
-						<span class="text-[0.6rem] text-surface-500">{cat.label}</span>
-					</div>
-				{/each}
-			</div>
 		</nav>
 
 		<!-- Items Grid -->
 		<div class="flex-1 overflow-y-auto p-5">
 			<div class="grid grid-cols-2 gap-4">
-				{#each activeItems as [itemName, item] (itemName)}
+				{#each shopItems as [itemName, item, category] (itemName)}
 					{@const owned = player.inventoryCount(item.name)}
 					{@const cost = getItemCost(itemName as AllItems)}
 					{@const canAfford = player.canBuyItem(itemName as AllItems)}
-					{@const isHovered = hoveredItem === itemName}
 					{@const stats = parseStats(item.description)}
-					{@const catConfig = categories.find((c) => c.key === unlockedCategory)}
+					{@const catConfig = categoryConfig[category]}
 
 					<article
 						class="group relative flex overflow-hidden border transition-all duration-200
@@ -262,8 +232,8 @@
 										<h3 class="text-sm font-bold uppercase tracking-wide text-surface-100">
 											{item.name}
 										</h3>
-										<span class="text-[0.6rem] tracking-widest text-surface-500"
-											>{unlockedCategory.toUpperCase()}</span
+										<span class="text-[0.6rem] tracking-widest text-{catConfig?.color ?? 'surface'}-400"
+											>{catConfig?.label?.toUpperCase() ?? category.toUpperCase()}</span
 										>
 									</div>
 								</div>
@@ -346,10 +316,10 @@
 			</div>
 
 			<!-- Empty state -->
-			{#if activeItems.length === 0}
+			{#if shopItems.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					<Icon icon="mdi:package-variant" class="mb-4 text-5xl text-surface-600" />
-					<p class="text-sm text-surface-400">No items available in this category</p>
+					<p class="text-sm text-surface-400">No items available</p>
 				</div>
 			{/if}
 		</div>
@@ -359,7 +329,7 @@
 			class="flex items-center justify-end border-t border-surface-500/20 bg-surface-950/80 px-6 py-2"
 		>
 			<div class="text-[0.6rem] tracking-wider text-surface-500">
-				{activeItems.length} ITEMS AVAILABLE
+				{shopItems.length} ITEMS AVAILABLE
 			</div>
 		</footer>
 	</div>

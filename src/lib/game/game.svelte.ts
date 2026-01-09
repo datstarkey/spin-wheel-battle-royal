@@ -1,6 +1,6 @@
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import type { AllItems } from './items/itemTypes';
+import items, { type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
 import type { WheelBase, CustomWheelConfig } from './wheels/wheels';
@@ -64,32 +64,35 @@ export class Game {
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Shop Category Lock System
-	 * Only one category is unlocked at a time, reroll cost doubles each time
+	 * Shop System - 4 random items from all categories
 	 */
-	private static readonly SHOP_CATEGORIES = [
-		'mainhand',
-		'offHand',
-		'helm',
-		'chest',
-		'consumables'
-	] as const;
+	static readonly SHOP_ITEM_COUNT = 4;
 	static readonly INITIAL_REROLL_COST = 2;
 
-	unlockedShopCategory = $state<string>(
-		Game.SHOP_CATEGORIES[Math.floor(Math.random() * Game.SHOP_CATEGORIES.length)]
-	);
+	/** Current shop inventory as array of [itemKey, item, category] tuples */
+	shopItems = $state<[string, Item, string][]>([]);
 	shopRerollCost = $state(Game.INITIAL_REROLL_COST);
 
-	randomizeShopCategory(resetCost: boolean = false) {
-		this.unlockedShopCategory =
-			Game.SHOP_CATEGORIES[Math.floor(Math.random() * Game.SHOP_CATEGORIES.length)];
+	/** Generate 4 random items from all categories */
+	randomizeShopItems(resetCost: boolean = false) {
+		// Collect all items with their category info
+		const allItems: [string, Item, string][] = [];
+		for (const [category, categoryItems] of Object.entries(items)) {
+			for (const [key, item] of Object.entries(categoryItems)) {
+				allItems.push([key, item as Item, category]);
+			}
+		}
+
+		// Shuffle and pick 4 random items
+		const shuffled = allItems.sort(() => Math.random() - 0.5);
+		this.shopItems = shuffled.slice(0, Game.SHOP_ITEM_COUNT);
+
 		if (resetCost) {
 			this.shopRerollCost = Game.INITIAL_REROLL_COST;
 		}
 	}
 
-	rerollShopCategory(): boolean {
+	rerollShopItems(): boolean {
 		const player = this.currentPlayer;
 		if (!player) return false;
 
@@ -100,22 +103,21 @@ export class Game {
 		// Deduct gold
 		player.gold -= this.shopRerollCost;
 
-		// Pick a new random category (different from current)
-		const availableCategories = Game.SHOP_CATEGORIES.filter(
-			(cat) => cat !== this.unlockedShopCategory
-		);
-		this.unlockedShopCategory =
-			availableCategories[Math.floor(Math.random() * availableCategories.length)];
+		// Get new random items
+		const previousCost = this.shopRerollCost;
+		this.randomizeShopItems();
 
 		// Double the reroll cost
-		const previousCost = this.shopRerollCost;
 		this.shopRerollCost *= 2;
 
-		this.addAuditTrail(
-			`${player.name} rerolled shop to ${this.unlockedShopCategory} for ${previousCost}g`
-		);
+		this.addAuditTrail(`${player.name} rerolled shop for ${previousCost}g`);
 
 		return true;
+	}
+
+	// Legacy getters for backwards compatibility during transition
+	get unlockedShopCategory(): string {
+		return this.shopItems[0]?.[2] ?? 'mainhand';
 	}
 
 	auditTrail = $state<string[]>([]);
@@ -244,7 +246,7 @@ export class Game {
 		}
 
 		// Actually start the turn
-		this.randomizeShopCategory(true);
+		this.randomizeShopItems(true);
 		player.onTurnStart();
 		this.addAuditTrail(`${player.name} starts their turn!`);
 		this.hasTurnStarted = true;
@@ -329,7 +331,7 @@ export class Game {
 			auditTrail: this.auditTrail,
 			shopCostModifier: this.shopCostModifier,
 			shopConsumableCostModifier: this.shopConsumableCostModifier,
-			unlockedShopCategory: this.unlockedShopCategory,
+			shopItems: this.shopItems,
 			shopRerollCost: this.shopRerollCost,
 			hasTurnStarted: this.hasTurnStarted,
 			skippedNextTurns: this.skippedNextTurns,
@@ -375,8 +377,13 @@ export class Game {
 		game.auditTrail = data.auditTrail;
 		game.shopCostModifier = data.shopCostModifier;
 		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
-		game.unlockedShopCategory = data.unlockedShopCategory ?? game.unlockedShopCategory;
 		game.shopRerollCost = data.shopRerollCost ?? Game.INITIAL_REROLL_COST;
+		// Regenerate shop items on load (old saves won't have shopItems)
+		if (data.shopItems && data.shopItems.length > 0) {
+			game.shopItems = data.shopItems as [string, Item, string][];
+		} else {
+			game.randomizeShopItems();
+		}
 		game.hasTurnStarted = data.hasTurnStarted ?? false;
 		game.skippedNextTurns = data.skippedNextTurns ?? [];
 		game.hasMoved = data.hasMoved ?? false;

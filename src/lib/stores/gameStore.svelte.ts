@@ -498,20 +498,20 @@ export function getItemCost(item: AllItems): number {
 }
 
 // ============================================================================
-// Shop Category System
+// Shop System - Random Items
 // ============================================================================
 
-export function getUnlockedShopCategory(): string {
-	return currentGame.value?.unlockedShopCategory ?? 'mainhand';
+export function getShopItems() {
+	return currentGame.value?.shopItems ?? [];
 }
 
 export function getShopRerollCost(): number {
 	return currentGame.value?.shopRerollCost ?? 2;
 }
 
-export function rerollShopCategory(): boolean {
+export function rerollShopItems(): boolean {
 	if (!currentGame.value) return false;
-	return currentGame.value.rerollShopCategory();
+	return currentGame.value.rerollShopItems();
 }
 
 export function addAuditTrail(message: string) {

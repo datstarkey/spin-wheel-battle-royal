@@ -135,7 +135,7 @@ export interface SerializedGame {
 	auditTrail: string[];
 	shopCostModifier: number;
 	shopConsumableCostModifier: number;
-	unlockedShopCategory?: string;
+	shopItems?: [string, unknown, string][]; // [itemKey, item, category]
 	shopRerollCost?: number;
 	hasTurnStarted: boolean;
 	skippedNextTurns: string[];
@@ -377,6 +377,17 @@ export function validateGame(data: unknown): SerializedGame | null {
 		}
 	}
 
+	// Validate shop items (array of [itemKey, item, category] tuples)
+	let shopItems: [string, unknown, string][] | undefined = undefined;
+	if (isArray(data.shopItems)) {
+		shopItems = [];
+		for (const entry of data.shopItems) {
+			if (isArray(entry) && entry.length === 3 && isString(entry[0]) && isString(entry[2])) {
+				shopItems.push([entry[0], entry[1], entry[2]]);
+			}
+		}
+	}
+
 	return {
 		players,
 		started: isBoolean(data.started) ? data.started : false,
@@ -389,7 +400,7 @@ export function validateGame(data: unknown): SerializedGame | null {
 		auditTrail,
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,
 		shopConsumableCostModifier: isNumber(data.shopConsumableCostModifier) ? data.shopConsumableCostModifier : 0,
-		unlockedShopCategory: isString(data.unlockedShopCategory) ? data.unlockedShopCategory : undefined,
+		shopItems,
 		shopRerollCost: isNumber(data.shopRerollCost) ? data.shopRerollCost : undefined,
 		hasTurnStarted: isBoolean(data.hasTurnStarted) ? data.hasTurnStarted : false,
 		skippedNextTurns,

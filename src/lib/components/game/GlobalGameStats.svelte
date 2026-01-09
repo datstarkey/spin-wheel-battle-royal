@@ -287,23 +287,23 @@
 				<div class="h-px flex-1 bg-linear-to-r from-transparent via-surface-600 to-transparent"></div>
 			</div>
 
-			<!-- Shop Category -->
+			<!-- Shop Items -->
 			<div class="rounded border border-white/10 bg-black/20 p-3">
 				<div class="text-surface-400 mb-2 flex items-center gap-2 text-[0.65rem] font-semibold tracking-widest uppercase">
 					<Icon icon="mdi:store" class="text-xs text-warning-400" />
-					<span>Shop Category</span>
+					<span>Shop Items</span>
 				</div>
 				<div class="flex items-center gap-2">
 					<div class="flex-1 rounded border border-warning-500/30 bg-warning-500/10 px-3 py-2 text-center">
-						<span class="text-warning-400 font-semibold capitalize">{game.unlockedShopCategory}</span>
+						<span class="text-warning-400 font-semibold">{game.shopItems.length} items</span>
 					</div>
 					<button
 						type="button"
 						class="btn preset-tonal-warning flex items-center gap-1.5 text-xs"
 						onclick={() => {
-							game.randomizeShopCategory();
-							addAuditTrail(`Shop category randomized to ${game.unlockedShopCategory}`);
-							toast.success(`Shop category: ${game.unlockedShopCategory}`);
+							game.randomizeShopItems();
+							addAuditTrail(`Shop items randomized`);
+							toast.success(`Shop items refreshed`);
 						}}
 					>
 						<Icon icon="mdi:dice-multiple" />
