@@ -25,8 +25,8 @@ export const Poopmaster: ClassBase = {
 	name: 'PoopMaster',
 	icon: '/Classes/Poopmaster.svg',
 	description:
-		'A chaotic disruptor who destroys enemy items. Gets +2 ATK for each item destroyed (Poop Pile). Reduces attacker damage by 20%.',
-	onWinAbility: 'Shit on one of their items (or steal gold if they have none)',
+		'A chaotic disruptor who destroys enemy items. Gets +2 ATK for each item destroyed (Poop Pile). Reduces attacker damage by 20%. Destroys items on ANY combat win!',
+	onWinAbility: 'Shit on one of their items (attack or defend win)',
 	attackRange: 1,
 
 	// Passive: +2 ATK per item destroyed
@@ -130,5 +130,94 @@ export const Poopmaster: ClassBase = {
 
 	onDefenseEnd(_player, attackingPlayer) {
 		delete attackingPlayer.attackMultipliers[poopMasterMultiplier];
+	},
+
+	onDefendWin(player, attackingPlayer) {
+		// Same item destruction mechanic as onAttackWin - revenge poop!
+		const wheelItems: WheelBase = [];
+
+		if (attackingPlayer.gear.mainHand) {
+			wheelItems.push({
+				label: attackingPlayer.gear.mainHand,
+				onWin() {
+					addAuditTrail(
+						`${player.name} revenge-poops on ${attackingPlayer.name}'s ${attackingPlayer.gear.mainHand}!`
+					);
+					attackingPlayer.gear.deleteItem('mainhand');
+					addToPoopPile(player);
+				}
+			});
+		}
+
+		if (attackingPlayer.gear.offHand) {
+			wheelItems.push({
+				label: attackingPlayer.gear.offHand,
+				onWin() {
+					addAuditTrail(
+						`${player.name} revenge-poops on ${attackingPlayer.name}'s ${attackingPlayer.gear.offHand}!`
+					);
+					attackingPlayer.gear.deleteItem('offHand');
+					addToPoopPile(player);
+				}
+			});
+		}
+
+		if (attackingPlayer.gear.chest) {
+			wheelItems.push({
+				label: attackingPlayer.gear.chest,
+				onWin() {
+					addAuditTrail(
+						`${player.name} revenge-poops on ${attackingPlayer.name}'s ${attackingPlayer.gear.chest}!`
+					);
+					attackingPlayer.gear.deleteItem('chest');
+					addToPoopPile(player);
+				}
+			});
+		}
+
+		if (attackingPlayer.gear.helm) {
+			wheelItems.push({
+				label: attackingPlayer.gear.helm,
+				onWin() {
+					addAuditTrail(
+						`${player.name} revenge-poops on ${attackingPlayer.name}'s ${attackingPlayer.gear.helm}!`
+					);
+					attackingPlayer.gear.deleteItem('helm');
+					addToPoopPile(player);
+				}
+			});
+		}
+
+		if (wheelItems.length) {
+			const wheel = wheelItems.concat(
+				attackingPlayer.gear.consumables.map((x, index) => {
+					return {
+						label: x,
+						onWin() {
+							addAuditTrail(`${player.name} revenge-poops on ${attackingPlayer.name}'s ${x}!`);
+							attackingPlayer.gear.deleteItem('consumables', index);
+							addToPoopPile(player);
+						}
+					};
+				})
+			);
+
+			addCustomWheel(`${player.name}'s Revenge Poop Wheel`, wheel);
+		} else {
+			// Fallback: If enemy has no items, steal some gold instead
+			const stolenGold = Math.min(5, attackingPlayer.gold);
+			if (stolenGold > 0) {
+				attackingPlayer.gold -= stolenGold;
+				player.gold += stolenGold;
+				addAuditTrail(
+					`${attackingPlayer.name} has no items to shit on! ${player.name} steals ${stolenGold} gold as revenge.`
+				);
+			} else {
+				addToPoopPile(player);
+				addAuditTrail(
+					`${attackingPlayer.name} is completely destitute! ${player.name} gains pity poop.`
+				);
+			}
+		}
 	}
 };
