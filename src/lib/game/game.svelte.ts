@@ -1,5 +1,6 @@
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import { grantUnusedMovementMana } from './classes/magicman';
 import items, { type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
@@ -280,6 +281,12 @@ export class Game {
 
 	finishTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
+
+		// Grant unused movement mana for Magic Man if they didn't move at all
+		if (this.currentPlayer?.classType === 'magicman' && !this.hasMoved) {
+			grantUnusedMovementMana(this.currentPlayer, this.currentPlayer.movement);
+		}
+
 		this.currentPlayer?.onTurnEnd();
 
 		this.incrementTurn();
