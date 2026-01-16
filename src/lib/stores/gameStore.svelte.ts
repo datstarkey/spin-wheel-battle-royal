@@ -1,13 +1,14 @@
 import { page } from '$app/state';
-import { gameBoard, getValidMoves } from '$lib/game/board/board.svelte';
+import { gameBoard, getValidMoves, getPathDistance } from '$lib/game/board/board.svelte';
 import { SHADOW_REALM_TILES, SPAWN_ZONES } from '$lib/game/board/boardData';
 import { executeTileAction } from '$lib/game/board/tileActions';
 import type { Position } from '$lib/game/board/types';
 import { positionsEqual } from '$lib/game/board/types';
+import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
 import { Game } from '$lib/game/game.svelte';
 import { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import { Player } from '$lib/game/player/player.svelte';
-import type { WheelBase, CustomWheelData } from '$lib/game/wheels/wheels';
+import type { WheelBase } from '$lib/game/wheels/wheels';
 import type { WheelTheme } from '$lib/components/wheel/types';
 import toast from '$lib/stores/toaster.svelte';
 import { localStorageStore } from './localStorageStore.svelte';
@@ -98,8 +99,11 @@ export function moveCurrentPlayerTo(position: Position): boolean {
 		return false;
 	}
 
-	// Move the player
+	// Calculate tiles moved (path distance) before moving
 	const oldPos = { ...currentPlayer.position };
+	const tilesMovedThisTurn = getPathDistance(oldPos, position, currentPlayer.movement);
+
+	// Move the player
 	currentPlayer.position = { ...position };
 
 	// Update the game board
@@ -111,6 +115,14 @@ export function moveCurrentPlayerTo(position: Position): boolean {
 	// Mark as moved and exit movement mode
 	currentGame.value.hasMoved = true;
 	exitMovementMode();
+
+	// Grant unused movement mana for Magic Man
+	if (currentPlayer.classType === 'magicman' && tilesMovedThisTurn >= 0) {
+		const unusedMovement = currentPlayer.movement - tilesMovedThisTurn;
+		if (unusedMovement > 0) {
+			grantUnusedMovementMana(currentPlayer, unusedMovement);
+		}
+	}
 
 	// Execute tile action at the new position (treasure chests, shops, etc.)
 	executeTileAction(currentPlayer, position);
@@ -499,8 +511,8 @@ export function getConsumableItemCostModifier(item: AllItems) {
 export function getItemCost(item: AllItems): number {
 	const modifier = getItemCostModifier(item);
 	const actualitem = getItemByType(item);
-	let baseCost = actualitem?.baseCost ?? 0;
-	let isConsumable = actualitem?.type == 'consumables';
+	const baseCost = actualitem?.baseCost ?? 0;
+	const isConsumable = actualitem?.type == 'consumables';
 	if (isConsumable) return baseCost + getConsumableItemCostModifier(item) + modifier;
 	return baseCost + modifier + getShopCostModifier();
 }

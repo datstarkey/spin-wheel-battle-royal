@@ -43,6 +43,7 @@ export {
 	getTileAt,
 	isWalkable,
 	canMoveBetween,
+	getPathDistance,
 	getValidMoves,
 	getPlayersInAttackRange,
 	getSpawnPointsForZone,

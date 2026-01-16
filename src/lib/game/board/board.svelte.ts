@@ -60,6 +60,58 @@ export function canMoveBetween(from: Position, to: Position): boolean {
 }
 
 /**
+ * Calculate the path distance between two positions using BFS.
+ * Returns -1 if no path exists.
+ * @param startPos - Starting position
+ * @param endPos - Target position
+ * @param maxRange - Maximum search range (optional, for performance)
+ */
+export function getPathDistance(
+	startPos: Position,
+	endPos: Position,
+	maxRange: number = 50
+): number {
+	if (positionsEqual(startPos, endPos)) return 0;
+
+	const visited = new SvelteSet<string>();
+	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
+
+	const posKey = (p: Position) => `${p.x},${p.y}`;
+	visited.add(posKey(startPos));
+
+	while (queue.length > 0) {
+		const current = queue.shift()!;
+
+		// If we've reached max range, don't explore further
+		if (current.distance >= maxRange) {
+			continue;
+		}
+
+		// Get the current tile
+		const currentTile = getTileAt(current.pos);
+		if (!currentTile) continue;
+
+		// Explore each valid connection
+		for (const direction of currentTile.connections) {
+			const nextPos = getAdjacentPosition(current.pos, direction);
+			const key = posKey(nextPos);
+
+			if (!visited.has(key) && isWalkable(nextPos)) {
+				// Check if we found the target
+				if (positionsEqual(nextPos, endPos)) {
+					return current.distance + 1;
+				}
+
+				visited.add(key);
+				queue.push({ pos: nextPos, distance: current.distance + 1 });
+			}
+		}
+	}
+
+	return -1; // No path found
+}
+
+/**
  * Calculate all valid move positions from a starting position within a given range.
  * Uses BFS (flood fill) respecting tile connections.
  * @param startPos - Starting position
