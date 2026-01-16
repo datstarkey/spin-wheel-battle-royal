@@ -191,7 +191,6 @@
 		onclick={() => (shopOpen = true)}
 		disabled={showWheel ||
 			shopOpen ||
-			player.classType == 'gambler' ||
 			player.inShadowRealm ||
 			!canAccessShop}
 		title={!canAccessShop ? 'Must be on a shop tile to access the shop' : ''}
