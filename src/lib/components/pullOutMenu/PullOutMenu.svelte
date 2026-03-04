@@ -56,7 +56,7 @@
 
 <Portal>
 	<div
-		class="fixed z-1000 overflow-hidden bg-surface-50 transition-transform duration-300 ease-in-out dark:bg-surface-900"
+		class="bg-surface-50 dark:bg-surface-900 fixed z-1000 overflow-hidden transition-transform duration-300 ease-in-out"
 		style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
 	>
 		{#if !hideCloseButton}

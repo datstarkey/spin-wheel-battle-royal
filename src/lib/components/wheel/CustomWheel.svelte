@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { WheelTheme } from '$lib/components/wheel/types';
 	import type { WheelBase } from '$lib/game/wheels/wheels';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import SpinWheel from './SpinWheel.svelte';
 
 	interface Props {
@@ -171,10 +171,9 @@
 	// Auto-scroll the result section into view when it appears
 	$effect(() => {
 		if (hasWon && resultSection) {
-			// Use setTimeout to ensure DOM is fully rendered and layout is complete
-			setTimeout(() => {
+			tick().then(() => {
 				resultSection?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-			}, 100);
+			});
 		}
 	});
 </script>

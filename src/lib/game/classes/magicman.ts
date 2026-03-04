@@ -1,15 +1,15 @@
 import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
 import {
-	MANA_RESOURCE,
 	MANA_REGEN_PER_TURN,
+	MANA_RESOURCE,
 	MAX_MANA,
 	addMana,
 	getMana,
-	setMana,
 	getRuneOfPowerTurns,
 	incrementRuneOfPowerTurns,
-	resetRuneOfPowerTurns
+	resetRuneOfPowerTurns,
+	setMana
 } from '../wheels/spellWheels';
 import type { ClassBase } from './classType';
 
@@ -24,7 +24,7 @@ export const Magicman: ClassBase = {
 		'Master of arcane arts who casts spells instead of attacking. Manages mana (max 100) to fuel Minor (25), Major (50), and Ultimate (100) spells.',
 	onWinAbility: 'Regenerates 10 mana + 1 per unused movement',
 
-	onAttackWin: (player, _defendingPlayer) => {
+	onAttackWin: (player) => {
 		// Magic Man generates mana on attack win instead of normal win wheel
 		addMana(player, 10);
 		addAuditTrail(`${player.name} channels arcane energy, gaining 10 mana`);
@@ -53,15 +53,22 @@ export const Magicman: ClassBase = {
 		// This could be expanded to track active spells
 	},
 
-	onTurnEnd(player) {
-		// Calculate unused movement (this would need game state access)
-		// For now, base regeneration only
-		let manaRegen = MANA_REGEN_PER_TURN;
+	onTurnEnd(player, context) {
+		const isArchmage = player.statuses.hasStatus('Archmage');
 
-		// Archmage doubles mana regen
-		if (player.statuses.hasStatus('Archmage')) {
-			manaRegen *= 2;
+		// Grant mana for unused movement
+		if (context) {
+			let unusedMovement = context.hasMoved ? 0 : context.totalMovement;
+			if (isArchmage) unusedMovement *= 2;
+			if (unusedMovement > 0) {
+				addMana(player, unusedMovement);
+				addAuditTrail(`${player.name} gains ${unusedMovement} mana from unused movement`);
+			}
 		}
+
+		// Base mana regeneration
+		let manaRegen = MANA_REGEN_PER_TURN;
+		if (isArchmage) manaRegen *= 2;
 
 		addMana(player, manaRegen);
 		addAuditTrail(`${player.name} regenerates ${manaRegen} mana (${getMana(player)}/${MAX_MANA})`);

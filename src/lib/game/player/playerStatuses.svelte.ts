@@ -89,7 +89,7 @@ export class PlayerStatuses {
 
 	onTurnEnd() {
 		const statusesToRemove: PlayerStatusEffect[] = [];
-		
+
 		this._statuses.forEach((s) => {
 			if (s.duration !== undefined) {
 				s.duration -= 1;
@@ -98,7 +98,7 @@ export class PlayerStatuses {
 				}
 			}
 		});
-		
+
 		statusesToRemove.forEach((s) => {
 			addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
 			s.status.onRemove?.(this.player);
@@ -168,10 +168,10 @@ export class PlayerStatuses {
 
 		return statuses;
 	}
-	
+
 	// Call this after setPlayer to apply status effects
 	applyDeserializedStatuses() {
-		this._statuses.forEach(status => {
+		this._statuses.forEach((status) => {
 			status.status.onApply?.(this.player);
 		});
 	}

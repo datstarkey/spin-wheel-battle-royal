@@ -71,7 +71,7 @@
 <PullOutMenu position="left" width="900px" bind:isOpen={open} hideCloseButton>
 	<div class="flex h-full max-h-screen flex-col bg-black/40">
 		<!-- Armory Header -->
-		<header class="relative border-b border-surface-500/20 bg-surface-950/80 px-6 py-4">
+		<header class="border-surface-500/20 bg-surface-950/80 relative border-b px-6 py-4">
 			<!-- Scanline effect -->
 			<div
 				class="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]"
@@ -81,31 +81,30 @@
 				<!-- Title Section -->
 				<div class="flex items-center gap-4">
 					<div
-						class="relative flex h-12 w-12 items-center justify-center border border-warning-500/30 bg-gradient-to-br from-warning-500/20 to-transparent"
+						class="border-warning-500/30 from-warning-500/20 relative flex h-12 w-12 items-center justify-center border bg-gradient-to-br to-transparent"
 					>
-						<Icon icon="mdi:cash-register" class="text-2xl text-warning-400" />
+						<Icon icon="mdi:cash-register" class="text-warning-400 text-2xl" />
 						<div
-							class="absolute -top-px -left-px h-2 w-2 border-t border-l border-warning-400"
+							class="border-warning-400 absolute -top-px -left-px h-2 w-2 border-t border-l"
 						></div>
 						<div
-							class="absolute -top-px -right-px h-2 w-2 border-t border-r border-warning-400"
+							class="border-warning-400 absolute -top-px -right-px h-2 w-2 border-t border-r"
 						></div>
 						<div
-							class="absolute -bottom-px -left-px h-2 w-2 border-b border-l border-warning-400"
+							class="border-warning-400 absolute -bottom-px -left-px h-2 w-2 border-b border-l"
 						></div>
 						<div
-							class="absolute -bottom-px -right-px h-2 w-2 border-b border-r border-warning-400"
+							class="border-warning-400 absolute -right-px -bottom-px h-2 w-2 border-r border-b"
 						></div>
 					</div>
 					<div>
 						<div class="flex items-center gap-2">
-							<span class="text-[0.65rem] font-bold tracking-[0.3em] text-warning-500/80"
-								>SHOP</span
+							<span class="text-warning-500/80 text-[0.65rem] font-bold tracking-[0.3em]">SHOP</span
 							>
 							<span class="text-surface-600">|</span>
-							<span class="text-[0.65rem] tracking-widest text-surface-400">EQUIPMENT & ITEMS</span>
+							<span class="text-surface-400 text-[0.65rem] tracking-widest">EQUIPMENT & ITEMS</span>
 						</div>
-						<h1 class="text-xl font-black uppercase tracking-wide text-surface-100">
+						<h1 class="text-surface-100 text-xl font-black tracking-wide uppercase">
 							{player.name}
 						</h1>
 					</div>
@@ -114,17 +113,17 @@
 				<!-- Gold Display -->
 				<div class="flex items-center gap-4">
 					<div class="text-right">
-						<div class="text-[0.6rem] font-semibold tracking-[0.2em] text-surface-500">
+						<div class="text-surface-500 text-[0.6rem] font-semibold tracking-[0.2em]">
 							AVAILABLE CREDITS
 						</div>
 						<div class="flex items-center justify-end gap-2">
-							<Icon icon="mdi:coin" class="text-xl text-warning-400" />
-							<span class="font-mono text-3xl font-black text-warning-300">{player.gold}</span>
+							<Icon icon="mdi:coin" class="text-warning-400 text-xl" />
+							<span class="text-warning-300 font-mono text-3xl font-black">{player.gold}</span>
 						</div>
 					</div>
 					<button
 						onclick={() => (open = false)}
-						class="flex h-10 w-10 items-center justify-center border border-surface-600 bg-surface-900/50 text-surface-400 transition-all hover:border-primary-500 hover:bg-primary-500/10 hover:text-primary-400"
+						class="border-surface-600 bg-surface-900/50 text-surface-400 hover:border-primary-500 hover:bg-primary-500/10 hover:text-primary-400 flex h-10 w-10 items-center justify-center border transition-all"
 						title="Close Shop"
 					>
 						<Icon icon="mdi:close" class="text-lg" />
@@ -134,15 +133,15 @@
 		</header>
 
 		<!-- Shop Info with Reroll -->
-		<nav class="border-b border-surface-500/20 bg-surface-900/60 px-4">
+		<nav class="border-surface-500/20 bg-surface-900/60 border-b px-4">
 			<div class="flex items-center justify-between py-3">
 				<!-- Current Stock Info -->
 				<div class="flex items-center gap-3">
-					<div class="text-[0.6rem] font-semibold tracking-[0.2em] text-surface-500">
+					<div class="text-surface-500 text-[0.6rem] font-semibold tracking-[0.2em]">
 						TODAY'S STOCK
 					</div>
 					<span
-						class="rounded-sm bg-surface-700/50 px-2 py-1 text-[0.7rem] font-mono text-surface-300"
+						class="bg-surface-700/50 text-surface-300 rounded-sm px-2 py-1 font-mono text-[0.7rem]"
 					>
 						{shopItems.length} items available
 					</span>
@@ -152,10 +151,10 @@
 				<button
 					onclick={handleReroll}
 					disabled={!canAffordReroll}
-					class="group relative flex items-center gap-2 overflow-hidden px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all
+					class="group relative flex items-center gap-2 overflow-hidden px-4 py-2 text-xs font-bold tracking-wider uppercase transition-all
 						{canAffordReroll
-						? 'border border-tertiary-500/50 bg-gradient-to-r from-tertiary-600 to-tertiary-700 text-white hover:from-tertiary-500 hover:to-tertiary-600 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]'
-						: 'cursor-not-allowed border border-surface-600 bg-surface-800 text-surface-500'}"
+						? 'border-tertiary-500/50 from-tertiary-600 to-tertiary-700 hover:from-tertiary-500 hover:to-tertiary-600 border bg-gradient-to-r text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]'
+						: 'border-surface-600 bg-surface-800 text-surface-500 cursor-not-allowed border'}"
 					title={canAffordReroll
 						? `Reroll shop inventory for ${rerollCost}g`
 						: `Not enough gold (need ${rerollCost}g)`}
@@ -168,8 +167,8 @@
 					<Icon icon="mdi:dice-multiple" class="text-sm" />
 					<span>Reroll</span>
 					<div class="flex items-center gap-1 border-l border-white/20 pl-2">
-						<Icon icon="mdi:coin" class="text-xs text-warning-400" />
-						<span class="font-mono text-warning-300">{rerollCost}</span>
+						<Icon icon="mdi:coin" class="text-warning-400 text-xs" />
+						<span class="text-warning-300 font-mono">{rerollCost}</span>
 					</div>
 				</button>
 			</div>
@@ -200,7 +199,7 @@
 
 						<!-- Item Image Section -->
 						<div
-							class="relative flex w-28 shrink-0 items-center justify-center border-r border-surface-700/30 bg-surface-900/60 p-4"
+							class="border-surface-700/30 bg-surface-900/60 relative flex w-28 shrink-0 items-center justify-center border-r p-4"
 						>
 							{#if item.image}
 								<img
@@ -209,37 +208,38 @@
 									class="h-16 w-16 object-contain transition-transform duration-300 group-hover:scale-110"
 								/>
 							{:else}
-								<Icon icon={catConfig?.icon || 'mdi:cube'} class="text-4xl text-surface-600" />
+								<Icon icon={catConfig?.icon || 'mdi:cube'} class="text-surface-600 text-4xl" />
 							{/if}
 
 							<!-- Owned badge -->
 							{#if owned > 0}
 								<div
-									class="absolute top-2 left-2 flex items-center gap-1 border border-success-500/30 bg-success-500/20 px-1.5 py-0.5"
+									class="border-success-500/30 bg-success-500/20 absolute top-2 left-2 flex items-center gap-1 border px-1.5 py-0.5"
 								>
-									<Icon icon="mdi:check" class="text-[0.6rem] text-success-400" />
-									<span class="text-[0.6rem] font-bold text-success-300">×{owned}</span>
+									<Icon icon="mdi:check" class="text-success-400 text-[0.6rem]" />
+									<span class="text-success-300 text-[0.6rem] font-bold">×{owned}</span>
 								</div>
 							{/if}
 						</div>
 
 						<!-- Item Details Section -->
-						<div class="flex flex-1 flex-col justify-between bg-surface-900/40 p-4">
+						<div class="bg-surface-900/40 flex flex-1 flex-col justify-between p-4">
 							<div>
 								<!-- Item Name & Type -->
 								<div class="mb-2 flex items-start justify-between">
 									<div>
-										<h3 class="text-sm font-bold uppercase tracking-wide text-surface-100">
+										<h3 class="text-surface-100 text-sm font-bold tracking-wide uppercase">
 											{item.name}
 										</h3>
-										<span class="text-[0.6rem] tracking-widest text-{catConfig?.color ?? 'surface'}-400"
+										<span
+											class="text-[0.6rem] tracking-widest text-{catConfig?.color ?? 'surface'}-400"
 											>{catConfig?.label?.toUpperCase() ?? category.toUpperCase()}</span
 										>
 									</div>
 								</div>
 
 								<!-- Description -->
-								<p class="mb-3 text-xs leading-relaxed text-surface-400">
+								<p class="text-surface-400 mb-3 text-xs leading-relaxed">
 									{item.description}
 								</p>
 
@@ -264,9 +264,9 @@
 							</div>
 
 							<!-- Purchase Section -->
-							<div class="flex items-center justify-between border-t border-surface-700/30 pt-3">
+							<div class="border-surface-700/30 flex items-center justify-between border-t pt-3">
 								<div class="flex items-center gap-2">
-									<Icon icon="mdi:coin" class="text-lg text-warning-400" />
+									<Icon icon="mdi:coin" class="text-warning-400 text-lg" />
 									<span
 										class="font-mono text-xl font-black
 										{canAfford ? 'text-warning-300' : 'text-error-400'}"
@@ -278,10 +278,10 @@
 								<button
 									disabled={!canAfford}
 									onclick={() => player.buyItem(itemName as AllItems)}
-									class="relative flex items-center gap-2 overflow-hidden px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all
+									class="relative flex items-center gap-2 overflow-hidden px-5 py-2 text-xs font-bold tracking-wider uppercase transition-all
 										{canAfford
-										? 'border border-warning-500/50 bg-gradient-to-r from-warning-600 to-warning-700 text-white hover:from-warning-500 hover:to-warning-600 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
-										: 'cursor-not-allowed border border-surface-600 bg-surface-800 text-surface-500'}"
+										? 'border-warning-500/50 from-warning-600 to-warning-700 hover:from-warning-500 hover:to-warning-600 border bg-gradient-to-r text-white hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'
+										: 'border-surface-600 bg-surface-800 text-surface-500 cursor-not-allowed border'}"
 								>
 									{#if canAfford}
 										<div
@@ -308,7 +308,7 @@
 								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
 						></div>
 						<div
-							class="pointer-events-none absolute bottom-0 right-0 h-3 w-3 border-b-2 border-r-2 opacity-30 transition-opacity group-hover:opacity-70
+							class="pointer-events-none absolute right-0 bottom-0 h-3 w-3 border-r-2 border-b-2 opacity-30 transition-opacity group-hover:opacity-70
 								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
 						></div>
 					</article>
@@ -318,17 +318,17 @@
 			<!-- Empty state -->
 			{#if shopItems.length === 0}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
-					<Icon icon="mdi:package-variant" class="mb-4 text-5xl text-surface-600" />
-					<p class="text-sm text-surface-400">No items available</p>
+					<Icon icon="mdi:package-variant" class="text-surface-600 mb-4 text-5xl" />
+					<p class="text-surface-400 text-sm">No items available</p>
 				</div>
 			{/if}
 		</div>
 
 		<!-- Footer Status Bar -->
 		<footer
-			class="flex items-center justify-end border-t border-surface-500/20 bg-surface-950/80 px-6 py-2"
+			class="border-surface-500/20 bg-surface-950/80 flex items-center justify-end border-t px-6 py-2"
 		>
-			<div class="text-[0.6rem] tracking-wider text-surface-500">
+			<div class="text-surface-500 text-[0.6rem] tracking-wider">
 				{shopItems.length} ITEMS AVAILABLE
 			</div>
 		</footer>

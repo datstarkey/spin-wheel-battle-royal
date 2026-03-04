@@ -1,6 +1,6 @@
+import { shuffle } from '$lib/components/wheel/utils';
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import { grantUnusedMovementMana } from './classes/magicman';
 import items, { type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
@@ -105,7 +105,7 @@ export class Game {
 		}
 
 		// Shuffle and pick 4 random items
-		const shuffled = allItems.sort(() => Math.random() - 0.5);
+		const shuffled = shuffle(allItems);
 		this.shopItems = shuffled.slice(0, Game.SHOP_ITEM_COUNT);
 
 		if (resetCost) {
@@ -282,12 +282,10 @@ export class Game {
 	finishTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 
-		// Grant unused movement mana for Magic Man if they didn't move at all
-		if (this.currentPlayer?.classType === 'magicman' && !this.hasMoved) {
-			grantUnusedMovementMana(this.currentPlayer, this.currentPlayer.movement);
-		}
-
-		this.currentPlayer?.onTurnEnd();
+		this.currentPlayer?.onTurnEnd({
+			hasMoved: this.hasMoved,
+			totalMovement: this.currentPlayer.movement
+		});
 
 		this.incrementTurn();
 		this.hasTurnStarted = false;
@@ -314,9 +312,7 @@ export class Game {
 			// Check for HP reduction increase (every 20 rounds, doubles infinitely)
 			if (this.globalTurnCount % Game.TURNS_PER_HP_REDUCTION_INCREASE === 0) {
 				this.globalHpReduction *= 2;
-				this.addAuditTrail(
-					`Global HP reduction doubled to ${this.globalHpReduction}!`
-				);
+				this.addAuditTrail(`Global HP reduction doubled to ${this.globalHpReduction}!`);
 			}
 		}
 
@@ -418,14 +414,16 @@ export class Game {
 		game.globalTurnCount = data.globalTurnCount ?? 0;
 		game.turnsThisRound = data.turnsThisRound ?? 0;
 		// Normalize wheel data to handle both old (array) and new (config object) formats
-		const normalizedWheels = data.customWheels.map(([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
-			if (Array.isArray(value)) {
-				// Old format: just an array of items
-				return [key, { items: value }];
+		const normalizedWheels = data.customWheels.map(
+			([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
+				if (Array.isArray(value)) {
+					// Old format: just an array of items
+					return [key, { items: value }];
+				}
+				// New format: already a CustomWheelConfig
+				return [key, value as CustomWheelConfig];
 			}
-			// New format: already a CustomWheelConfig
-			return [key, value as CustomWheelConfig];
-		});
+		);
 		game.customWheels = new SvelteMap(normalizedWheels);
 		game.playerOrder = data.playerOrder;
 		game._currentTurn = data._currentTurn;

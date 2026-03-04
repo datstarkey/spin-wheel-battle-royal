@@ -15,7 +15,6 @@
 			name: ''
 		},
 		(res) => {
-			console.log('ayoo');
 			if (
 				currentGame.value?.players.some((x) => x.name.toLowerCase() == res.name.toLocaleLowerCase())
 			) {

@@ -1,5 +1,6 @@
 import { addAuditTrail, addCustomWheel } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
+import { addResource, getResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
@@ -22,7 +23,7 @@ export const Intern: ClassBase = {
 		// Build the "Helpful Suggestions" wheel
 		const wheel: WheelBase = [
 			{
-				label: "Actually, I can help with that! (+15 ATK)",
+				label: 'Actually, I can help with that! (+15 ATK)',
 				onWin() {
 					player.addStatModifier('Helpful Insight', 'attack', 15);
 					addAuditTrail(
@@ -31,7 +32,7 @@ export const Intern: ClassBase = {
 				}
 			},
 			{
-				label: "Let me clarify... (Steal 10 gold)",
+				label: 'Let me clarify... (Steal 10 gold)',
 				onWin() {
 					const stolen = Math.min(10, defendingPlayer.gold);
 					defendingPlayer.gold -= stolen;
@@ -42,7 +43,7 @@ export const Intern: ClassBase = {
 				}
 			},
 			{
-				label: "I appreciate the feedback! (+20 Confidence)",
+				label: 'I appreciate the feedback! (+20 Confidence)',
 				onWin() {
 					increaseConfidence(player, 20);
 					addAuditTrail(
@@ -63,13 +64,11 @@ export const Intern: ClassBase = {
 				label: "I'll do my best! (Heal 15 HP)",
 				onWin() {
 					player.hp += 15;
-					addAuditTrail(
-						`${player.name} is so enthusiastic about helping that they heal 15 HP!`
-					);
+					addAuditTrail(`${player.name} is so enthusiastic about helping that they heal 15 HP!`);
 				}
 			},
 			{
-				label: "Let me research that... (+2 Range)",
+				label: 'Let me research that... (+2 Range)',
 				onWin() {
 					player.addStatModifier('Research Complete', 'attackRange', 2);
 					addAuditTrail(
@@ -86,7 +85,7 @@ export const Intern: ClassBase = {
 				}
 			},
 			{
-				label: "MAXIMUM HELPFULNESS! (+30 Confidence)",
+				label: 'MAXIMUM HELPFULNESS! (+30 Confidence)',
 				onWin() {
 					increaseConfidence(player, 30);
 					addAuditTrail(
@@ -189,20 +188,15 @@ export const Intern: ClassBase = {
 
 // Helper functions
 function getConfidence(player: Player): number {
-	return player.resources[CONFIDENCE_RESOURCE] ?? 0;
+	return getResource(player, CONFIDENCE_RESOURCE);
 }
 
 function increaseConfidence(player: Player, amount: number) {
-	player.resources[CONFIDENCE_RESOURCE] ??= 0;
-	player.resources[CONFIDENCE_RESOURCE] += amount;
-
-	if (player.resources[CONFIDENCE_RESOURCE] > MAX_CONFIDENCE) {
-		player.resources[CONFIDENCE_RESOURCE] = MAX_CONFIDENCE;
-	}
+	addResource(player, CONFIDENCE_RESOURCE, amount, 0, MAX_CONFIDENCE);
 
 	// Remove Overthinking if confidence recovers
 	if (
-		player.resources[CONFIDENCE_RESOURCE] > OVERTHINKING_THRESHOLD &&
+		getResource(player, CONFIDENCE_RESOURCE) > OVERTHINKING_THRESHOLD &&
 		player.statuses.hasStatus('Overthinking')
 	) {
 		player.statuses.removeStatus('Overthinking');
@@ -211,16 +205,11 @@ function increaseConfidence(player: Player, amount: number) {
 }
 
 function decreaseConfidence(player: Player, amount: number) {
-	player.resources[CONFIDENCE_RESOURCE] ??= 70;
-	player.resources[CONFIDENCE_RESOURCE] -= amount;
-
-	if (player.resources[CONFIDENCE_RESOURCE] < 0) {
-		player.resources[CONFIDENCE_RESOURCE] = 0;
-	}
+	addResource(player, CONFIDENCE_RESOURCE, -amount, 0, MAX_CONFIDENCE);
 
 	// Remove Actually mode if confidence drops
 	if (
-		player.resources[CONFIDENCE_RESOURCE] < MAX_CONFIDENCE &&
+		getResource(player, CONFIDENCE_RESOURCE) < MAX_CONFIDENCE &&
 		player.statuses.hasStatus('Actually')
 	) {
 		player.statuses.removeStatus('Actually');

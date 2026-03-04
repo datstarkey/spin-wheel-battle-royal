@@ -3,11 +3,8 @@
 	import { gameBoard } from '$lib/game/board/board.svelte';
 	import type { Position, Tile } from '$lib/game/board/types';
 	import { positionsEqual } from '$lib/game/board/types';
-	import {
-		currentGame,
-		getIsMovementMode,
-		moveCurrentPlayerTo
-	} from '$lib/stores/gameStore.svelte';
+	import { currentGame } from '$lib/stores/gameStore.svelte';
+	import { getIsMovementMode, moveCurrentPlayerTo } from '$lib/stores/movementStore.svelte';
 	import PlayerToken from './PlayerToken.svelte';
 
 	// Check if a position has an unlooted treasure chest
@@ -32,9 +29,7 @@
 	let isMovementMode = $derived(getIsMovementMode());
 
 	// Only render interactive overlays for walkable tiles
-	const walkableTiles = $derived(
-		TILES.flat().filter((tile: Tile) => tile.walkable)
-	);
+	const walkableTiles = $derived(TILES.flat().filter((tile: Tile) => tile.walkable));
 
 	// Pan and zoom state
 	let scale = $state(0.8);
@@ -248,8 +243,7 @@
 				{@const players = getPlayersAtPosition(tile.position)}
 				{@const isHighlighted = showValidMoves && gameBoard.isHighlighted(tile.position)}
 				{@const isSelected =
-					gameBoard.selectedTile !== null &&
-					positionsEqual(gameBoard.selectedTile, tile.position)}
+					gameBoard.selectedTile !== null && positionsEqual(gameBoard.selectedTile, tile.position)}
 				{@const hasTreasure = hasUnlootedTreasure(tile.position)}
 				<button
 					class="absolute box-border border border-transparent bg-transparent p-0 hover:border-white/50"
@@ -264,7 +258,9 @@
 					onmouseleave={() => (hoveredTile = null)}
 				>
 					{#if isHighlighted}
-						<div class="absolute inset-0 animate-pulse border-2 border-yellow-400/80 bg-yellow-400/40"></div>
+						<div
+							class="absolute inset-0 animate-pulse border-2 border-yellow-400/80 bg-yellow-400/40"
+						></div>
 					{/if}
 					{#if isSelected}
 						<div class="absolute inset-0 border-2 border-green-400/90 bg-green-400/30"></div>
@@ -308,23 +304,23 @@
 	</div>
 
 	<!-- Zoom controls -->
-	<div class="absolute bottom-4 right-4 flex flex-col gap-2">
+	<div class="absolute right-4 bottom-4 flex flex-col gap-2">
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-800/80 text-xl text-surface-100 backdrop-blur-sm transition hover:bg-surface-700"
+			class="bg-surface-800/80 text-surface-100 hover:bg-surface-700 flex h-10 w-10 items-center justify-center rounded-lg text-xl backdrop-blur-sm transition"
 			onclick={() => (scale = Math.min(MAX_SCALE, scale * 1.2))}
 			aria-label="Zoom in"
 		>
 			+
 		</button>
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-800/80 text-xl text-surface-100 backdrop-blur-sm transition hover:bg-surface-700"
+			class="bg-surface-800/80 text-surface-100 hover:bg-surface-700 flex h-10 w-10 items-center justify-center rounded-lg text-xl backdrop-blur-sm transition"
 			onclick={() => (scale = Math.max(MIN_SCALE, scale * 0.8))}
 			aria-label="Zoom out"
 		>
 			−
 		</button>
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-800/80 text-xs text-surface-100 backdrop-blur-sm transition hover:bg-surface-700"
+			class="bg-surface-800/80 text-surface-100 hover:bg-surface-700 flex h-10 w-10 items-center justify-center rounded-lg text-xs backdrop-blur-sm transition"
 			onclick={() => {
 				scale = 0.8;
 				panX = (window.innerWidth - boardWidth * scale) / 2;
@@ -338,7 +334,7 @@
 
 	<!-- Scale indicator -->
 	<div
-		class="absolute bottom-4 left-4 rounded bg-surface-800/80 px-2 py-1 text-xs text-surface-300 backdrop-blur-sm"
+		class="bg-surface-800/80 text-surface-300 absolute bottom-4 left-4 rounded px-2 py-1 text-xs backdrop-blur-sm"
 	>
 		{Math.round(scale * 100)}%
 	</div>
@@ -346,10 +342,10 @@
 	<!-- Tile debug info -->
 	{#if hoveredTile}
 		<div
-			class="absolute bottom-16 right-4 rounded-lg bg-surface-800/90 px-3 py-2 text-xs text-surface-100 backdrop-blur-sm"
+			class="bg-surface-800/90 text-surface-100 absolute right-4 bottom-16 rounded-lg px-3 py-2 text-xs backdrop-blur-sm"
 		>
-			<div class="font-bold text-surface-50">Tile Info</div>
-			<div class="mt-1 space-y-0.5 text-surface-300">
+			<div class="text-surface-50 font-bold">Tile Info</div>
+			<div class="text-surface-300 mt-1 space-y-0.5">
 				<div>Position: ({hoveredTile.position.x}, {hoveredTile.position.y})</div>
 				<div>Type: <span class="text-primary-400">{hoveredTile.type}</span></div>
 				<div>Walkable: {hoveredTile.walkable ? 'Yes' : 'No'}</div>

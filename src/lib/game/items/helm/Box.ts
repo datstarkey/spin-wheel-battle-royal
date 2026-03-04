@@ -1,20 +1,17 @@
-import type { Player } from '../../player/player.svelte';
 import type { Item } from '../itemTypes';
+import { createStatModifierItem } from '../itemFactory';
 
-export const Box: Item = {
-	name: 'A Box',
-	description: 'Gain +20 Defense, lose -10 Attack',
-	type: 'helm',
-	baseCost: 3,
-	maxAmount: 1,
-	image: '/Items/HelmEquipables/Box.svg',
-
-	onEquip: (player: Player) => {
-		player.addStatModifier('A Box', 'attack', -10);
-		player.addStatModifier('A Box', 'defense', 20);
+export const Box: Item = createStatModifierItem(
+	{
+		name: 'A Box',
+		description: 'Gain +20 Defense, lose -10 Attack',
+		type: 'helm',
+		baseCost: 3,
+		maxAmount: 1,
+		image: '/Items/HelmEquipables/Box.svg'
 	},
-	onUnequip: (player: Player) => {
-		player.removeStatModifier('A Box', 'attack');
-		player.removeStatModifier('A Box', 'defense');
-	}
-};
+	[
+		{ stat: 'attack', value: -10 },
+		{ stat: 'defense', value: 20 }
+	]
+);

@@ -1,5 +1,6 @@
 import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
+import { addResource } from '../player/playerResources';
 import { generateRandomPlayerWheel } from '../wheels/randomPlayerWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
 import type { ClassBase } from './classType';
@@ -9,12 +10,8 @@ export const SHADE_RESOURCE = 'Shade';
 
 // Helper to add Shade to a Shadeweaver
 export function addShade(player: Player, amount: number = 1) {
-	player.resources[SHADE_RESOURCE] ??= 0;
-	player.resources[SHADE_RESOURCE] += amount;
-	const totalShade = player.resources[SHADE_RESOURCE];
-	addAuditTrail(
-		`${player.name}'s Shade grows to ${totalShade}! (+${totalShade}% ATK/DEF)`
-	);
+	const totalShade = addResource(player, SHADE_RESOURCE, amount);
+	addAuditTrail(`${player.name}'s Shade grows to ${totalShade}! (+${totalShade}% ATK/DEF)`);
 }
 
 export const Shadeweaver: ClassBase = {
@@ -49,4 +46,3 @@ export const Shadeweaver: ClassBase = {
 		);
 	}
 };
-			

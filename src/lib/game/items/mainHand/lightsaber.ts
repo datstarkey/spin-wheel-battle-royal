@@ -1,18 +1,14 @@
-import type { Player } from '../../player/player.svelte';
 import type { Item } from '../itemTypes';
+import { createStatModifierItem } from '../itemFactory';
 
-export const Lightsaber: Item = {
-	name: 'Lightsaber',
-	description: 'Base Attack + 15',
-	type: 'mainhand',
-	baseCost: 3,
-	maxAmount: 1,
-	image: '/Items/MainHandEquipables/Lightsaber.svg',
-
-	onEquip: (player: Player) => {
-		player.addStatModifier('Lightsaber', 'attack', 15);
+export const Lightsaber: Item = createStatModifierItem(
+	{
+		name: 'Lightsaber',
+		description: 'Base Attack + 15',
+		type: 'mainhand',
+		baseCost: 3,
+		maxAmount: 1,
+		image: '/Items/MainHandEquipables/Lightsaber.svg'
 	},
-	onUnequip: (player: Player) => {
-		player.removeStatModifier('Lightsaber', 'attack');
-	}
-} as const;
+	[{ stat: 'attack', value: 15 }]
+);

@@ -34,7 +34,7 @@ export interface ClassBase {
 	onDefendWin?: (player: Player, attackingPlayer: Player) => void;
 	onDefendLose?: (player: Player, attackingPlayer: Player) => void;
 	onTurnStart?: (player: Player) => void;
-	onTurnEnd?: (player: Player) => void;
+	onTurnEnd?: (player: Player, context?: { hasMoved: boolean; totalMovement: number }) => void;
 	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
 	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
 	onDefenseStart?: (player: Player, attackingPlayer: Player) => void;

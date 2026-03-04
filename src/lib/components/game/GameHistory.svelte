@@ -310,9 +310,7 @@
 		}));
 	}
 
-	let processedEntries = $derived(
-		processEntries(currentGame.value?.auditTrail.toReversed() ?? [])
-	);
+	let processedEntries = $derived(processEntries(currentGame.value?.auditTrail.toReversed() ?? []));
 
 	let entryCount = $derived(currentGame.value?.auditTrail.length ?? 0);
 </script>
@@ -323,8 +321,8 @@
 	<button
 		class="group relative flex items-center justify-between overflow-hidden border border-b-0 px-4 py-2.5 transition-all duration-300
 			{isExpanded
-			? 'rounded-t-lg border-primary-500/50 bg-surface-900/95'
-			: 'rounded-lg border-surface-500/30 bg-surface-900/90 hover:border-primary-500/30 hover:bg-surface-800/95'}"
+			? 'border-primary-500/50 bg-surface-900/95 rounded-t-lg'
+			: 'border-surface-500/30 bg-surface-900/90 hover:border-primary-500/30 hover:bg-surface-800/95 rounded-lg'}"
 		onclick={() => (isExpanded = !isExpanded)}
 	>
 		<!-- Scanline overlay effect -->
@@ -347,19 +345,19 @@
 				<!-- Blinking indicator -->
 				{#if entryCount > 0}
 					<div
-						class="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-primary-500"
+						class="bg-primary-500 absolute -top-0.5 -right-0.5 h-2 w-2 animate-pulse rounded-full"
 					></div>
 				{/if}
 			</div>
 
 			<div class="flex flex-col items-start">
 				<span
-					class="text-xs font-bold uppercase tracking-widest
+					class="text-xs font-bold tracking-widest uppercase
 					{isExpanded ? 'text-primary-400' : 'text-surface-200 group-hover:text-primary-400'}"
 				>
 					Battle Log
 				</span>
-				<span class="text-[10px] uppercase tracking-wider text-surface-500">
+				<span class="text-surface-500 text-[10px] tracking-wider uppercase">
 					{entryCount} events recorded
 				</span>
 			</div>
@@ -370,7 +368,7 @@
 			<!-- Entry count badge -->
 			{#if entryCount > 0 && !isExpanded}
 				<div
-					class="flex h-5 min-w-5 items-center justify-center rounded-sm bg-primary-500/20 px-1.5 text-[10px] font-bold text-primary-400"
+					class="bg-primary-500/20 text-primary-400 flex h-5 min-w-5 items-center justify-center rounded-sm px-1.5 text-[10px] font-bold"
 				>
 					{entryCount}
 				</div>
@@ -379,15 +377,9 @@
 			<!-- Chevron -->
 			<div
 				class="flex h-6 w-6 items-center justify-center rounded transition-transform duration-300
-				{isExpanded ? 'rotate-180 text-primary-400' : 'text-surface-400'}"
+				{isExpanded ? 'text-primary-400 rotate-180' : 'text-surface-400'}"
 			>
-				<svg
-					class="h-4 w-4"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-					stroke-width="2"
-				>
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
 				</svg>
 			</div>
@@ -404,12 +396,12 @@
 	<!-- Expanded Log Panel -->
 	{#if isExpanded}
 		<div
-			class="relative overflow-hidden rounded-b-lg border border-t-0 border-primary-500/50 bg-surface-950/98 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5),0_0_20px_-5px_rgba(220,38,38,0.2)]"
+			class="border-primary-500/50 bg-surface-950/98 relative overflow-hidden rounded-b-lg border border-t-0 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5),0_0_20px_-5px_rgba(220,38,38,0.2)]"
 			transition:slide={{ duration: 250 }}
 		>
 			<!-- Top fade gradient -->
 			<div
-				class="pointer-events-none absolute left-0 right-0 top-0 z-10 h-6 bg-linear-to-b from-surface-950/98 to-transparent"
+				class="from-surface-950/98 pointer-events-none absolute top-0 right-0 left-0 z-10 h-6 bg-linear-to-b to-transparent"
 			></div>
 
 			<!-- Scrollable content -->
@@ -420,8 +412,8 @@
 				{#if processedEntries.length === 0}
 					<div class="flex flex-col items-center justify-center py-8 text-center">
 						<div class="mb-2 text-2xl opacity-30">📜</div>
-						<p class="text-xs uppercase tracking-wider text-surface-500">No events recorded</p>
-						<p class="mt-1 text-[10px] text-surface-600">Battle log will appear here</p>
+						<p class="text-surface-500 text-xs tracking-wider uppercase">No events recorded</p>
+						<p class="text-surface-600 mt-1 text-[10px]">Battle log will appear here</p>
 					</div>
 				{:else}
 					<div class="space-y-1.5">
@@ -431,9 +423,9 @@
 							<!-- Turn separator -->
 							{#if entry.isTurnEnd && i < processedEntries.length - 1}
 								<div class="relative my-4 flex items-center justify-center">
-									<div class="absolute inset-x-0 top-1/2 h-px bg-surface-700/50"></div>
+									<div class="bg-surface-700/50 absolute inset-x-0 top-1/2 h-px"></div>
 									<div
-										class="relative z-10 rounded-full bg-surface-900 px-3 py-0.5 text-[9px] uppercase tracking-widest text-surface-500"
+										class="bg-surface-900 text-surface-500 relative z-10 rounded-full px-3 py-0.5 text-[9px] tracking-widest uppercase"
 									>
 										turn end
 									</div>
@@ -442,7 +434,7 @@
 
 							<!-- Log Entry -->
 							<div
-								class="group/entry relative flex items-start gap-2 rounded border px-2.5 py-2 transition-all duration-150 hover:bg-surface-800/30 {event.bgClass}"
+								class="group/entry hover:bg-surface-800/30 relative flex items-start gap-2 rounded border px-2.5 py-2 transition-all duration-150 {event.bgClass}"
 								in:fly={{ x: -20, duration: 200, delay: Math.min(i * 30, 300) }}
 							>
 								<!-- Event icon -->
@@ -454,14 +446,14 @@
 
 								<!-- Message content -->
 								<div class="min-w-0 flex-1">
-									<p class="text-xs leading-relaxed text-surface-200">
+									<p class="text-surface-200 text-xs leading-relaxed">
 										{entry.message}
 									</p>
 								</div>
 
 								<!-- Entry number (subtle) -->
 								<div
-									class="shrink-0 self-center text-[9px] tabular-nums text-surface-600 opacity-0 transition-opacity group-hover/entry:opacity-100"
+									class="text-surface-600 shrink-0 self-center text-[9px] tabular-nums opacity-0 transition-opacity group-hover/entry:opacity-100"
 								>
 									#{currentGame.value?.auditTrail.length ?? 0 - entry.index}
 								</div>
@@ -473,12 +465,12 @@
 
 			<!-- Bottom fade gradient -->
 			<div
-				class="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-6 bg-linear-to-t from-surface-950/98 to-transparent"
+				class="from-surface-950/98 pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-6 bg-linear-to-t to-transparent"
 			></div>
 
 			<!-- Corner accents -->
-			<div class="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-primary-500/30"></div>
-			<div class="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-primary-500/30"></div>
+			<div class="border-primary-500/30 absolute bottom-0 left-0 h-3 w-3 border-b border-l"></div>
+			<div class="border-primary-500/30 absolute right-0 bottom-0 h-3 w-3 border-r border-b"></div>
 		</div>
 	{/if}
 </div>

@@ -6,16 +6,19 @@ export const GigaChad: ClassBase = {
 	defense: 5,
 	name: 'Giga Chad',
 	icon: '/Classes/GigaChad.svg',
-	description: 'An unstoppable force. Gets 30% of base attack as bonus defense.',
+	description: 'An unstoppable force. Gets 30% of attack as bonus defense.',
 	onWinAbility: 'Gain 3 attack permanently',
 	attackRange: 1,
 
-	// Passive: 30% of base attack becomes bonus defense
+	// Passive: 30% of total attack becomes bonus defense
 	getBonusDefense(player) {
-		return Math.floor(0.3 * player.baseAttack);
+		// Use attack calculation without this bonus to avoid circular dependency
+		const attackWithoutThisBonus =
+			(player.baseAttack + player.bonusAttack) * player.attackMultiplier;
+		return Math.floor(0.3 * attackWithoutThisBonus);
 	},
 
-	onAttackWin(player, _defendingPlayer) {
+	onAttackWin(player) {
 		player.baseAttack += 3;
 	}
 };

@@ -14,9 +14,7 @@ export const overthinking: StatusEffect = {
 		player.attackMultipliers['Overthinking'] = 0.7; // 30% less attack
 		player.defenseMultipliers['Overthinking'] = 0.7; // 30% less defense
 		player.addStatModifier('Overthinking', 'movement', -1); // Paralyzed by indecision
-		addAuditTrail(
-			`${player.name} is overthinking everything! -30% ATK, -30% DEF, -1 Movement`
-		);
+		addAuditTrail(`${player.name} is overthinking everything! -30% ATK, -30% DEF, -1 Movement`);
 	},
 
 	onRemove(player) {

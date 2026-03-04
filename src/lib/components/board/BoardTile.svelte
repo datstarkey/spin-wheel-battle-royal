@@ -57,7 +57,8 @@
 	style:width="{tileSize}px"
 	style:height="{tileSize}px"
 	style:background-image="url('/Map.svg')"
-	style:background-position="-{bgPosX * (tileSize / SVG_PIXELS_PER_TILE)}px -{bgPosY * (tileSize / SVG_PIXELS_PER_TILE)}px"
+	style:background-position="-{bgPosX * (tileSize / SVG_PIXELS_PER_TILE)}px -{bgPosY *
+		(tileSize / SVG_PIXELS_PER_TILE)}px"
 	style:background-size="{bgSize}px {bgSize}px"
 >
 	{#if isHighlighted}

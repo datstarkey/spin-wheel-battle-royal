@@ -6,7 +6,12 @@
 
 import type { Player } from '../player/player.svelte';
 import type { Position, TileType } from './types';
-import { getTileAt, isOuterTeleporter, getOtherOuterTeleporters, getInnerTeleporter } from './board.svelte';
+import {
+	getTileAt,
+	isOuterTeleporter,
+	getOtherOuterTeleporters,
+	getInnerTeleporter
+} from './board.svelte';
 import { generateButtonWheel } from '../wheels/buttonWheel';
 import { generateCasinoWheel } from '../wheels/casinoWheel';
 import { generateLootWheel } from '../wheels/lootWheel';

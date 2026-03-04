@@ -8,6 +8,6 @@ export const stellaArtois: Item = {
 	type: 'consumables',
 	maxAmount: 5,
 	onUse(player) {
-		player.statuses.addStatus("StellaArtois")
+		player.statuses.addStatus('StellaArtois');
 	}
 };

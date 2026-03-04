@@ -36,18 +36,22 @@
 <!-- Custom layout replacing AppShell -->
 <div class="flex h-full flex-col">
 	<!-- Header/AppBar -->
-	<header class="bg-surface-100-900 flex items-center justify-between border-b border-surface-300 px-4 py-3">
+	<header
+		class="bg-surface-100-900 border-surface-300 flex items-center justify-between border-b px-4 py-3"
+	>
 		<h3 class="ml-2 text-xl font-semibold">Spin-Wheel Battle Royal</h3>
 		<div class="flex items-center gap-3">
 			{#if currentGame.value?.started}
 				<!-- Round Counter -->
 				<div
-					class="flex items-center gap-2 rounded border border-secondary-500/30 bg-secondary-500/10 px-3 py-1.5 text-sm font-medium"
+					class="border-secondary-500/30 bg-secondary-500/10 flex items-center gap-2 rounded border px-3 py-1.5 text-sm font-medium"
 					title="Global round count (movement +1 every 5 rounds)"
 				>
-					<Icon icon="mdi:rotate-right" class="text-base text-secondary-400" />
+					<Icon icon="mdi:rotate-right" class="text-secondary-400 text-base" />
 					<span class="text-secondary-300">Round {currentGame.value.globalTurnCount}</span>
-					<span class="text-secondary-500/80 text-xs">(+{currentGame.value.globalMovementBonus} mov)</span>
+					<span class="text-secondary-500/80 text-xs"
+						>(+{currentGame.value.globalMovementBonus} mov)</span
+					>
 				</div>
 				<!-- Quick Mode Toggle -->
 				<button

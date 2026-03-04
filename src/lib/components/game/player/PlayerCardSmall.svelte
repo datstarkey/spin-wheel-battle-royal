@@ -1,16 +1,9 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { generateButtonWheel } from '$lib/game/wheels/buttonWheel';
-	import { generateDamageTakenWheel } from '$lib/game/wheels/damageTakenWheel';
-	import { generateGamblerWheel } from '$lib/game/wheels/gamblerWheel';
-	import { generateLootWheel } from '$lib/game/wheels/lootWheel';
-	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
-	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
-	import { generateWinWheel } from '$lib/game/wheels/winWheel';
-	import toast from '$lib/stores/toaster.svelte';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
+	import WheelDropdown from './WheelDropdown.svelte';
 
 	interface Props {
 		player: Player;
@@ -21,35 +14,12 @@
 
 	let isExpanded = $state(false);
 	let isAttackWindowOpen = $state(false);
-	let wheelDropdownOpen = $state(false);
-
-	const wheels = [
-		{ name: 'Loot Wheel', action: () => generateLootWheel(player.name) },
-		{ name: 'Win Wheel', action: () => generateWinWheel(player.name) },
-		{ name: 'Lose Wheel', action: () => generateLoseWheel(player.name) },
-		{ name: 'Button Wheel', action: () => generateButtonWheel(player.name) },
-		{ name: 'Damage Taken Wheel', action: () => generateDamageTakenWheel(player.name) },
-		{
-			name: 'Shadow Realm Wheel',
-			action: () => generateShadowRealmWheel(player.name),
-			condition: () => player.inShadowRealm
-		},
-		{
-			name: 'Gambler Wheel',
-			action: () => generateGamblerWheel(player.name),
-			condition: () => player.classType === 'gambler'
-		}
-	];
-
-	function addWheel(wheel: (typeof wheels)[0]) {
-		wheel.action();
-		toast.success(`${wheel.name} Added`);
-		wheelDropdownOpen = false;
-	}
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
-	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100)));
+	let hpPercent = $derived(
+		Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100))
+	);
 
 	// Get first letter for avatar
 	let avatarLetter = $derived(player.name.charAt(0).toUpperCase());
@@ -80,23 +50,21 @@
 	class="group relative"
 	onmouseenter={() => (isExpanded = true)}
 	onmouseleave={() => {
-		if (!wheelDropdownOpen) isExpanded = false;
+		isExpanded = false;
 	}}
 >
 	<!-- Collapsed State - Compact Bar -->
 	<div
-		class="relative flex items-center gap-3 overflow-hidden rounded-lg border bg-surface-950/95 px-3 py-2 backdrop-blur-sm transition-all duration-300 ease-out
+		class="bg-surface-950/95 relative flex items-center gap-3 overflow-hidden rounded-lg border px-3 py-2 backdrop-blur-sm transition-all duration-300 ease-out
 			{borderStateClass}
 			{isDead ? 'opacity-50' : ''}
 			{isExpanded ? 'rounded-b-none border-b-0' : ''}"
 	>
 		<!-- Scan line effect for active turn -->
 		{#if isActiveTurn}
-			<div
-				class="pointer-events-none absolute inset-0 overflow-hidden opacity-20"
-			>
+			<div class="pointer-events-none absolute inset-0 overflow-hidden opacity-20">
 				<div
-					class="absolute inset-0 bg-gradient-to-b from-transparent via-primary-500/30 to-transparent animate-[scan_2s_linear_infinite]"
+					class="via-primary-500/30 absolute inset-0 animate-[scan_2s_linear_infinite] bg-gradient-to-b from-transparent to-transparent"
 				></div>
 			</div>
 		{/if}
@@ -128,7 +96,7 @@
 			<!-- Active turn pulse ring -->
 			{#if isActiveTurn}
 				<div
-					class="absolute inset-0 rounded-full border-2 border-primary-500 animate-ping opacity-40"
+					class="border-primary-500 absolute inset-0 animate-ping rounded-full border-2 opacity-40"
 				></div>
 			{/if}
 		</div>
@@ -146,7 +114,9 @@
 					<Icon icon="mdi:star-four-points" class="text-tertiary-400 shrink-0 text-xs" />
 				{/if}
 			</div>
-			<span class="text-[0.6rem] tracking-widest uppercase text-surface-400 flex items-center gap-1">
+			<span
+				class="text-surface-400 flex items-center gap-1 text-[0.6rem] tracking-widest uppercase"
+			>
 				{#if player.class.icon}
 					<img src={player.class.icon} alt="" class="h-3 w-3" style="image-rendering: pixelated;" />
 				{/if}
@@ -164,23 +134,23 @@
 			</div>
 			<div class="flex items-center justify-end gap-1">
 				<Icon icon="mdi:heart" class="text-error-500 text-[0.6rem]" />
-				<span class="text-[0.65rem] font-bold text-surface-200">{player.hp}</span>
+				<span class="text-surface-200 text-[0.65rem] font-bold">{player.hp}</span>
 			</div>
 		</div>
 
 		<!-- Quick Stats (visible in collapsed) -->
-		<div class="flex items-center gap-2 border-l border-surface-700/50 pl-3">
+		<div class="border-surface-700/50 flex items-center gap-2 border-l pl-3">
 			<div class="flex items-center gap-1" title="Attack">
 				<Icon icon="mdi:sword" class="text-primary-400 text-xs" />
-				<span class="text-xs font-bold text-surface-200">{player.attack.toFixed(0)}</span>
+				<span class="text-surface-200 text-xs font-bold">{player.attack.toFixed(0)}</span>
 			</div>
 			<div class="flex items-center gap-1" title="Defense">
 				<Icon icon="mdi:shield" class="text-secondary-400 text-xs" />
-				<span class="text-xs font-bold text-surface-200">{player.defense.toFixed(0)}</span>
+				<span class="text-surface-200 text-xs font-bold">{player.defense.toFixed(0)}</span>
 			</div>
 			<div class="flex items-center gap-1" title="Gold">
 				<Icon icon="mdi:coin" class="text-warning-400 text-xs" />
-				<span class="text-xs font-bold text-surface-200">{player.gold}</span>
+				<span class="text-surface-200 text-xs font-bold">{player.gold}</span>
 			</div>
 		</div>
 
@@ -194,50 +164,21 @@
 
 	<!-- Expanded Panel -->
 	<div
-		class="absolute left-0 right-0 top-full z-20 origin-top rounded-b-lg border border-t-0 bg-surface-950 transition-all duration-300 ease-out
+		class="bg-surface-950 absolute top-full right-0 left-0 z-20 origin-top rounded-b-lg border border-t-0 transition-all duration-300 ease-out
 			{borderStateClass}
 			{isExpanded ? 'opacity-100' : 'pointer-events-none h-0 overflow-hidden opacity-0'}"
 	>
 		<div class="p-4">
 			<!-- Action Bar -->
-			<div class="mb-4 flex items-center justify-between border-b border-surface-700/30 pb-3">
+			<div class="border-surface-700/30 mb-4 flex items-center justify-between border-b pb-3">
 				<div class="flex items-center gap-1">
-					<div class="relative">
-						<button
-							class="flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100"
-							onclick={() => (wheelDropdownOpen = !wheelDropdownOpen)}
-							title="Add Wheel"
-						>
-							<Icon icon="mdi:tire" />
-						</button>
-						{#if wheelDropdownOpen}
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<div
-								class="fixed inset-0 z-40"
-								onclick={() => (wheelDropdownOpen = false)}
-							></div>
-							<div
-								class="absolute top-full left-0 z-50 mt-1 min-w-40 overflow-hidden rounded border border-white/10 bg-surface-950 shadow-xl"
-							>
-								{#each wheels as wheel (wheel.name)}
-									{#if !wheel.condition || wheel.condition()}
-										<button
-											class="w-full border-none bg-transparent px-3 py-2 text-left text-xs text-surface-300 transition-all hover:bg-white/5 hover:text-surface-100"
-											onclick={() => addWheel(wheel)}
-										>
-											{wheel.name}
-										</button>
-									{/if}
-								{/each}
-							</div>
-						{/if}
-					</div>
+					<WheelDropdown {player} align="left" />
 					<EditPlayer {player} />
 				</div>
 
 				{#if player.inShadowRealm}
 					<div
-						class="flex items-center gap-1 rounded-sm border border-tertiary-500/30 bg-tertiary-500/10 px-2 py-1 text-[0.6rem] font-semibold uppercase tracking-widest text-tertiary-300"
+						class="border-tertiary-500/30 bg-tertiary-500/10 text-tertiary-300 flex items-center gap-1 rounded-sm border px-2 py-1 text-[0.6rem] font-semibold tracking-widest uppercase"
 					>
 						<Icon icon="mdi:star-four-points" class="text-xs" />
 						Shadow Realm
@@ -252,14 +193,12 @@
 				>
 					<Icon icon="mdi:sword" class="text-primary-400 mb-1 text-base" />
 					<div class="flex items-baseline gap-1">
-						<span class="text-base font-bold text-surface-100"
-							>{player.attack.toFixed(0)}</span
-						>
+						<span class="text-surface-100 text-base font-bold">{player.attack.toFixed(0)}</span>
 						{#if player.bonusAttack > 0 || player.attackMultiplier > 1}
-							<span class="text-[0.55rem] text-surface-500">({player.baseAttack})</span>
+							<span class="text-surface-500 text-[0.55rem]">({player.baseAttack})</span>
 						{/if}
 					</div>
-					<span class="text-[0.5rem] uppercase tracking-widest text-surface-500">ATK</span>
+					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">ATK</span>
 				</div>
 
 				<div
@@ -267,24 +206,20 @@
 				>
 					<Icon icon="mdi:shield" class="text-secondary-400 mb-1 text-base" />
 					<div class="flex items-baseline gap-1">
-						<span class="text-base font-bold text-surface-100"
-							>{player.defense.toFixed(0)}</span
-						>
+						<span class="text-surface-100 text-base font-bold">{player.defense.toFixed(0)}</span>
 						{#if player.bonusDefense > 0 || player.defenseMultiplier > 1}
-							<span class="text-[0.55rem] text-surface-500">({player.baseDefense})</span
-							>
+							<span class="text-surface-500 text-[0.55rem]">({player.baseDefense})</span>
 						{/if}
 					</div>
-					<span class="text-[0.5rem] uppercase tracking-widest text-surface-500">DEF</span>
+					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">DEF</span>
 				</div>
 
 				<div
 					class="flex flex-col items-center rounded border border-white/5 bg-black/30 p-2 transition-all hover:border-white/10"
 				>
 					<Icon icon="mdi:coin" class="text-warning-400 mb-1 text-base" />
-					<span class="text-base font-bold text-surface-100">{player.gold}</span>
-					<span class="text-[0.5rem] uppercase tracking-widest text-surface-500">GOLD</span
-					>
+					<span class="text-surface-100 text-base font-bold">{player.gold}</span>
+					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">GOLD</span>
 				</div>
 
 				<div
@@ -292,26 +227,22 @@
 				>
 					<Icon icon="ion:footsteps" class="text-success-400 mb-1 text-base" />
 					<div class="flex items-baseline gap-1">
-						<span class="text-base font-bold text-surface-100">{player.movement}</span>
+						<span class="text-surface-100 text-base font-bold">{player.movement}</span>
 						{#if player.bonusMovement > 0}
-							<span class="text-[0.55rem] text-surface-500"
-								>({player.baseMovement})</span
-							>
+							<span class="text-surface-500 text-[0.55rem]">({player.baseMovement})</span>
 						{/if}
 					</div>
-					<span class="text-[0.5rem] uppercase tracking-widest text-surface-500">MOV</span>
+					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">MOV</span>
 				</div>
 			</div>
 
 			<!-- Range -->
-			<div
-				class="mb-4 flex items-center gap-2 rounded bg-black/20 px-2 py-1.5 text-xs"
-			>
+			<div class="mb-4 flex items-center gap-2 rounded bg-black/20 px-2 py-1.5 text-xs">
 				<Icon icon="material-symbols:social-distance" class="text-warning-500" />
 				<span class="text-surface-400">Range:</span>
-				<span class="font-bold text-surface-100">{player.attackRange}</span>
+				<span class="text-surface-100 font-bold">{player.attackRange}</span>
 				{#if player.bonusAttackRange > 0}
-					<span class="text-[0.65rem] text-success-400">(+{player.bonusAttackRange})</span>
+					<span class="text-success-400 text-[0.65rem]">(+{player.bonusAttackRange})</span>
 				{/if}
 			</div>
 
@@ -321,9 +252,7 @@
 					{#each Object.entries(player.resources) as [resource, amount] (resource)}
 						{#if resource === 'Swenergy'}
 							<div class="flex items-center gap-2 rounded bg-black/20 px-2 py-1.5">
-								<span
-									class="flex min-w-[70px] items-center gap-1 text-[0.65rem] text-surface-300"
-								>
+								<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
 									<Icon icon="mdi:cube-outline" class="text-xs text-teal-400" />
 									{resource}
 								</span>
@@ -333,18 +262,15 @@
 										style:width="{(amount / 10) * 100}%"
 									></div>
 								</div>
-								<span
-									class="min-w-[30px] text-right text-[0.65rem] font-semibold text-surface-300"
+								<span class="text-surface-300 min-w-[30px] text-right text-[0.65rem] font-semibold"
 									>{amount}/10</span
 								>
 							</div>
 						{:else}
-							<div
-								class="mt-1 flex items-center gap-1.5 rounded bg-black/20 px-2 py-1 text-xs"
-							>
+							<div class="mt-1 flex items-center gap-1.5 rounded bg-black/20 px-2 py-1 text-xs">
 								<Icon icon="mdi:cube-outline" class="text-teal-400" />
 								<span>{resource}</span>
-								<span class="ml-auto font-semibold text-surface-100">{amount}</span>
+								<span class="text-surface-100 ml-auto font-semibold">{amount}</span>
 							</div>
 						{/if}
 					{/each}
@@ -354,7 +280,7 @@
 			<!-- Equipment -->
 			<div class="mb-4">
 				<div
-					class="mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-surface-500"
+					class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
 				>
 					<Icon icon="mdi:treasure-chest" class="text-xs opacity-70" />
 					<span>Equipment</span>
@@ -367,7 +293,7 @@
 						<span
 							class="truncate text-[0.65rem] {player.gear.mainHand
 								? 'text-surface-300'
-								: 'italic text-surface-500'}"
+								: 'text-surface-500 italic'}"
 						>
 							{player.gear.mainHand ?? 'Empty'}
 						</span>
@@ -379,7 +305,7 @@
 						<span
 							class="truncate text-[0.65rem] {player.gear.offHand
 								? 'text-surface-300'
-								: 'italic text-surface-500'}"
+								: 'text-surface-500 italic'}"
 						>
 							{player.gear.offHand ?? 'Empty'}
 						</span>
@@ -387,14 +313,11 @@
 					<div
 						class="flex items-center gap-1.5 rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
 					>
-						<Icon
-							icon="game-icons:crested-helmet"
-							class="text-tertiary-400 text-xs opacity-60"
-						/>
+						<Icon icon="game-icons:crested-helmet" class="text-tertiary-400 text-xs opacity-60" />
 						<span
 							class="truncate text-[0.65rem] {player.gear.helm
 								? 'text-surface-300'
-								: 'italic text-surface-500'}"
+								: 'text-surface-500 italic'}"
 						>
 							{player.gear.helm ?? 'Empty'}
 						</span>
@@ -406,7 +329,7 @@
 						<span
 							class="truncate text-[0.65rem] {player.gear.chest
 								? 'text-surface-300'
-								: 'italic text-surface-500'}"
+								: 'text-surface-500 italic'}"
 						>
 							{player.gear.chest ?? 'Empty'}
 						</span>
@@ -418,7 +341,7 @@
 			{#if player.statuses.statuses.length > 0}
 				<div class="mb-4">
 					<div
-						class="mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-surface-500"
+						class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
 					>
 						<Icon icon="mdi:star-four-points" class="text-xs opacity-70" />
 						<span>Status Effects</span>
@@ -426,17 +349,16 @@
 					<div class="flex flex-wrap gap-1">
 						{#each player.statuses.statuses as status (status.status.name)}
 							<div
-								class="flex items-center gap-1.5 rounded border border-warning-500/20 bg-warning-500/10 px-1.5 py-0.5"
+								class="border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded border px-1.5 py-0.5"
 							>
-								<span class="text-[0.6rem] text-warning-400">{status.status.name}</span
-								>
+								<span class="text-warning-400 text-[0.6rem]">{status.status.name}</span>
 								{#if status.duration && status.duration > 0}
 									<span
-										class="rounded-sm bg-black/30 px-1 py-0.5 text-[0.55rem] font-bold text-warning-500"
+										class="text-warning-500 rounded-sm bg-black/30 px-1 py-0.5 text-[0.55rem] font-bold"
 										>{status.duration}T</span
 									>
 								{:else}
-									<span class="text-[0.6rem] text-tertiary-400">∞</span>
+									<span class="text-tertiary-400 text-[0.6rem]">∞</span>
 								{/if}
 							</div>
 						{/each}
@@ -448,7 +370,7 @@
 			{#if player.gear.consumables.length > 0}
 				<div class="mb-4">
 					<div
-						class="mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-surface-500"
+						class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
 					>
 						<Icon icon="iconoir:consumable" class="text-xs opacity-70" />
 						<span>Items</span>
@@ -458,9 +380,9 @@
 							<div
 								class="flex items-center justify-between rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
 							>
-								<span class="text-[0.65rem] text-surface-300">{item}</span>
+								<span class="text-surface-300 text-[0.65rem]">{item}</span>
 								<button
-									class="rounded-sm border-none bg-gradient-to-br from-primary-600 to-primary-700 px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-widest text-white transition-all hover:-translate-y-px hover:from-primary-500 hover:to-primary-600 disabled:cursor-not-allowed disabled:opacity-30"
+									class="from-primary-600 to-primary-700 hover:from-primary-500 hover:to-primary-600 rounded-sm border-none bg-gradient-to-br px-1.5 py-0.5 text-[0.55rem] font-bold tracking-widest text-white uppercase transition-all hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-30"
 									disabled={isDead || player.name !== currentTurnPlayer?.name}
 									onclick={() => player.gear.useConsumable(item)}
 								>
@@ -474,7 +396,7 @@
 
 			<!-- Attack Button (for active player) -->
 			{#if isActiveTurn}
-				<div class="border-t border-primary-500/20 pt-3">
+				<div class="border-primary-500/20 border-t pt-3">
 					<AttackPlayer bind:showWheel={isAttackWindowOpen} {player} />
 				</div>
 			{/if}

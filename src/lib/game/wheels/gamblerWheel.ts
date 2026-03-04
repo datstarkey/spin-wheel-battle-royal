@@ -1,4 +1,9 @@
-import { addAuditTrail, addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import {
+	addAuditTrail,
+	addCustomWheel,
+	currentGame,
+	getPlayerByName
+} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { incrementLuckyStreak, resetLuckyStreak } from '../classes/gambler';
 import { generateLootWheel } from './lootWheel';

@@ -8,6 +8,6 @@ export const JagerShots: Item = {
 	type: 'consumables',
 	maxAmount: 5,
 	onUse(player) {
-		player.statuses.addStatus("JagerShots")
+		player.statuses.addStatus('JagerShots');
 	}
 };

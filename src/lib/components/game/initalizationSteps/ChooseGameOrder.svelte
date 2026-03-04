@@ -64,7 +64,9 @@
 <div class="mb-5 flex items-center justify-between gap-3">
 	<h2>Select Order</h2>
 	{#if !isComplete}
-		<p class="text-surface-400">{remainingPlayers} player{remainingPlayers !== 1 ? 's' : ''} remaining</p>
+		<p class="text-surface-400">
+			{remainingPlayers} player{remainingPlayers !== 1 ? 's' : ''} remaining
+		</p>
 	{:else}
 		<p class="text-success-500">Order complete!</p>
 	{/if}

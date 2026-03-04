@@ -70,7 +70,7 @@ const COLOR_TO_TILE_TYPE: Record<string, TileType> = {
 // Colors that indicate a WALL/BARRIER (blocks connections)
 const WALL_COLORS = [
 	'#000000', // Pure black
-	'#060608', // Dark path borders
+	'#060608' // Dark path borders
 ];
 
 // Colors that are walkable for path connection purposes
@@ -84,7 +84,7 @@ const PATH_COLORS = [
 	'#285cc4', // Blue teleporter
 	'#df3e23', // Orange/red casino
 	'#b4202a', // Red casino shadow
-	'#fa6a0a', // Orange casino
+	'#fa6a0a' // Orange casino
 ];
 
 // Tiles that players can walk on
@@ -228,7 +228,6 @@ function getDominantTileType(
 	return dominant;
 }
 
-
 /**
  * Check if a pixel color is a wall/barrier
  */
@@ -308,7 +307,7 @@ function calculateConnections(
 			neighborEdge.push({ x: startX + px, y: neighborStartY + PIXELS_PER_LOGICAL_TILE - 1 });
 		}
 
-		if (debug) console.log(`  Checking NORTH (${x}, ${y-1}):`);
+		if (debug) console.log(`  Checking NORTH (${x}, ${y - 1}):`);
 		const ourOk = checkEdgeClear(ourEdge, 'Our top edge');
 		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor bottom edge');
 
@@ -332,7 +331,7 @@ function calculateConnections(
 			neighborEdge.push({ x: startX + px, y: neighborStartY });
 		}
 
-		if (debug) console.log(`  Checking SOUTH (${x}, ${y+1}):`);
+		if (debug) console.log(`  Checking SOUTH (${x}, ${y + 1}):`);
 		const ourOk = checkEdgeClear(ourEdge, 'Our bottom edge');
 		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor top edge');
 
@@ -356,7 +355,7 @@ function calculateConnections(
 			neighborEdge.push({ x: neighborStartX + PIXELS_PER_LOGICAL_TILE - 1, y: startY + py });
 		}
 
-		if (debug) console.log(`  Checking WEST (${x-1}, ${y}):`);
+		if (debug) console.log(`  Checking WEST (${x - 1}, ${y}):`);
 		const ourOk = checkEdgeClear(ourEdge, 'Our left edge');
 		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor right edge');
 
@@ -380,7 +379,7 @@ function calculateConnections(
 			neighborEdge.push({ x: neighborStartX, y: startY + py });
 		}
 
-		if (debug) console.log(`  Checking EAST (${x+1}, ${y}):`);
+		if (debug) console.log(`  Checking EAST (${x + 1}, ${y}):`);
 		const ourOk = checkEdgeClear(ourEdge, 'Our right edge');
 		const neighborOk = checkEdgeClear(neighborEdge, 'Neighbor left edge');
 

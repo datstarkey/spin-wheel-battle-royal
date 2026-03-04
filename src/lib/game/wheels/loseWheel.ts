@@ -1,4 +1,9 @@
-import { addAuditTrail, addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import {
+	addAuditTrail,
+	addCustomWheel,
+	currentGame,
+	getPlayerByName
+} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
@@ -55,7 +60,7 @@ export function generateLoseWheel(playerName: string) {
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
 				generateRandomPlayerWheel(`${playerName} Gives ${globalHpValue} Hp To`, (winner) => {
-					let hpAmount = Math.min(player.hp, globalHpValue);
+					const hpAmount = Math.min(player.hp, globalHpValue);
 					addAuditTrail(`${player.name} transfers ${hpAmount} HP to ${winner.name}`);
 					player.hp -= hpAmount;
 					winner.hp += hpAmount;
@@ -100,7 +105,7 @@ export function generateLoseWheel(playerName: string) {
 				player.statuses.addStatus('EmotionalDamage');
 				addAuditTrail(`${player.name} suffered Emotional Damage!`);
 			}
-		},
+		}
 	];
 	if (player.classType == 'gambler') generateGamblerWheel(player.name);
 	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel, 'lose');

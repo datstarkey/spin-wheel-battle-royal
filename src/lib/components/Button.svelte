@@ -20,7 +20,7 @@
 	{...rest}
 	class="{isIconOnly
 		? isSmall
-			? 'flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 text-surface-300 transition-all hover:border-primary-500 hover:bg-white/10 hover:text-surface-100'
+			? 'text-surface-300 hover:border-primary-500 hover:text-surface-100 flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 transition-all hover:bg-white/10'
 			: 'btn-icon preset-filled'
 		: 'btn preset-filled'} {classStr.replace('btn-icon-sm', '')}"
 >

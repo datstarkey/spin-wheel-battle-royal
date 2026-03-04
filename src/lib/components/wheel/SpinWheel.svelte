@@ -181,7 +181,9 @@
 		</div>
 
 		<!-- Center hub decoration -->
-		<div class="pointer-events-none absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
+		<div
+			class="pointer-events-none absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2"
+		>
 			<div
 				class="border-primary-500/60 from-surface-800 to-surface-950 h-12 w-12 rounded-full border-2 bg-gradient-to-br shadow-[0_0_15px_rgba(220,38,38,0.3),inset_0_2px_4px_rgba(255,255,255,0.1)]"
 			></div>

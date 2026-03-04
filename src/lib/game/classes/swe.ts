@@ -1,5 +1,6 @@
 import { addCustomWheel } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
+import { addResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
@@ -48,25 +49,19 @@ export const Swe: ClassBase = {
 };
 
 function increaseSwenergy(player: Player, amount: number) {
-	player.resources[Swenergy] ??= 0;
-	player.resources[Swenergy] += amount;
+	const value = addResource(player, Swenergy, amount, 0, 10);
 
-	//if we go above 10, set to 10 and add swesupreme status
-	if (player.resources[Swenergy] >= 10) {
-		player.resources[Swenergy] = 10;
+	//if we hit 10, add swesupreme status
+	if (value >= 10) {
 		player.statuses.addStatus('Swesupreme');
 	}
 }
 
 function reduceSwenergy(player: Player, amount: number) {
-	player.resources[Swenergy] ??= 0;
-	player.resources[Swenergy] -= amount;
+	const value = addResource(player, Swenergy, -amount, 0, 10);
 
-	//if we go below 0, set to zero and remove swesupreme status
-	if (player.resources[Swenergy] <= 0) {
-		player.resources[Swenergy] = 0;
-		if (player.statuses.hasStatus('Swesupreme')) {
-			player.statuses.removeStatus('Swesupreme');
-		}
+	//if we hit 0, remove swesupreme status
+	if (value <= 0 && player.statuses.hasStatus('Swesupreme')) {
+		player.statuses.removeStatus('Swesupreme');
 	}
 }

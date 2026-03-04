@@ -8,7 +8,11 @@
 
 	const STEPS = [
 		{ title: 'Players', description: 'Add players to the game', icon: 'mdi:account-group' },
-		{ title: 'Battle Order', description: 'Determine who goes first', icon: 'mdi:sort-numeric-ascending' },
+		{
+			title: 'Battle Order',
+			description: 'Determine who goes first',
+			icon: 'mdi:sort-numeric-ascending'
+		},
 		{ title: 'Classes', description: 'Choose your class', icon: 'mdi:sword-cross' }
 	] as const;
 
@@ -110,19 +114,17 @@
 <div class="mx-auto w-full max-w-2xl">
 	<!-- Header -->
 	<div class="mb-8 text-center">
-		<h1 class="mb-2 text-3xl font-bold tracking-wider text-surface-100 uppercase">
-			Battle Setup
-		</h1>
-		<p class="text-sm tracking-wide text-surface-400">Prepare for combat</p>
+		<h1 class="text-surface-100 mb-2 text-3xl font-bold tracking-wider uppercase">Battle Setup</h1>
+		<p class="text-surface-400 text-sm tracking-wide">Prepare for combat</p>
 	</div>
 
 	<!-- Step Indicators -->
 	<div class="relative mb-8">
 		<!-- Progress line background -->
-		<div class="absolute top-6 left-0 h-0.5 w-full bg-surface-700"></div>
+		<div class="bg-surface-700 absolute top-6 left-0 h-0.5 w-full"></div>
 		<!-- Progress line filled -->
 		<div
-			class="absolute top-6 left-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 transition-all duration-500 ease-out"
+			class="from-primary-600 to-primary-400 absolute top-6 left-0 h-0.5 bg-gradient-to-r transition-all duration-500 ease-out"
 			style="width: {(currentStep / (STEPS.length - 1)) * 100}%"
 		></div>
 
@@ -137,12 +139,13 @@
 						{status === 'upcoming' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}"
 				>
 					<!-- Step circle -->
-					<div class="relative flex h-12 w-12 items-center justify-center rounded-sm transition-all duration-300
+					<div
+						class="relative flex h-12 w-12 items-center justify-center rounded-sm transition-all duration-300
 						{status === 'complete'
 							? 'bg-primary-600 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
 							: status === 'current'
-								? 'bg-surface-800 border-2 border-primary-500 shadow-[0_0_25px_rgba(220,38,38,0.3)] animate-pulse'
-								: 'bg-surface-800 border border-surface-600'}"
+								? 'bg-surface-800 border-primary-500 animate-pulse border-2 shadow-[0_0_25px_rgba(220,38,38,0.3)]'
+								: 'bg-surface-800 border-surface-600 border'}"
 					>
 						{#if status === 'complete'}
 							<Icon icon="mdi:check" class="text-surface-50" size="lg" />
@@ -156,20 +159,34 @@
 
 						<!-- Corner accents for current step -->
 						{#if status === 'current'}
-							<div class="absolute -top-0.5 -left-0.5 h-2 w-2 border-t-2 border-l-2 border-primary-400"></div>
-							<div class="absolute -top-0.5 -right-0.5 h-2 w-2 border-t-2 border-r-2 border-primary-400"></div>
-							<div class="absolute -bottom-0.5 -left-0.5 h-2 w-2 border-b-2 border-l-2 border-primary-400"></div>
-							<div class="absolute -bottom-0.5 -right-0.5 h-2 w-2 border-b-2 border-r-2 border-primary-400"></div>
+							<div
+								class="border-primary-400 absolute -top-0.5 -left-0.5 h-2 w-2 border-t-2 border-l-2"
+							></div>
+							<div
+								class="border-primary-400 absolute -top-0.5 -right-0.5 h-2 w-2 border-t-2 border-r-2"
+							></div>
+							<div
+								class="border-primary-400 absolute -bottom-0.5 -left-0.5 h-2 w-2 border-b-2 border-l-2"
+							></div>
+							<div
+								class="border-primary-400 absolute -right-0.5 -bottom-0.5 h-2 w-2 border-r-2 border-b-2"
+							></div>
 						{/if}
 					</div>
 
 					<!-- Step label -->
 					<div class="text-center">
-						<p class="text-xs font-bold tracking-wider uppercase
-							{status === 'current' ? 'text-primary-400' : status === 'complete' ? 'text-surface-200' : 'text-surface-500'}">
+						<p
+							class="text-xs font-bold tracking-wider uppercase
+							{status === 'current'
+								? 'text-primary-400'
+								: status === 'complete'
+									? 'text-surface-200'
+									: 'text-surface-500'}"
+						>
 							{step.title}
 						</p>
-						<p class="hidden text-[10px] text-surface-500 sm:block">{step.description}</p>
+						<p class="text-surface-500 hidden text-[10px] sm:block">{step.description}</p>
 					</div>
 				</button>
 			{/each}
@@ -177,22 +194,28 @@
 	</div>
 
 	<!-- Content Panel -->
-	<div class="relative overflow-hidden rounded-sm border border-surface-700 bg-surface-900/80 backdrop-blur-sm">
+	<div
+		class="border-surface-700 bg-surface-900/80 relative overflow-hidden rounded-sm border backdrop-blur-sm"
+	>
 		<!-- Corner accents -->
-		<div class="absolute top-0 left-0 h-4 w-4 border-t-2 border-l-2 border-primary-500/50"></div>
-		<div class="absolute top-0 right-0 h-4 w-4 border-t-2 border-r-2 border-primary-500/50"></div>
-		<div class="absolute bottom-0 left-0 h-4 w-4 border-b-2 border-l-2 border-primary-500/50"></div>
-		<div class="absolute bottom-0 right-0 h-4 w-4 border-b-2 border-r-2 border-primary-500/50"></div>
+		<div class="border-primary-500/50 absolute top-0 left-0 h-4 w-4 border-t-2 border-l-2"></div>
+		<div class="border-primary-500/50 absolute top-0 right-0 h-4 w-4 border-t-2 border-r-2"></div>
+		<div class="border-primary-500/50 absolute bottom-0 left-0 h-4 w-4 border-b-2 border-l-2"></div>
+		<div
+			class="border-primary-500/50 absolute right-0 bottom-0 h-4 w-4 border-r-2 border-b-2"
+		></div>
 
 		<!-- Header bar -->
-		<div class="flex items-center justify-between border-b border-surface-700 bg-surface-800/50 px-4 py-3">
+		<div
+			class="border-surface-700 bg-surface-800/50 flex items-center justify-between border-b px-4 py-3"
+		>
 			<div class="flex items-center gap-2">
 				<Icon icon={STEPS[currentStep].icon} class="text-primary-400" />
-				<span class="text-sm font-bold tracking-wider text-surface-200 uppercase">
+				<span class="text-surface-200 text-sm font-bold tracking-wider uppercase">
 					{STEPS[currentStep].title}
 				</span>
 			</div>
-			<div class="flex items-center gap-2 text-xs text-surface-400">
+			<div class="text-surface-400 flex items-center gap-2 text-xs">
 				<span>Step {currentStep + 1} of {STEPS.length}</span>
 			</div>
 		</div>
@@ -203,18 +226,20 @@
 				<div class="space-y-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-3">
-							<div class="flex h-8 w-8 items-center justify-center rounded-sm bg-surface-800 border border-surface-600">
-								<span class="text-sm font-bold text-primary-400">{playerCount}</span>
+							<div
+								class="bg-surface-800 border-surface-600 flex h-8 w-8 items-center justify-center rounded-sm border"
+							>
+								<span class="text-primary-400 text-sm font-bold">{playerCount}</span>
 							</div>
-							<span class="text-sm text-surface-300">Players added</span>
+							<span class="text-surface-300 text-sm">Players added</span>
 						</div>
 						{#if !step1Valid}
-							<div class="flex items-center gap-2 text-xs text-warning-400">
+							<div class="text-warning-400 flex items-center gap-2 text-xs">
 								<Icon icon="mdi:alert" size="sm" />
 								<span>Need {MIN_PLAYERS - playerCount} more</span>
 							</div>
 						{:else}
-							<div class="flex items-center gap-2 text-xs text-success-400">
+							<div class="text-success-400 flex items-center gap-2 text-xs">
 								<Icon icon="mdi:check-circle" size="sm" />
 								<span>Ready to proceed</span>
 							</div>
@@ -239,12 +264,14 @@
 			disabled={currentStep === 0}
 			class="group flex items-center gap-2 px-4 py-2 text-sm font-bold tracking-wider uppercase transition-all duration-200
 				{currentStep === 0
-					? 'cursor-not-allowed text-surface-600'
-					: 'text-surface-300 hover:text-surface-100'}"
+				? 'text-surface-600 cursor-not-allowed'
+				: 'text-surface-300 hover:text-surface-100'}"
 		>
 			<Icon
 				icon="mdi:chevron-left"
-				class="transition-transform duration-200 {currentStep > 0 ? 'group-hover:-translate-x-1' : ''}"
+				class="transition-transform duration-200 {currentStep > 0
+					? 'group-hover:-translate-x-1'
+					: ''}"
 			/>
 			<span>Back</span>
 		</button>
@@ -255,8 +282,8 @@
 			disabled={!canProceed(currentStep)}
 			class="group relative flex items-center gap-2 overflow-hidden rounded-sm px-6 py-3 text-sm font-bold tracking-wider uppercase transition-all duration-300
 				{canProceed(currentStep)
-					? 'bg-gradient-to-r from-primary-600 to-primary-500 text-surface-50 shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:scale-105'
-					: 'cursor-not-allowed bg-surface-800 text-surface-500'}"
+				? 'from-primary-600 to-primary-500 text-surface-50 bg-gradient-to-r shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:scale-105 hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]'
+				: 'bg-surface-800 text-surface-500 cursor-not-allowed'}"
 		>
 			{#if currentStep === STEPS.length - 1}
 				<Icon icon="mdi:sword-cross" />
@@ -265,13 +292,17 @@
 				<span>Continue</span>
 				<Icon
 					icon="mdi:chevron-right"
-					class="transition-transform duration-200 {canProceed(currentStep) ? 'group-hover:translate-x-1' : ''}"
+					class="transition-transform duration-200 {canProceed(currentStep)
+						? 'group-hover:translate-x-1'
+						: ''}"
 				/>
 			{/if}
 
 			<!-- Shine effect on hover -->
 			{#if canProceed(currentStep)}
-				<div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full"></div>
+				<div
+					class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full"
+				></div>
 			{/if}
 		</button>
 	</div>

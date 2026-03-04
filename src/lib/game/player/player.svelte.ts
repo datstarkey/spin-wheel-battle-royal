@@ -8,16 +8,18 @@ import {
 	increaseGlobalHpReduction,
 	increaseShopConsumableCostModifier,
 	increaseShopCostModifier,
-	setHasShoppedThisTurn,
+	setHasShoppedThisTurn
+} from '$lib/stores/gameStore.svelte';
+import {
 	teleportFromShadowRealm,
 	teleportToRandomSpawn,
 	teleportToShadowRealm
-} from '$lib/stores/gameStore.svelte';
+} from '$lib/stores/teleportStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import type { Position } from '../board/types';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
-import type { SerializedPlayer } from '../serialization';
+import type { SerializedPlayer, StatType } from '../serialization';
 import { generateDamageTakenWheel } from '../wheels/damageTakenWheel';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
@@ -46,101 +48,43 @@ export class Player {
 	 * Stat Modifiers System
 	 */
 	// Track all stat modifiers by source (item name or status name)
-	private _statModifiersAttack = $state<Record<string, number>>({});
-	private _statModifiersDefense = $state<Record<string, number>>({});
-	private _statModifiersMovement = $state<Record<string, number>>({});
-	private _statModifiersAttackRange = $state<Record<string, number>>({});
-	private _statModifiersHp = $state<Record<string, number>>({});
-	
-	private get statModifiers() {
-		return {
-			attack: this._statModifiersAttack,
-			defense: this._statModifiersDefense,
-			movement: this._statModifiersMovement,
-			attackRange: this._statModifiersAttackRange,
-			hp: this._statModifiersHp
-		};
-	}
-	
+	private _statModifiers = $state<Record<StatType, Record<string, number>>>({
+		attack: {},
+		defense: {},
+		movement: {},
+		attackRange: {},
+		hp: {}
+	});
+
 	// Public getters for UI display
 	get activeModifiers() {
 		return {
-			attack: { ...this._statModifiersAttack },
-			defense: { ...this._statModifiersDefense },
-			movement: { ...this._statModifiersMovement },
-			attackRange: { ...this._statModifiersAttackRange },
-			hp: { ...this._statModifiersHp }
+			attack: { ...this._statModifiers.attack },
+			defense: { ...this._statModifiers.defense },
+			movement: { ...this._statModifiers.movement },
+			attackRange: { ...this._statModifiers.attackRange },
+			hp: { ...this._statModifiers.hp }
 		};
 	}
 
 	// Add or update a stat modifier
-	addStatModifier(source: string, stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp', value: number) {
-		switch(stat) {
-			case 'attack':
-				this._statModifiersAttack[source] = value;
-				break;
-			case 'defense':
-				this._statModifiersDefense[source] = value;
-				break;
-			case 'movement':
-				this._statModifiersMovement[source] = value;
-				break;
-			case 'attackRange':
-				this._statModifiersAttackRange[source] = value;
-				break;
-			case 'hp':
-				this._statModifiersHp[source] = value;
-				break;
-		}
+	addStatModifier(source: string, stat: StatType, value: number) {
+		this._statModifiers[stat][source] = value;
 		addAuditTrail(`${this.name} gains ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
 	}
 
 	// Remove a stat modifier
-	removeStatModifier(source: string, stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp') {
-		let value: number | undefined;
-		switch(stat) {
-			case 'attack':
-				value = this._statModifiersAttack[source];
-				if (value !== undefined) delete this._statModifiersAttack[source];
-				break;
-			case 'defense':
-				value = this._statModifiersDefense[source];
-				if (value !== undefined) delete this._statModifiersDefense[source];
-				break;
-			case 'movement':
-				value = this._statModifiersMovement[source];
-				if (value !== undefined) delete this._statModifiersMovement[source];
-				break;
-			case 'attackRange':
-				value = this._statModifiersAttackRange[source];
-				if (value !== undefined) delete this._statModifiersAttackRange[source];
-				break;
-			case 'hp':
-				value = this._statModifiersHp[source];
-				if (value !== undefined) delete this._statModifiersHp[source];
-				break;
-		}
+	removeStatModifier(source: string, stat: StatType) {
+		const value = this._statModifiers[stat][source];
 		if (value !== undefined) {
+			delete this._statModifiers[stat][source];
 			addAuditTrail(`${this.name} loses ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
 		}
 	}
 
 	// Get total modifier for a stat
-	getTotalStatModifier(stat: 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp'): number {
-		switch(stat) {
-			case 'attack':
-				return Object.values(this._statModifiersAttack).reduce((sum, value) => sum + value, 0);
-			case 'defense':
-				return Object.values(this._statModifiersDefense).reduce((sum, value) => sum + value, 0);
-			case 'movement':
-				return Object.values(this._statModifiersMovement).reduce((sum, value) => sum + value, 0);
-			case 'attackRange':
-				return Object.values(this._statModifiersAttackRange).reduce((sum, value) => sum + value, 0);
-			case 'hp':
-				return Object.values(this._statModifiersHp).reduce((sum, value) => sum + value, 0);
-			default:
-				return 0;
-		}
+	getTotalStatModifier(stat: StatType): number {
+		return Object.values(this._statModifiers[stat]).reduce((sum, value) => sum + value, 0);
 	}
 
 	private _inShadowRealm = $state(false);
@@ -225,7 +169,9 @@ export class Player {
 			if (delta > 0) {
 				addAuditTrail(`${this.name} healed ${delta} HP (${this._hp}/${this._maxHp})`);
 			} else {
-				addAuditTrail(`${this.name} took ${Math.abs(delta)} damage (${this._hp}/${this._maxHp} HP)`);
+				addAuditTrail(
+					`${this.name} took ${Math.abs(delta)} damage (${this._hp}/${this._maxHp} HP)`
+				);
 			}
 		}
 	}
@@ -248,7 +194,9 @@ export class Player {
 
 	public set class(value: ClassBase) {
 		const classType = Object.keys(classMap).find((key) => classMap[key as ClassType] === value);
-		this._class = classType as ClassType;
+		if (classType) {
+			this._class = classType as ClassType;
+		}
 	}
 
 	/**
@@ -338,6 +286,9 @@ export class Player {
 		this._bonusAttack = value;
 		addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
 	}
+	public get rawBonusAttack(): number {
+		return this._bonusAttack;
+	}
 
 	//Base
 	public get baseAttack(): number {
@@ -356,7 +307,9 @@ export class Player {
 	//Combine both as basic attack
 	public get attack(): number {
 		//Add brass knuckles multiplier after attack multipliers
-		return (this.bonusAttack + this.baseAttack + this.brassKnucklesMultiplier) * this.attackMultiplier;
+		return (
+			(this.bonusAttack + this.baseAttack + this.brassKnucklesMultiplier) * this.attackMultiplier
+		);
 	}
 
 	/**
@@ -390,6 +343,9 @@ export class Player {
 	public set bonusDefense(value: number) {
 		this._bonusDefense = value;
 		addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
+	}
+	public get rawBonusDefense(): number {
+		return this._bonusDefense;
 	}
 
 	public get defenseMultiplier(): number {
@@ -430,7 +386,7 @@ export class Player {
 		if (this._class && this._class !== 'none') {
 			this.removeStatModifier(`Class: ${this.class.name}`, 'defense');
 		}
-		
+
 		this._class = classType;
 		this._hp = this.class.hp;
 		this._baseAttack = this.class.attack;
@@ -440,12 +396,6 @@ export class Player {
 
 		if (this.classType == 'gambler') {
 			this._hp = this.class.startingGold ?? 0;
-		}
-		
-		// Apply class-specific passive modifiers
-		if (this.classType == 'gigachad') {
-			// GigaChad's defense bonus is handled dynamically in the getter
-			// No need to add it to modifiers
 		}
 	}
 
@@ -586,8 +536,8 @@ export class Player {
 		}
 	}
 
-	onTurnEnd() {
-		this.class.onTurnEnd?.(this);
+	onTurnEnd(context?: { hasMoved: boolean; totalMovement: number }) {
+		this.class.onTurnEnd?.(this, context);
 		this.gear.onTurnEnd();
 		this.statuses.onTurnEnd();
 	}
@@ -627,13 +577,7 @@ export class Player {
 			resources: this.resources,
 			gear: this.gear.serialize(),
 			statuses: this.statuses.serialize(),
-			statModifiers: {
-				attack: this._statModifiersAttack,
-				defense: this._statModifiersDefense,
-				movement: this._statModifiersMovement,
-				attackRange: this._statModifiersAttackRange,
-				hp: this._statModifiersHp
-			},
+			statModifiers: this._statModifiers,
 			position: this._position
 		};
 	}
@@ -658,11 +602,7 @@ export class Player {
 		player.defenseMultipliers = data.defenseMultipliers;
 		player._gold = data.gold;
 		player.resources = data.resources;
-		player._statModifiersAttack = data.statModifiers.attack;
-		player._statModifiersDefense = data.statModifiers.defense;
-		player._statModifiersMovement = data.statModifiers.movement;
-		player._statModifiersAttackRange = data.statModifiers.attackRange;
-		player._statModifiersHp = data.statModifiers.hp;
+		player._statModifiers = data.statModifiers;
 		player._position = data.position;
 		player.gear = PlayerGear.deserialize(data.gear, player);
 		player.statuses = PlayerStatuses.deserialize(data.statuses, player);

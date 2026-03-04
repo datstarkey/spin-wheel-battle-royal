@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { currentGame, getPlayerByName, syncPlayerPositionsToBoard } from '$lib/stores/gameStore.svelte';
+	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 	import GameBoard from '$lib/components/board/GameBoard.svelte';
 	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
@@ -8,16 +8,7 @@
 	let currentTurnPlayer = $derived(currentGame.value?.currentPlayer);
 
 	// All players in turn order
-	let allPlayers = $derived(
-		currentGame.value ? Object.values(currentGame.value.playerOrder) : []
-	);
-
-	// Sync player positions to the game board when the component mounts or game changes
-	$effect(() => {
-		if (currentGame.value?.started) {
-			syncPlayerPositionsToBoard();
-		}
-	});
+	let allPlayers = $derived(currentGame.value ? Object.values(currentGame.value.playerOrder) : []);
 </script>
 
 <!-- Game board as background layer (1:1 pixel mapping at 480x480) -->
@@ -37,7 +28,7 @@
 			{#if currentTurnPlayer}
 				<div class="sticky top-4">
 					<div
-						class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary-400"
+						class="text-primary-400 mb-3 flex items-center gap-2 text-xs font-semibold tracking-widest uppercase"
 					>
 						<iconify-icon icon="mdi:sword-cross" width="14"></iconify-icon>
 						<span>Active Turn</span>
@@ -53,9 +44,9 @@
 		</div>
 
 		<!-- Right side: All players in turn order (isolate creates new stacking context) -->
-		<div class="pointer-events-auto w-96 shrink-0 isolate">
+		<div class="pointer-events-auto isolate w-96 shrink-0">
 			<div
-				class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-surface-400"
+				class="text-surface-400 mb-3 flex items-center gap-2 text-xs font-semibold tracking-widest uppercase"
 			>
 				<iconify-icon icon="mdi:account-group" width="14"></iconify-icon>
 				<span>Turn Order</span>

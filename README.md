@@ -1,6 +1,7 @@
 # Spin-Wheel The Game
 
 ## Rules
+
 Todo
 
 [Demo](https://spin.jakestarkey.dev)

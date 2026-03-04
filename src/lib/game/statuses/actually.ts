@@ -36,14 +36,10 @@ export const actually: StatusEffect = {
 
 	onDefendWin(player, _attackingPlayer) {
 		// Successfully defending proves you were right
-		addAuditTrail(
-			`${player.name}: "I told you so." The smugness is palpable.`
-		);
+		addAuditTrail(`${player.name}: "I told you so." The smugness is palpable.`);
 	},
 
 	onTurnStart(player) {
-		addAuditTrail(
-			`${player.name} adjusts their glasses: "Well, ACTUALLY..."`
-		);
+		addAuditTrail(`${player.name} adjusts their glasses: "Well, ACTUALLY..."`);
 	}
 };

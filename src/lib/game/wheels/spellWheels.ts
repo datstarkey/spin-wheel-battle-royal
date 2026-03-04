@@ -1,6 +1,7 @@
 import { addCustomWheel, currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import type { Player } from '../player/player.svelte';
+import { addResource, getResource, setResource } from '../player/playerResources';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 import { generateWinWheel } from './winWheel';
@@ -15,16 +16,15 @@ export const RUNE_OF_POWER_TURNS_KEY = 'RuneOfPowerTurns';
 // ============================================================================
 
 export function getMana(player: Player): number {
-	return player.resources[MANA_RESOURCE] ?? 0;
+	return getResource(player, MANA_RESOURCE);
 }
 
 export function setMana(player: Player, amount: number) {
-	player.resources[MANA_RESOURCE] = Math.max(0, Math.min(MAX_MANA, amount));
+	setResource(player, MANA_RESOURCE, amount, 0, MAX_MANA);
 }
 
 export function addMana(player: Player, amount: number) {
-	const current = getMana(player);
-	setMana(player, current + amount);
+	addResource(player, MANA_RESOURCE, amount, 0, MAX_MANA);
 }
 
 export function spendMana(player: Player, amount: number): boolean {
@@ -46,15 +46,15 @@ export function canCastSpell(player: Player, manaCost: number): boolean {
 // ============================================================================
 
 export function getRuneOfPowerTurns(player: Player): number {
-	return player.resources[RUNE_OF_POWER_TURNS_KEY] ?? 0;
+	return getResource(player, RUNE_OF_POWER_TURNS_KEY);
 }
 
 export function incrementRuneOfPowerTurns(player: Player) {
-	player.resources[RUNE_OF_POWER_TURNS_KEY] = getRuneOfPowerTurns(player) + 1;
+	addResource(player, RUNE_OF_POWER_TURNS_KEY, 1);
 }
 
 export function resetRuneOfPowerTurns(player: Player) {
-	player.resources[RUNE_OF_POWER_TURNS_KEY] = 0;
+	setResource(player, RUNE_OF_POWER_TURNS_KEY, 0);
 }
 
 // ============================================================================
@@ -267,7 +267,9 @@ export function generateMajorSpellWheel(playerName: string, targetPlayer?: Playe
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					currentGame.value?.skipNextTurn(targetPlayer);
-					toast.success(`${player.name} polymorphs ${targetPlayer.name}! They skip their next turn!`);
+					toast.success(
+						`${player.name} polymorphs ${targetPlayer.name}! They skip their next turn!`
+					);
 				} else {
 					generateRandomPlayerWheel(`${player.name}'s Polymorph Target`, (target) => {
 						currentGame.value?.skipNextTurn(target);
@@ -302,7 +304,9 @@ export function generateUltimateSpellWheel(playerName: string, targetPlayer?: Pl
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 60;
-					toast.success(`${player.name} calls down a METEOR on ${targetPlayer.name} for 60 damage!`);
+					toast.success(
+						`${player.name} calls down a METEOR on ${targetPlayer.name} for 60 damage!`
+					);
 				} else {
 					generateRandomPlayerWheel(`${player.name}'s Meteor Strike Target`, (target) => {
 						target.hp -= 60;
@@ -330,7 +334,9 @@ export function generateUltimateSpellWheel(playerName: string, targetPlayer?: Pl
 			onWin: () => {
 				player.baseAttack += 25;
 				player.baseDefense += 15;
-				toast.success(`${player.name} achieves ARCANE SUPREMACY! +25 attack, +15 defense permanently!`);
+				toast.success(
+					`${player.name} achieves ARCANE SUPREMACY! +25 attack, +15 defense permanently!`
+				);
 			}
 		},
 		{

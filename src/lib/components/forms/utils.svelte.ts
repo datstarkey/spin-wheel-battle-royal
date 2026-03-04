@@ -11,13 +11,7 @@ export function createForm<T>(type: z.ZodType<T>, initialValue: T, onValid: (val
 			};
 			for (const issue of result.error.issues) {
 				errors[issue.path.join('.')] = issue.message;
-				// errors[issue.path.join('.')] = issue.message;
-				// 	updater[issue.path.join('.')] = issue.message;
-				// 	return updater;
-				// });
-				// console.log(errors);
 			}
-			console.log(errors);
 		} else {
 			onValid(body);
 		}
@@ -39,7 +33,5 @@ export function createForm<T>(type: z.ZodType<T>, initialValue: T, onValid: (val
 
 export function errorClass(key: string, errors: Record<string, string>) {
 	if (!errors['hasRan']) return '';
-	const result = errors[key] ? 'input-error' : 'input-success';
-	console.log(result);
-	return result;
+	return errors[key] ? 'input-error' : 'input-success';
 }

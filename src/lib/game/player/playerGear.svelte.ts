@@ -208,7 +208,7 @@ export class PlayerGear {
 			toast.error('Consumable not found in inventory');
 			return;
 		}
-		
+
 		const actualItem = getItemByType(item);
 		actualItem?.onUse?.(this.player);
 

@@ -63,12 +63,16 @@ function isConsumable(value: unknown): value is Consumables {
 }
 
 function isAllItems(value: unknown): value is AllItems {
-	return isMainHand(value) || isOffHand(value) || isHelm(value) || isChest(value) || isConsumable(value);
+	return (
+		isMainHand(value) || isOffHand(value) || isHelm(value) || isChest(value) || isConsumable(value)
+	);
 }
 
 // ============================================================================
 // Serialized Data Types
 // ============================================================================
+
+export type StatType = 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp';
 
 export interface SerializedStatModifiers {
 	attack: Record<string, number>;
@@ -152,7 +156,10 @@ export interface SerializedGame {
 // Validation Functions
 // ============================================================================
 
-function validateNumberRecord(data: unknown, defaultValue: Record<string, number> = {}): Record<string, number> {
+function validateNumberRecord(
+	data: unknown,
+	defaultValue: Record<string, number> = {}
+): Record<string, number> {
 	if (!isObject(data)) return defaultValue;
 	const result: Record<string, number> = {};
 	for (const [key, value] of Object.entries(data)) {
@@ -276,7 +283,9 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 		bonusAttack: isNumber(data.bonusAttack) ? data.bonusAttack : 0,
 		baseAttack: isNumber(data.baseAttack) ? data.baseAttack : 1,
 		attackMultipliers: validateNumberRecord(data.attackMultipliers),
-		brassKnucklesMultiplier: isNumber(data.brassKnucklesMultiplier) ? data.brassKnucklesMultiplier : 0,
+		brassKnucklesMultiplier: isNumber(data.brassKnucklesMultiplier)
+			? data.brassKnucklesMultiplier
+			: 0,
 		baseDefense: isNumber(data.baseDefense) ? data.baseDefense : 0,
 		bonusDefense: isNumber(data.bonusDefense) ? data.bonusDefense : 0,
 		// Handle both the typo (defenseMultiplier) and correct name (defenseMultipliers)
@@ -403,7 +412,9 @@ export function validateGame(data: unknown): SerializedGame | null {
 		itemCostModifiers,
 		auditTrail,
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,
-		shopConsumableCostModifier: isNumber(data.shopConsumableCostModifier) ? data.shopConsumableCostModifier : 0,
+		shopConsumableCostModifier: isNumber(data.shopConsumableCostModifier)
+			? data.shopConsumableCostModifier
+			: 0,
 		shopItems,
 		shopRerollCost: isNumber(data.shopRerollCost) ? data.shopRerollCost : undefined,
 		hasTurnStarted: isBoolean(data.hasTurnStarted) ? data.hasTurnStarted : false,

@@ -55,13 +55,18 @@
 						<td>{Number(order) + 1}</td>
 						<td>{player.name}</td>
 						<td>
-						<span class="preset-filled chip flex items-center gap-1">
-							{#if player.class.icon}
-								<img src={player.class.icon} alt="" class="h-4 w-4" style="image-rendering: pixelated;" />
-							{/if}
-							{player.class.name}
-						</span>
-					</td>
+							<span class="preset-filled chip flex items-center gap-1">
+								{#if player.class.icon}
+									<img
+										src={player.class.icon}
+										alt=""
+										class="h-4 w-4"
+										style="image-rendering: pixelated;"
+									/>
+								{/if}
+								{player.class.name}
+							</span>
+						</td>
 					</tr>
 				{/if}
 			{/each}

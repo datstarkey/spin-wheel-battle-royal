@@ -31,9 +31,11 @@
 </script>
 
 <div
-	class="rounded-full border-2 border-white flex items-center justify-center relative font-bold text-white z-10
+	class="relative z-10 flex items-center justify-center rounded-full border-2 border-white font-bold text-white
 		{player.dead ? 'opacity-40 grayscale' : ''}
-		{player.inShadowRealm ? 'border-[#430067] shadow-[0_0_8px_#6a00a3,0_2px_4px_rgba(0,0,0,0.3)]' : 'shadow-[0_2px_4px_rgba(0,0,0,0.3)]'}"
+		{player.inShadowRealm
+		? 'border-[#430067] shadow-[0_0_8px_#6a00a3,0_2px_4px_rgba(0,0,0,0.3)]'
+		: 'shadow-[0_2px_4px_rgba(0,0,0,0.3)]'}"
 	style:background-color={color}
 	style:width="{size}px"
 	style:height="{size}px"
@@ -52,11 +54,11 @@
 		<span class="select-none">{initials}</span>
 	{/if}
 	{#if isCurrentPlayer}
-		<div class="absolute -inset-1 border-2 border-yellow-400 rounded-full animate-pulse"></div>
+		<div class="absolute -inset-1 animate-pulse rounded-full border-2 border-yellow-400"></div>
 	{/if}
 	{#if player.inShadowRealm}
 		<div
-			class="absolute -inset-0.5 rounded-full pointer-events-none"
+			class="pointer-events-none absolute -inset-0.5 rounded-full"
 			style="background: radial-gradient(circle, transparent 60%, rgba(106, 0, 163, 0.4) 100%);"
 		></div>
 	{/if}

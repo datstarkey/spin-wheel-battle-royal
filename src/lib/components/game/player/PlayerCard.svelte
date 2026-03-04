@@ -1,31 +1,24 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { generateButtonWheel } from '$lib/game/wheels/buttonWheel';
-	import { generateDamageTakenWheel } from '$lib/game/wheels/damageTakenWheel';
-	import { generateGamblerWheel } from '$lib/game/wheels/gamblerWheel';
-	import { generateLootWheel } from '$lib/game/wheels/lootWheel';
-	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
-	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
-	import { generateWinWheel } from '$lib/game/wheels/winWheel';
 	import {
 		generateMinorSpellWheel,
 		generateMajorSpellWheel,
 		generateUltimateSpellWheel,
-		getMana,
 		canCastSpell,
 		MAX_MANA
 	} from '$lib/game/wheels/spellWheels';
+	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
+	import { currentGame } from '$lib/stores/gameStore.svelte';
 	import {
-		currentGame,
 		enterMovementMode,
 		exitMovementMode,
 		getHasMovedThisTurn,
 		getIsMovementMode
-	} from '$lib/stores/gameStore.svelte';
-	import toast from '$lib/stores/toaster.svelte';
+	} from '$lib/stores/movementStore.svelte';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
+	import WheelDropdown from './WheelDropdown.svelte';
 
 	// Derive movement state
 	let isMovementMode = $derived(getIsMovementMode());
@@ -39,40 +32,16 @@
 	let { player, currentTurnPlayer }: Props = $props();
 
 	let isAttackWindowOpen = $state(false);
-	let wheelDropdownOpen = $state(false);
-
-	const wheels = [
-		{ name: 'Loot Wheel', action: () => generateLootWheel(player.name) },
-		{ name: 'Win Wheel', action: () => generateWinWheel(player.name) },
-		{ name: 'Lose Wheel', action: () => generateLoseWheel(player.name) },
-		{ name: 'Button Wheel', action: () => generateButtonWheel(player.name) },
-		{ name: 'Damage Taken Wheel', action: () => generateDamageTakenWheel(player.name) },
-		{
-			name: 'Shadow Realm Wheel',
-			action: () => generateShadowRealmWheel(player.name),
-			condition: () => player.inShadowRealm
-		},
-		{
-			name: 'Gambler Wheel',
-			action: () => generateGamblerWheel(player.name),
-			condition: () => player.classType === 'gambler'
-		}
-	];
-
-	function addWheel(wheel: (typeof wheels)[0]) {
-		wheel.action();
-		toast.success(`${wheel.name} Added`);
-		wheelDropdownOpen = false;
-	}
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
-	let hpPercent = $derived(Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100)));
+	let hpPercent = $derived(
+		Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100))
+	);
 </script>
 
 <div
 	class="bg-surface-900/95 border-surface-500/30 relative rounded border p-4 transition-all duration-300
-		{wheelDropdownOpen ? 'z-50' : ''}
 		{isActiveTurn
 		? 'border-primary-500/50 shadow-[0_0_20px_rgba(220,38,38,0.2),inset_0_0_30px_rgba(220,38,38,0.05)]'
 		: ''}
@@ -140,43 +109,16 @@
 				{player.inShadowRealm ? 'from-tertiary-500 to-tertiary-700 bg-gradient-to-br' : ''}"
 			>
 				{#if player.class.icon}
-				<img src={player.class.icon} alt="" class="h-4 w-4" style="image-rendering: pixelated;" />
-			{/if}
-			<span class="text-[0.65rem] font-semibold tracking-widest text-white uppercase"
+					<img src={player.class.icon} alt="" class="h-4 w-4" style="image-rendering: pixelated;" />
+				{/if}
+				<span class="text-[0.65rem] font-semibold tracking-widest text-white uppercase"
 					>{player.class.name}</span
 				>
 			</div>
 		</div>
 
 		<div class="flex items-center gap-1">
-			<div class="relative">
-				<button
-					class="text-surface-300 hover:border-primary-500 hover:text-surface-100 flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 transition-all hover:bg-white/10"
-					onclick={() => (wheelDropdownOpen = !wheelDropdownOpen)}
-					title="Add Wheel"
-				>
-					<Icon icon="mdi:tire" />
-				</button>
-				{#if wheelDropdownOpen}
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<div class="fixed inset-0 z-40" onclick={() => (wheelDropdownOpen = false)}></div>
-					<div
-						class="bg-surface-950 absolute top-full right-0 z-50 mt-1 min-w-40 overflow-hidden rounded border border-white/10 shadow-xl"
-					>
-						{#each wheels as wheel (wheel.name)}
-							{#if !wheel.condition || wheel.condition()}
-								<button
-									class="text-surface-300 hover:text-surface-100 w-full border-none bg-transparent px-3 py-2 text-left text-xs transition-all hover:bg-white/5"
-									onclick={() => addWheel(wheel)}
-								>
-									{wheel.name}
-								</button>
-							{/if}
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<WheelDropdown {player} />
 			<EditPlayer {player} />
 		</div>
 	</header>
@@ -297,11 +239,11 @@
 					</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
 						<div
-							class="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-300 shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+							class="h-full bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.5)] transition-all duration-300"
 							style:width="{(manaAmount / MAX_MANA) * 100}%"
 						></div>
 					</div>
-					<span class="text-violet-300 min-w-[45px] text-right text-[0.65rem] font-semibold"
+					<span class="min-w-[45px] text-right text-[0.65rem] font-semibold text-violet-300"
 						>{manaAmount}/{MAX_MANA}</span
 					>
 				</div>
@@ -309,15 +251,15 @@
 
 			<!-- Always show SWEnergy bar for SWE -->
 			{#if player.classType === 'swe'}
-				{@const swenergyAmount = player.resources['SWEnergy'] ?? 0}
+				{@const swenergyAmount = player.resources[SWENERGY_RESOURCE] ?? 0}
 				<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
 					<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
-						<Icon icon="mdi:code-braces" class="text-xs text-secondary-400" />
+						<Icon icon="mdi:code-braces" class="text-secondary-400 text-xs" />
 						SWEnergy
 					</span>
 					<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
 						<div
-							class="h-full bg-gradient-to-r from-secondary-500 to-secondary-400 transition-all duration-300"
+							class="from-secondary-500 to-secondary-400 h-full bg-gradient-to-r transition-all duration-300"
 							style:width="{(swenergyAmount / 10) * 100}%"
 						></div>
 					</div>
@@ -329,7 +271,7 @@
 
 			<!-- Other resources (excluding class-specific ones already shown) -->
 			{#each Object.entries(player.resources) as [resource, amount] (resource)}
-				{#if resource !== 'Mana' && resource !== 'SWEnergy' && resource !== 'RuneOfPowerTurns'}
+				{#if resource !== 'Mana' && resource !== SWENERGY_RESOURCE && resource !== 'RuneOfPowerTurns'}
 					<div class="mt-1 flex items-center gap-1.5 rounded-sm bg-black/20 px-2 py-1 text-xs">
 						<Icon icon="mdi:cube-outline" class="text-teal-400" />
 						<span>{resource}</span>
@@ -412,7 +354,7 @@
 			<div class="flex flex-wrap gap-1">
 				{#each player.statuses.statuses as status (status.status.name)}
 					<div
-						class="group relative border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 cursor-help"
+						class="group border-warning-500/20 bg-warning-500/10 relative flex cursor-help items-center gap-1.5 rounded-sm border px-1.5 py-0.5"
 					>
 						<span class="text-warning-400 text-[0.6rem]">{status.status.name}</span>
 						{#if status.duration && status.duration > 0}
@@ -436,7 +378,7 @@
 							</div>
 							<!-- Arrow -->
 							<div
-								class="border-surface-950 absolute left-1/2 -translate-x-1/2 border-4 border-b-0 border-l-transparent border-r-transparent"
+								class="border-surface-950 absolute left-1/2 -translate-x-1/2 border-4 border-b-0 border-r-transparent border-l-transparent"
 							></div>
 						</div>
 					</div>
@@ -500,10 +442,11 @@
 
 			<!-- Magic Man Spell Buttons -->
 			{#if player.classType === 'magicman'}
-				{@const mana = getMana(player)}
 				{@const hasFought = currentGame.value?.hasFought === true}
 				<div class="mb-3">
-					<div class="text-surface-400 mb-2 flex items-center gap-1.5 text-[0.6rem] font-semibold tracking-[0.15em] uppercase">
+					<div
+						class="text-surface-400 mb-2 flex items-center gap-1.5 text-[0.6rem] font-semibold tracking-[0.15em] uppercase"
+					>
 						<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
 						<span>Cast Spell</span>
 						{#if hasFought}
@@ -521,7 +464,7 @@
 							}}
 							title="Minor Spell - 25 Mana"
 						>
-							<Icon icon="mdi:star-outline" class="text-violet-400 text-lg" />
+							<Icon icon="mdi:star-outline" class="text-lg text-violet-400" />
 							<span class="text-[0.6rem] font-bold text-violet-300">Minor</span>
 							<span class="text-[0.5rem] text-violet-400/70">25 MP</span>
 						</button>
@@ -536,7 +479,7 @@
 							}}
 							title="Major Spell - 50 Mana"
 						>
-							<Icon icon="mdi:star-half-full" class="text-violet-400 text-lg" />
+							<Icon icon="mdi:star-half-full" class="text-lg text-violet-400" />
 							<span class="text-[0.6rem] font-bold text-violet-300">Major</span>
 							<span class="text-[0.5rem] text-violet-400/70">50 MP</span>
 						</button>
@@ -551,7 +494,7 @@
 							}}
 							title="Ultimate Spell - 100 Mana"
 						>
-							<Icon icon="mdi:star-shooting" class="text-violet-300 text-lg animate-pulse" />
+							<Icon icon="mdi:star-shooting" class="animate-pulse text-lg text-violet-300" />
 							<span class="text-[0.6rem] font-bold text-violet-200">Ultimate</span>
 							<span class="text-[0.5rem] text-violet-400/70">100 MP</span>
 						</button>

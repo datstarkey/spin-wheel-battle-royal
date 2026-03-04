@@ -37,7 +37,16 @@ export class IndexDbStorageStore<T> {
 
 	private async loadValue() {
 		const localValue = await get(this.key);
-		this.value = localValue ? (superjson.parse<T>(localValue) as T) : (this.initialValue as T);
+		if (localValue) {
+			try {
+				this.value = superjson.parse<T>(localValue) as T;
+			} catch (e) {
+				console.error(`Failed to parse IndexDB value for key "${this.key}":`, e);
+				this.value = this.initialValue as T;
+			}
+		} else {
+			this.value = this.initialValue as T;
+		}
 		this.loaded = true;
 	}
 }
@@ -48,7 +57,16 @@ export class LocalStorageStore<T> {
 	constructor(key: string, initialValue: T) {
 		if (browser) {
 			const localValue = localStorage.getItem(key);
-			this.value = localValue ? (superjson.parse<T>(localValue) as T) : (initialValue as T);
+			if (localValue) {
+				try {
+					this.value = superjson.parse<T>(localValue) as T;
+				} catch (e) {
+					console.error(`Failed to parse localStorage value for key "${key}":`, e);
+					this.value = initialValue as T;
+				}
+			} else {
+				this.value = initialValue as T;
+			}
 		} else {
 			this.value = initialValue as T;
 		}

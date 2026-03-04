@@ -62,7 +62,9 @@ export const Gorf: ClassBase = {
 		// Grudge: +25% damage vs last attacker
 		if (isGrudgeTarget(player, defendingPlayer.name)) {
 			player.attackMultipliers[GRUDGE_BONUS] = 1.25;
-			addAuditTrail(`${player.name} attacks their Grudge target ${defendingPlayer.name}! +25% damage! 🔥`);
+			addAuditTrail(
+				`${player.name} attacks their Grudge target ${defendingPlayer.name}! +25% damage! 🔥`
+			);
 		}
 	},
 

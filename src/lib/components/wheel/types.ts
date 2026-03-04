@@ -5,4 +5,14 @@ export type SpinWheelItem = {
 	onWin?: (...args: never[]) => void;
 };
 
-export type WheelTheme = 'win' | 'lose' | 'loot' | 'casino' | 'shadow' | 'gambler' | 'damage' | 'button' | 'magic' | 'default';
+export type WheelTheme =
+	| 'win'
+	| 'lose'
+	| 'loot'
+	| 'casino'
+	| 'shadow'
+	| 'gambler'
+	| 'damage'
+	| 'button'
+	| 'magic'
+	| 'default';

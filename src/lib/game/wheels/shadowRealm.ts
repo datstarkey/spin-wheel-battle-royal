@@ -7,7 +7,6 @@ import {
 } from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { addShade } from '../classes/shadeweaver';
-import type { Player } from '../player/player.svelte';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 import type { WheelBase } from './wheels';
 
@@ -43,7 +42,7 @@ export function generateShadowRealmWheel(playerName: string) {
 		},
 		{
 			label: 'Lose 5 gold',
-			onWin: (player: Player) => {
+			onWin: () => {
 				player.gold -= 5;
 				addAuditTrail(`${player.name} lost 5 gold in the Shadow Realm`);
 			}

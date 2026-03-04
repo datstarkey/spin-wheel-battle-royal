@@ -1,18 +1,14 @@
-import type { Player } from '../../player/player.svelte';
 import type { Item } from '../itemTypes';
+import { createStatModifierItem } from '../itemFactory';
 
-export const Kevlar: Item = {
-	name: 'Kevlar',
-	description: 'Gain +15 Defense',
-	type: 'chest',
-	baseCost: 3,
-	maxAmount: 1,
-	image: '/Items/ChestEquipables/KevlarVest.svg',
-
-	onEquip: (player: Player) => {
-		player.addStatModifier('Kevlar', 'defense', 15);
+export const Kevlar: Item = createStatModifierItem(
+	{
+		name: 'Kevlar',
+		description: 'Gain +15 Defense',
+		type: 'chest',
+		baseCost: 3,
+		maxAmount: 1,
+		image: '/Items/ChestEquipables/KevlarVest.svg'
 	},
-	onUnequip: (player: Player) => {
-		player.removeStatModifier('Kevlar', 'defense');
-	}
-};
+	[{ stat: 'defense', value: 15 }]
+);

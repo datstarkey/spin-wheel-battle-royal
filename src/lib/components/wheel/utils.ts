@@ -16,7 +16,7 @@ export function classSpinItems(): SpinWheelItem[] {
 		.map((x) => ({ label: x }));
 }
 
-export function shuffle(array: SpinWheelItem[]) {
+export function shuffle<T>(array: T[]): T[] {
 	let currentIndex = array.length,
 		randomIndex;
 

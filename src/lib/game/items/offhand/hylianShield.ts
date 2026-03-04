@@ -1,17 +1,13 @@
-import type { Player } from '$lib/game/player/player.svelte';
 import type { Item } from '../itemTypes';
+import { createStatModifierItem } from '../itemFactory';
 
-export const HylianShield: Item = {
-	name: 'Hylian Shield',
-	description: 'Gain +20 Defense',
-	type: 'offHand',
-	baseCost: 3,
-	image: '/Items/OffHandEquipables/HylianShield.svg',
-
-	onEquip: (player: Player) => {
-		player.addStatModifier('Hylian Shield', 'defense', 20);
+export const HylianShield: Item = createStatModifierItem(
+	{
+		name: 'Hylian Shield',
+		description: 'Gain +20 Defense',
+		type: 'offHand',
+		baseCost: 3,
+		image: '/Items/OffHandEquipables/HylianShield.svg'
 	},
-	onUnequip: (player: Player) => {
-		player.removeStatModifier('Hylian Shield', 'defense');
-	}
-};
+	[{ stat: 'defense', value: 20 }]
+);

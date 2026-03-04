@@ -8,6 +8,6 @@ export const vodkaRedbull: Item = {
 	type: 'consumables',
 	maxAmount: 5,
 	onUse(player) {
-		player.statuses.addStatus("VodkaRedbull")
+		player.statuses.addStatus('VodkaRedbull');
 	}
 };
