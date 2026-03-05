@@ -1,4 +1,5 @@
 import type { ClassType } from '../classes/classType';
+import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { BarbarianHarness } from './chest/barbarianHarness';
 import { GoFasterStripes } from './chest/goFasterStripes';
@@ -28,19 +29,19 @@ export interface Item {
 	classLocks?: ClassType[];
 	maxAmount?: number;
 
-	onUse?: (player: Player) => void;
-	onEquip?: (player: Player, type: ItemType) => void;
-	onUnequip?: (player: Player, type: ItemType) => void;
-	onAttackWin?: (player: Player, defendingPlayer: Player) => void;
-	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
-	onDefendWin?: (player: Player, playerAttackingYou: Player) => void;
-	onDefendLose?: (player: Player, playerAttackingYou: Player) => void;
-	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
-	onDefenseStart?: (player: Player, playerAttackingYou: Player) => void;
-	onDefenseEnd?: (player: Player, playerAttackingYou: Player) => void;
-	onTurnStart?: (player: Player) => void;
-	onTurnEnd?: (player: Player) => void;
+	onUse?: (player: Player, ctx: GameContext) => void;
+	onEquip?: (player: Player, type: ItemType, ctx: GameContext) => void;
+	onUnequip?: (player: Player, type: ItemType, ctx: GameContext) => void;
+	onAttackWin?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefendWin?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onDefendLose?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefenseStart?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onDefenseEnd?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onTurnStart?: (player: Player, ctx: GameContext) => void;
+	onTurnEnd?: (player: Player, ctx: GameContext) => void;
 }
 
 export const mainhands = {

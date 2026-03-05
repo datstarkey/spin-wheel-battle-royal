@@ -1,4 +1,3 @@
-import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource } from '../player/playerResources';
 import { generateRandomPlayerWheel } from '../wheels/randomPlayerWheel';
@@ -39,13 +38,13 @@ export const Shadeweaver: ClassBase = {
 		return Math.floor((shade / 100) * player.baseDefense);
 	},
 
-	onAttackWin: (player) => {
+	onAttackWin: (player, _defendingPlayer, ctx) => {
 		generateRandomPlayerWheel(
 			`${player.name} Makes someone roll the Shadow Realm Wheel`,
 			(winner) => {
-				generateShadowRealmWheel(winner.name, getServerGameContext());
+				generateShadowRealmWheel(winner.name, ctx);
 			},
-			getServerGameContext()
+			ctx
 		);
 	}
 };

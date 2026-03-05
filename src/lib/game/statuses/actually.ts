@@ -27,7 +27,6 @@ export const actually: StatusEffect = {
 		);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackWin(player, _defendingPlayer) {
 		// Correcting people gives a small heal
 		player.hp += 5;
@@ -36,7 +35,6 @@ export const actually: StatusEffect = {
 		);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onDefendWin(player, _attackingPlayer) {
 		// Successfully defending proves you were right
 		player.game?.addAuditTrail(`${player.name}: "I told you so." The smugness is palpable.`);

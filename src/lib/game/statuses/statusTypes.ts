@@ -1,4 +1,5 @@
 import type { ClassType } from '../classes/classType';
+import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { actually } from './actually';
 import { archmage } from './archmage';
@@ -18,18 +19,18 @@ export interface StatusEffect {
 	turnDuration?: number;
 	allowMultiple?: boolean;
 	classLock?: ClassType[];
-	onApply?: (player: Player) => void;
-	onRemove?: (player: Player) => void;
-	onTurnStart?: (player: Player) => void;
-	onTurnEnd?: (player: Player) => void;
-	onAttackWin?: (player: Player, defendingPlayer: Player) => void;
-	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
-	onDefendWin?: (player: Player, playerAttackingYou: Player) => void;
-	onDefendLose?: (player: Player, playerAttackingYou: Player) => void;
-	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
-	onDefenseStart?: (player: Player, playerAttackingYou: Player) => void;
-	onDefenseEnd?: (player: Player, playerAttackingYou: Player) => void;
+	onApply?: (player: Player, ctx: GameContext) => void;
+	onRemove?: (player: Player, ctx: GameContext) => void;
+	onTurnStart?: (player: Player, ctx: GameContext) => void;
+	onTurnEnd?: (player: Player, ctx: GameContext) => void;
+	onAttackWin?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefendWin?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onDefendLose?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefenseStart?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
+	onDefenseEnd?: (player: Player, playerAttackingYou: Player, ctx: GameContext) => void;
 }
 
 const statusEffects = {

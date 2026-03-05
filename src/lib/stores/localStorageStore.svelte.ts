@@ -5,32 +5,39 @@ import superjson from 'superjson';
 const stores = new Map<string, any>();
 
 export class LocalStorageStore<T> {
-	value: T = $state<T>()!;
+	private _value: T = $state<T>()!;
+	private key: string;
 
 	constructor(key: string, initialValue: T) {
+		this.key = key;
+
 		if (browser) {
 			const localValue = localStorage.getItem(key);
 			if (localValue) {
 				try {
-					this.value = superjson.parse<T>(localValue) as T;
+					this._value = superjson.parse<T>(localValue) as T;
 				} catch (e) {
 					console.error(`Failed to parse localStorage value for key "${key}":`, e);
-					this.value = initialValue as T;
+					this._value = initialValue as T;
 				}
 			} else {
-				this.value = initialValue as T;
+				this._value = initialValue as T;
 			}
 		} else {
-			this.value = initialValue as T;
+			this._value = initialValue as T;
 		}
+	}
 
-		$effect.root(() => {
-			$effect(() => {
-				if (browser) {
-					localStorage.setItem(key, superjson.stringify(this.value));
-				}
-			});
-		});
+	get value(): T {
+		return this._value;
+	}
+
+	/** Setting value also persists to localStorage. */
+	set value(newValue: T) {
+		this._value = newValue;
+		if (browser) {
+			localStorage.setItem(this.key, superjson.stringify(newValue));
+		}
 	}
 }
 

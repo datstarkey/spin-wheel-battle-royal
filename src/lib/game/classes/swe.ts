@@ -1,4 +1,3 @@
-import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
@@ -15,7 +14,7 @@ export const Swe: ClassBase = {
 	icon: '/Classes/Swe.svg',
 	description: 'Masters of Swenergy, gaining and utilizing it to become the Swe Supreme.',
 	onWinAbility: 'Generate Swesupreme energy (spin swheel)',
-	onAttackWin(player) {
+	onAttackWin(player, _defendingPlayer, ctx) {
 		const wheel: WheelBase = [];
 		for (let index = 1; index < 10; index++) {
 			wheel.push({
@@ -32,16 +31,16 @@ export const Swe: ClassBase = {
 			}
 		});
 
-		getServerGameContext().addCustomWheel(`Swenergy for ${player.name}`, wheel);
+		ctx.addCustomWheel(`Swenergy for ${player.name}`, wheel);
 	},
 
-	onTurnStart(player) {
+	onTurnStart(player, _ctx) {
 		if (!player.statuses.hasStatus('Swesupreme')) {
 			increaseSwenergy(player, 1);
 		}
 	},
 
-	onTurnEnd(player) {
+	onTurnEnd(player, _ctx, _context) {
 		if (player.statuses.hasStatus('Swesupreme')) {
 			reduceSwenergy(player, 2);
 		}

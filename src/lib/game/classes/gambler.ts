@@ -12,11 +12,10 @@ export function updateLuckyStreakMultipliers(player: Player) {
 	const streak = getResource(player, LUCKY_STREAK_RESOURCE);
 	if (streak > 0) {
 		// Each stack gives +10% multiplier (0.1 per stack)
-		// Attack multipliers are additive (summed then added to 1)
-		// Defense multipliers are multiplicative (multiplied starting at 1)
-		const multiplierBonus = streak * 0.1;
+		// Both attack and defense multipliers are multiplicative (multiplied starting at 1)
+		const multiplierBonus = 1 + streak * 0.1;
 		player.attackMultipliers[LUCKY_STREAK_MULTIPLIER_KEY] = multiplierBonus;
-		player.defenseMultipliers[LUCKY_STREAK_MULTIPLIER_KEY] = 1 + multiplierBonus;
+		player.defenseMultipliers[LUCKY_STREAK_MULTIPLIER_KEY] = multiplierBonus;
 	} else {
 		delete player.attackMultipliers[LUCKY_STREAK_MULTIPLIER_KEY];
 		delete player.defenseMultipliers[LUCKY_STREAK_MULTIPLIER_KEY];
@@ -59,25 +58,22 @@ export const Gambler: ClassBase = {
 	attackRange: 1,
 	startingGold: 100,
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onAttackWin(player, _defendingPlayer) {
+	onAttackWin(player, _defendingPlayer, _ctx) {
 		// Winning an attack is a positive outcome - streak grows
 		incrementLuckyStreak(player);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onAttackLose(player, _defendingPlayer) {
+	onAttackLose(player, _defendingPlayer, _ctx) {
 		// Losing an attack breaks the streak
 		resetLuckyStreak(player);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onDefendLose(player, _attackingPlayer) {
+	onDefendLose(player, _attackingPlayer, _ctx) {
 		// Getting hit breaks the streak
 		resetLuckyStreak(player);
 	},
 
-	onTurnStart(player) {
+	onTurnStart(player, _ctx) {
 		player.hp = player.gold;
 	}
 };

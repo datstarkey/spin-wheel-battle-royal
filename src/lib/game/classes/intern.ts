@@ -1,4 +1,3 @@
-import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
@@ -19,7 +18,7 @@ export const Intern: ClassBase = {
 		"An overly helpful AI assistant who wandered into the wrong battle royale. Manages 'Confidence' (0-100) - high confidence unlocks powerful abilities, but losing causes existential doubt.",
 	onWinAbility: 'Spin the Helpful Suggestions wheel for mutually beneficial outcomes',
 
-	onAttackWin(player, defendingPlayer) {
+	onAttackWin(player, defendingPlayer, ctx) {
 		// Build the "Helpful Suggestions" wheel
 		const wheel: WheelBase = [
 			{
@@ -97,11 +96,10 @@ export const Intern: ClassBase = {
 			}
 		];
 
-		getServerGameContext().addCustomWheel(`${player.name}'s Helpful Suggestions`, wheel);
+		ctx.addCustomWheel(`${player.name}'s Helpful Suggestions`, wheel);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onAttackLose(player, _defendingPlayer) {
+	onAttackLose(player, _defendingPlayer, _ctx) {
 		// Losing causes existential crisis
 		decreaseConfidence(player, 25);
 		player.game?.addAuditTrail(
@@ -109,8 +107,7 @@ export const Intern: ClassBase = {
 		);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onDefendWin(player, _attackingPlayer) {
+	onDefendWin(player, _attackingPlayer, _ctx) {
 		// Politely refuses the attack
 		increaseConfidence(player, 15);
 		player.game?.addAuditTrail(
@@ -118,15 +115,14 @@ export const Intern: ClassBase = {
 		);
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onDefendLose(player, _attackingPlayer) {
+	onDefendLose(player, _attackingPlayer, _ctx) {
 		decreaseConfidence(player, 15);
 		player.game?.addAuditTrail(
 			`${player.name} takes notes: "Thank you for this learning opportunity..." (-15 Confidence)`
 		);
 	},
 
-	onTurnStart(player) {
+	onTurnStart(player, _ctx) {
 		// Initialize confidence if not set
 		if (player.resources[CONFIDENCE_RESOURCE] === undefined) {
 			player.resources[CONFIDENCE_RESOURCE] = 70; // Starts fairly confident
@@ -159,7 +155,7 @@ export const Intern: ClassBase = {
 		}
 	},
 
-	onTurnEnd(player) {
+	onTurnEnd(player, _ctx, _context) {
 		const confidence = getConfidence(player);
 
 		// Actually mode drains confidence (it's exhausting being right all the time)

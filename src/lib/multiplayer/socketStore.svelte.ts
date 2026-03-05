@@ -215,8 +215,27 @@ class SocketStore {
 	private async ensureConnected(): Promise<void> {
 		if (this.socket?.connected) return;
 		this.connect();
-		await new Promise<void>((resolve) => {
-			this.socket!.once('connect', resolve);
+		await new Promise<void>((resolve, reject) => {
+			const timeout = setTimeout(() => {
+				this.socket!.off('connect', onConnect);
+				this.socket!.off('connect_error', onError);
+				reject(new Error('Connection timed out after 10s'));
+			}, 10_000);
+
+			const onConnect = () => {
+				clearTimeout(timeout);
+				this.socket!.off('connect_error', onError);
+				resolve();
+			};
+
+			const onError = (err: Error) => {
+				clearTimeout(timeout);
+				this.socket!.off('connect', onConnect);
+				reject(new Error(`Connection failed: ${err.message}`));
+			};
+
+			this.socket!.once('connect', onConnect);
+			this.socket!.once('connect_error', onError);
 		});
 	}
 
@@ -232,6 +251,7 @@ class SocketStore {
 					this.mpStore.setMyRole('gm');
 					this.mpStore.setMyPlayerName(gmName);
 					this.mpStore.setRoomCode(response.roomCode);
+					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();
 				}
 				resolve(response);

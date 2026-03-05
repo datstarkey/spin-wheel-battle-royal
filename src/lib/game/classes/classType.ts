@@ -1,3 +1,4 @@
+import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { AbsoluteUnit } from './absoluteUnit';
 import { Gambler } from './gambler';
@@ -8,7 +9,6 @@ import { Magicman } from './magicman';
 import { None } from './none';
 import { Poopmaster } from './poopmaster';
 import { Swe } from './swe';
-// import { Stoner } from './stoner';
 import { Shadeweaver } from './shadeweaver';
 
 export interface ClassBase {
@@ -29,16 +29,20 @@ export interface ClassBase {
 	getBonusAttack?: (player: Player) => number;
 	getBonusDefense?: (player: Player) => number;
 
-	onAttackWin: (player: Player, defendingPlayer: Player) => void;
-	onAttackLose?: (player: Player, defendingPlayer: Player) => void;
-	onDefendWin?: (player: Player, attackingPlayer: Player) => void;
-	onDefendLose?: (player: Player, attackingPlayer: Player) => void;
-	onTurnStart?: (player: Player) => void;
-	onTurnEnd?: (player: Player, context?: { hasMoved: boolean; totalMovement: number }) => void;
-	onAttackStart?: (player: Player, defendingPlayer: Player) => void;
-	onAttackEnd?: (player: Player, defendingPlayer: Player) => void;
-	onDefenseStart?: (player: Player, attackingPlayer: Player) => void;
-	onDefenseEnd?: (player: Player, attackingPlayer: Player) => void;
+	onAttackWin: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackLose?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefendWin?: (player: Player, attackingPlayer: Player, ctx: GameContext) => void;
+	onDefendLose?: (player: Player, attackingPlayer: Player, ctx: GameContext) => void;
+	onTurnStart?: (player: Player, ctx: GameContext) => void;
+	onTurnEnd?: (
+		player: Player,
+		ctx: GameContext,
+		context?: { hasMoved: boolean; totalMovement: number }
+	) => void;
+	onAttackStart?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onAttackEnd?: (player: Player, defendingPlayer: Player, ctx: GameContext) => void;
+	onDefenseStart?: (player: Player, attackingPlayer: Player, ctx: GameContext) => void;
+	onDefenseEnd?: (player: Player, attackingPlayer: Player, ctx: GameContext) => void;
 }
 
 export const classMap = {
@@ -52,7 +56,6 @@ export const classMap = {
 	magicman: Magicman,
 	intern: Intern,
 	gorf: Gorf
-	// stoner: Stoner
 };
 
 export type ClassType = keyof typeof classMap;

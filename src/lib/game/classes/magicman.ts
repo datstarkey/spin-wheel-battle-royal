@@ -29,7 +29,7 @@ export const Magicman: ClassBase = {
 		player.game?.addAuditTrail(`${player.name} channels arcane energy, gaining 10 mana`);
 	},
 
-	onTurnStart(player) {
+	onTurnStart(player, _ctx) {
 		// Initialize mana if not set
 		if (player.resources[MANA_RESOURCE] === undefined) {
 			setMana(player, 50); // Start with 50 mana
@@ -52,7 +52,7 @@ export const Magicman: ClassBase = {
 		// This could be expanded to track active spells
 	},
 
-	onTurnEnd(player, context) {
+	onTurnEnd(player, _ctx, context) {
 		const isArchmage = player.statuses.hasStatus('Archmage');
 
 		// Grant mana for unused movement

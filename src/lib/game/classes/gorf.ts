@@ -1,47 +1,48 @@
 import type { Player } from '../player/player.svelte';
 import type { ClassBase } from './classType';
 
-// Track grudges by player name -> target name (module level since resources only stores numbers)
-const grudgeTargets = new Map<string, string>();
-
 // Multiplier keys
 const DOUBLE_TAP_ATTACK = 'DoubleTapAttack';
 const DOUBLE_TAP_DEFENSE = 'DoubleTapDefense';
 const GRUDGE_BONUS = 'GrudgeBonus';
 
-// Helper to set grudge target
+// Grudge target stored in player resources with a prefixed key
+const GRUDGE_PREFIX = 'GorfGrudge:';
+
+// Helper to set grudge target using player resources
 function setGrudge(player: Player, attackerName: string) {
-	const oldGrudge = grudgeTargets.get(player.name);
+	const oldGrudge = getGrudgeTarget(player);
 	if (oldGrudge !== attackerName) {
-		grudgeTargets.set(player.name, attackerName);
-		player.game?.addAuditTrail(`${player.name} marks ${attackerName} for revenge! 🎯`);
+		if (oldGrudge) {
+			delete player.resources[`${GRUDGE_PREFIX}${oldGrudge}`];
+		}
+		player.resources[`${GRUDGE_PREFIX}${attackerName}`] = 1;
+		player.game?.addAuditTrail(`${player.name} marks ${attackerName} for revenge!`);
 	}
+}
+
+// Helper to get grudge target from player resources
+export function getGrudgeTarget(player: Player): string | undefined {
+	for (const key of Object.keys(player.resources)) {
+		if (key.startsWith(GRUDGE_PREFIX) && player.resources[key] === 1) {
+			return key.slice(GRUDGE_PREFIX.length);
+		}
+	}
+	return undefined;
 }
 
 // Helper to check if target is grudge target
 function isGrudgeTarget(player: Player, targetName: string): boolean {
-	return grudgeTargets.get(player.name) === targetName;
+	return getGrudgeTarget(player) === targetName;
 }
 
 // Helper to clear grudge
 function clearGrudge(player: Player) {
-	const oldGrudge = grudgeTargets.get(player.name);
+	const oldGrudge = getGrudgeTarget(player);
 	if (oldGrudge) {
-		grudgeTargets.delete(player.name);
-		player.game?.addAuditTrail(
-			`${player.name} got their revenge on ${oldGrudge}! Grudge cleared. 💀`
-		);
+		delete player.resources[`${GRUDGE_PREFIX}${oldGrudge}`];
+		player.game?.addAuditTrail(`${player.name} got their revenge on ${oldGrudge}! Grudge cleared.`);
 	}
-}
-
-// Export for UI display
-export function getGrudgeTarget(playerName: string): string | undefined {
-	return grudgeTargets.get(playerName);
-}
-
-// Export for game reset
-export function clearAllGrudges() {
-	grudgeTargets.clear();
 }
 
 export const Gorf: ClassBase = {
@@ -55,50 +56,38 @@ export const Gorf: ClassBase = {
 		'A scrappy two-tapper who amplifies all combat. Deals and takes 50% bonus damage. Holds a Grudge against whoever last attacked them (+25% damage).',
 	onWinAbility: 'Two-tap bonus damage + Grudge revenge',
 
-	// When Gorf attacks, apply Double Tap (50% more damage) and Grudge bonus if applicable
-	onAttackStart(player, defendingPlayer) {
-		// Double Tap: +50% damage dealt
+	onAttackStart(player, defendingPlayer, _ctx) {
 		player.attackMultipliers[DOUBLE_TAP_ATTACK] = 1.5;
-
-		// Grudge: +25% damage vs last attacker
 		if (isGrudgeTarget(player, defendingPlayer.name)) {
 			player.attackMultipliers[GRUDGE_BONUS] = 1.25;
 			player.game?.addAuditTrail(
-				`${player.name} attacks their Grudge target ${defendingPlayer.name}! +25% damage! 🔥`
+				`${player.name} attacks their Grudge target ${defendingPlayer.name}! +25% damage!`
 			);
 		}
 	},
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackEnd(player, _defendingPlayer) {
-		// Clean up multipliers
 		delete player.attackMultipliers[DOUBLE_TAP_ATTACK];
 		delete player.attackMultipliers[GRUDGE_BONUS];
 	},
 
-	onAttackWin(player, defendingPlayer) {
-		// If we beat our grudge target, clear the grudge
+	onAttackWin(player, defendingPlayer, _ctx) {
 		if (isGrudgeTarget(player, defendingPlayer.name)) {
 			clearGrudge(player);
 		}
-		// Bonus gold for the win
 		player.gold += 2;
-		player.game?.addAuditTrail(`${player.name} two-tapped ${defendingPlayer.name}! +2 gold 💰`);
+		player.game?.addAuditTrail(`${player.name} two-tapped ${defendingPlayer.name}! +2 gold`);
 	},
 
-	// When Gorf defends, apply Double Tap (50% more damage taken)
 	onDefenseStart(_player, attackingPlayer) {
-		// Double Tap: +50% damage taken (reduce our defense effectiveness)
 		attackingPlayer.attackMultipliers[DOUBLE_TAP_DEFENSE] = 1.5;
 	},
 
 	onDefenseEnd(_player, attackingPlayer) {
-		// Clean up multiplier
 		delete attackingPlayer.attackMultipliers[DOUBLE_TAP_DEFENSE];
 	},
 
-	onDefendLose(player, attackingPlayer) {
-		// Set grudge against whoever just hit us
+	onDefendLose(player, attackingPlayer, _ctx) {
 		setGrudge(player, attackingPlayer.name);
 	}
 };

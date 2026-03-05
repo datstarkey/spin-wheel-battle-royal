@@ -1,11 +1,11 @@
-import { getServerGameContext } from '$lib/game/serverContext';
+import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
 import type { ClassBase } from './classType';
 
 const poopMasterMultiplier = 'PoopReduction';
-const poopMasterMultiplierValue = -0.2;
+const poopMasterMultiplierValue = 0.8;
 
 // Resource key for tracking destroyed items
 export const POOP_PILE_RESOURCE = 'PoopPile';
@@ -32,20 +32,26 @@ export const Poopmaster: ClassBase = {
 		return getResource(player, POOP_PILE_RESOURCE) * 2;
 	},
 
-	onAttackWin(player, defendingPlayer) {
-		buildItemDestructionWheel(player, defendingPlayer, 'has shit on', 'Poop Wheel');
+	onAttackWin(player, defendingPlayer, ctx) {
+		buildItemDestructionWheel(player, defendingPlayer, 'has shit on', 'Poop Wheel', ctx);
 	},
 
-	onDefenseStart(_player, attackingPlayer) {
+	onDefenseStart(_player, attackingPlayer, _ctx) {
 		attackingPlayer.attackMultipliers[poopMasterMultiplier] = poopMasterMultiplierValue;
 	},
 
-	onDefenseEnd(_player, attackingPlayer) {
+	onDefenseEnd(_player, attackingPlayer, _ctx) {
 		delete attackingPlayer.attackMultipliers[poopMasterMultiplier];
 	},
 
-	onDefendWin(player, attackingPlayer) {
-		buildItemDestructionWheel(player, attackingPlayer, 'revenge-poops on', 'Revenge Poop Wheel');
+	onDefendWin(player, attackingPlayer, ctx) {
+		buildItemDestructionWheel(
+			player,
+			attackingPlayer,
+			'revenge-poops on',
+			'Revenge Poop Wheel',
+			ctx
+		);
 	}
 };
 
@@ -53,7 +59,8 @@ function buildItemDestructionWheel(
 	pooper: Player,
 	target: Player,
 	verb: string,
-	wheelName: string
+	wheelName: string,
+	ctx: GameContext
 ) {
 	const wheelItems: WheelBase = [];
 	const slots = ['mainHand', 'offHand', 'chest', 'helm'] as const;
@@ -85,7 +92,7 @@ function buildItemDestructionWheel(
 			}))
 		);
 
-		getServerGameContext().addCustomWheel(`${pooper.name}'s ${wheelName}`, wheel);
+		ctx.addCustomWheel(`${pooper.name}'s ${wheelName}`, wheel);
 	} else {
 		const stolenGold = Math.min(5, target.gold);
 		if (stolenGold > 0) {
