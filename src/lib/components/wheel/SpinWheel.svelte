@@ -62,14 +62,11 @@
 
 	let rotationResistance = $derived(rotationResistanceProp ?? (maxSpeed / minSpeed) * 50 * -1);
 
-	// One-time random shuffle for local mode (no server-provided order)
-	if (!shuffledOrder) {
-		items = shuffle(items);
-	}
-
-	// Display items: derived from server shuffle order, or use items as-is (already shuffled above).
-	// shuff() mutates items, so displayItems reactively updates in both modes.
-	let displayItems = $derived(shuffledOrder ? shuffledOrder.map((i: number) => items[i]) : items);
+	// Display items: derived from server shuffle order, or shuffled randomly for local mode.
+	const localShuffled = shuffle([...items]);
+	let displayItems = $derived(
+		shuffledOrder ? shuffledOrder.map((i: number) => items[i]) : localShuffled
+	);
 
 	let wheel = $state<Wheel>();
 	let hasSpun = $state(false);

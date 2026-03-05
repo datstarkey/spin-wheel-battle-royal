@@ -13,9 +13,9 @@
 
 	let { initialMode = 'menu', initialJoinCode = '' }: Props = $props();
 
-	let mode = $state<'menu' | 'create' | 'join'>(initialMode);
+	let mode = $derived<'menu' | 'create' | 'join'>(initialMode);
 	let password = $state('');
-	let joinCode = $state(initialJoinCode);
+	let joinCode = $derived(initialJoinCode);
 	let joinPassword = $state('');
 	let error = $state('');
 	let loading = $state(false);
