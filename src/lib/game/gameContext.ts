@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import type { WheelTheme } from '$lib/components/wheel/types';
 import type { SpinWheelItem } from '$lib/components/wheel/types';
 import type { Game } from './game.svelte';
@@ -21,7 +20,7 @@ export interface GameContext {
 }
 
 /**
- * Resolve a player from context, showing an error toast if not found.
+ * Resolve a player from context, logging an audit trail if not found.
  * Eliminates the duplicated "resolve player or toast" pattern across all wheel generators.
  */
 export function requirePlayer(
@@ -31,7 +30,7 @@ export function requirePlayer(
 ): Player | null {
 	const player = ctx.getPlayerByName(playerName);
 	if (!player) {
-		toast.error(`Could not generate ${wheelName}, Player ${playerName} not found!`);
+		ctx.addAuditTrail(`Could not generate ${wheelName}, Player ${playerName} not found!`);
 		return null;
 	}
 	return player;
@@ -40,12 +39,17 @@ export function requirePlayer(
 /**
  * Build spin wheel items from player names using a GameContext.
  * Replaces the gameStore-dependent `playerNameSpinItems()` for wheel generators.
+ * Filters out dead players and shadow realm players (unless all non-dead are in shadow realm).
  */
 export function playerNameSpinItemsFromContext(ctx: GameContext): SpinWheelItem[] {
 	const game = ctx.getGame();
-	return (
-		game?.players
-			.filter((player) => !game?.started || !player.dead)
-			.map((player) => ({ label: player.name })) ?? []
-	);
+	if (!game) return [];
+
+	const alivePlayers = game.players.filter((player) => !game.started || !player.dead);
+
+	// Prefer players not in shadow realm, but fall back to all alive if everyone is there
+	const nonShadow = alivePlayers.filter((player) => !player.inShadowRealm);
+	const candidates = nonShadow.length > 0 ? nonShadow : alivePlayers;
+
+	return candidates.map((player) => ({ label: player.name }));
 }

@@ -4,6 +4,8 @@ import type { Player } from '../player/player.svelte';
 import { actually } from './actually';
 import { archmage } from './archmage';
 import { emotionalDamage } from './emotionalDamage';
+import { frostShield } from './frostShield';
+import { iceStorm } from './iceStorm';
 import { jaegerShots } from './jagerShots';
 import { movementPot } from './movmentPot';
 import { overthinking } from './overthinking';
@@ -43,7 +45,9 @@ const statusEffects = {
 	RuneOfPower: runeOfPower,
 	Archmage: archmage,
 	Overthinking: overthinking,
-	Actually: actually
+	Actually: actually,
+	FrostShield: frostShield,
+	IceStorm: iceStorm
 };
 
 export default statusEffects;

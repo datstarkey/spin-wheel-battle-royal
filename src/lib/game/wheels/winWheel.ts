@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
@@ -10,76 +9,45 @@ export function generateWinWheel(playerName: string, ctx: GameContext) {
 
 	const wheel = [
 		{
-			//1
 			label: 'Gain 6 Base Attack',
+			weight: 2,
 			onWin: () => {
 				player.baseAttack += 6;
 			}
 		},
 		{
-			//2
 			label: 'Gain 6 Base Defense',
+			weight: 2,
 			onWin: () => {
 				player.baseDefense += 6;
 			}
 		},
 		{
-			//3
-			label: `Gain 10 Hp`,
+			label: 'Gain 10 Hp',
+			weight: 2,
 			onWin: () => {
 				player.hp += 10;
 			}
 		},
 		{
-			//4
 			label: 'Gain 10 Gold',
+			weight: 2,
 			onWin: () => {
 				player.gold += 10;
 			}
 		},
 		{
-			//5
 			label: 'Take another turn',
 			onWin: () => ctx.gainAnotherTurn()
 		},
 		{
-			//6
 			label: 'Spin Loot Wheel',
 			onWin: () => generateLootWheel(player.name, ctx)
 		},
 		{
-			//7
-			label: 'Gain 6 Base Attack',
-			onWin: () => {
-				player.baseAttack += 6;
-			}
-		},
-		{
-			//8
-			label: 'Gain 6 Base Defense',
-			onWin: () => {
-				player.baseDefense += 6;
-			}
-		},
-		{
-			//9
-			label: `Gain 10 Hp`,
-			onWin: () => {
-				player.hp += 10;
-			}
-		},
-		{
-			//10
-			label: 'Gain 10 Gold',
-			onWin: () => {
-				player.gold += 10;
-			}
-		},
-		{
-			//11
 			label: 'Send Someone to the Shadow Realm',
 			onWin: () => {
-				toast.success(`${playerName} Must spin again`);
+				ctx.addAuditTrail(`${playerName} must spin again`);
 				generateRandomPlayerWheel(
 					`${playerName} Sends to Shadow Realm`,
 					(winner) => {

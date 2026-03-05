@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import { requirePlayer, type GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource, setResource } from '../player/playerResources';
@@ -27,10 +26,10 @@ export function addMana(player: Player, amount: number) {
 	addResource(player, MANA_RESOURCE, amount, 0, MAX_MANA);
 }
 
-export function spendMana(player: Player, amount: number): boolean {
+export function spendMana(player: Player, amount: number, ctx: GameContext): boolean {
 	const current = getMana(player);
 	if (current < amount) {
-		toast.error(`Not enough mana! Need ${amount}, have ${current}`);
+		ctx.addAuditTrail(`${player.name} does not have enough mana! Need ${amount}, have ${current}`);
 		return false;
 	}
 	setMana(player, current - amount);
@@ -69,7 +68,7 @@ export function generateMinorSpellWheel(
 	const player = requirePlayer(ctx, playerName, 'minor spell wheel');
 	if (!player || player.dead) return;
 
-	if (!spendMana(player, 25)) return;
+	if (!spendMana(player, 25, ctx)) return;
 
 	const wheel = [
 		{
@@ -77,14 +76,13 @@ export function generateMinorSpellWheel(
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 15;
-					toast.success(`${player.name} zaps ${targetPlayer.name} for 15 damage!`);
+					ctx.addAuditTrail(`${player.name} zaps ${targetPlayer.name} for 15 damage!`);
 				} else {
-					toast.success(`${player.name} must select a target!`);
 					generateRandomPlayerWheel(
 						`${player.name}'s Arcane Bolt Target`,
 						(target) => {
 							target.hp -= 15;
-							toast.success(`Arcane Bolt hits ${target.name} for 15 damage!`);
+							ctx.addAuditTrail(`${player.name}'s Arcane Bolt hits ${target.name} for 15 damage!`);
 						},
 						ctx
 					);
@@ -94,16 +92,15 @@ export function generateMinorSpellWheel(
 		{
 			label: 'Frost Shield - +10 def (2 turns)',
 			onWin: () => {
-				player.addStatModifier('Frost Shield', 'defense', 10);
-				toast.success(`${player.name} gains Frost Shield! +10 defense for 2 turns`);
-				// Note: Would need status system to track duration
+				player.statuses.addStatus('FrostShield');
+				ctx.addAuditTrail(`${player.name} gains Frost Shield! +10 defense for 2 turns`);
 			}
 		},
 		{
 			label: 'Mana Spark - Gain 15 mana',
 			onWin: () => {
 				addMana(player, 15);
-				toast.success(`${player.name} regains 15 mana!`);
+				ctx.addAuditTrail(`${player.name} regains 15 mana!`);
 			}
 		},
 		{
@@ -112,14 +109,14 @@ export function generateMinorSpellWheel(
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 8;
 					player.gold += 3;
-					toast.success(`${player.name} fires magic missiles at ${targetPlayer.name}!`);
+					ctx.addAuditTrail(`${player.name} fires magic missiles at ${targetPlayer.name}!`);
 				} else {
 					generateRandomPlayerWheel(
 						`${player.name}'s Magic Missile Target`,
 						(target) => {
 							target.hp -= 8;
 							player.gold += 3;
-							toast.success(`Magic Missiles hit ${target.name}!`);
+							ctx.addAuditTrail(`${player.name}'s Magic Missiles hit ${target.name}!`);
 						},
 						ctx
 					);
@@ -130,21 +127,21 @@ export function generateMinorSpellWheel(
 			label: 'Blink - Teleport 3 tiles',
 			onWin: () => {
 				player.bonusMovement += 3;
-				toast.success(`${player.name} can blink up to 3 extra tiles this turn!`);
+				ctx.addAuditTrail(`${player.name} can blink up to 3 extra tiles this turn!`);
 			}
 		},
 		{
 			label: 'Heal - Restore 12 HP',
 			onWin: () => {
 				player.hp += 12;
-				toast.success(`${player.name} heals for 12 HP!`);
+				ctx.addAuditTrail(`${player.name} heals for 12 HP!`);
 			}
 		},
 		{
 			label: 'Arcane Sight - +1 range (perm)',
 			onWin: () => {
 				player.baseAttackRange += 1;
-				toast.success(`${player.name} gains permanent +1 attack range!`);
+				ctx.addAuditTrail(`${player.name} gains permanent +1 attack range!`);
 			}
 		},
 		{
@@ -170,7 +167,7 @@ export function generateMajorSpellWheel(
 	const player = requirePlayer(ctx, playerName, 'major spell wheel');
 	if (!player || player.dead) return;
 
-	if (!spendMana(player, 50)) return;
+	if (!spendMana(player, 50, ctx)) return;
 
 	const wheel = [
 		{
@@ -178,13 +175,17 @@ export function generateMajorSpellWheel(
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 30;
-					toast.success(`${player.name} hurls a fireball at ${targetPlayer.name} for 30 damage!`);
+					ctx.addAuditTrail(
+						`${player.name} hurls a fireball at ${targetPlayer.name} for 30 damage!`
+					);
 				} else {
 					generateRandomPlayerWheel(
 						`${player.name}'s Fireball Target`,
 						(target) => {
 							target.hp -= 30;
-							toast.success(`Fireball incinerates ${target.name} for 30 damage!`);
+							ctx.addAuditTrail(
+								`${player.name}'s Fireball incinerates ${target.name} for 30 damage!`
+							);
 						},
 						ctx
 					);
@@ -196,15 +197,17 @@ export function generateMajorSpellWheel(
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 15;
-					targetPlayer.addStatModifier('Ice Storm', 'movement', -1);
-					toast.success(`${player.name} freezes ${targetPlayer.name}! 15 damage and slowed!`);
+					targetPlayer.statuses.addStatus('IceStorm');
+					ctx.addAuditTrail(`${player.name} freezes ${targetPlayer.name}! 15 damage and slowed!`);
 				} else {
 					generateRandomPlayerWheel(
 						`${player.name}'s Ice Storm Target`,
 						(target) => {
 							target.hp -= 15;
-							target.addStatModifier('Ice Storm', 'movement', -1);
-							toast.success(`Ice Storm hits ${target.name}! 15 damage and slowed!`);
+							target.statuses.addStatus('IceStorm');
+							ctx.addAuditTrail(
+								`${player.name}'s Ice Storm hits ${target.name}! 15 damage and slowed!`
+							);
 						},
 						ctx
 					);
@@ -218,13 +221,14 @@ export function generateMajorSpellWheel(
 					`${player.name}'s Chain Lightning Primary`,
 					(primary) => {
 						primary.hp -= 20;
-						toast.success(`Chain Lightning strikes ${primary.name} for 20 damage!`);
-						// Chain to another random player
+						ctx.addAuditTrail(
+							`${player.name}'s Chain Lightning strikes ${primary.name} for 20 damage!`
+						);
 						generateRandomPlayerWheel(
 							`Chain Lightning Secondary`,
 							(secondary) => {
 								secondary.hp -= 10;
-								toast.success(`Chain Lightning arcs to ${secondary.name} for 10 damage!`);
+								ctx.addAuditTrail(`Chain Lightning arcs to ${secondary.name} for 10 damage!`);
 							},
 							ctx
 						);
@@ -237,21 +241,21 @@ export function generateMajorSpellWheel(
 			label: 'Greater Heal - 35 HP',
 			onWin: () => {
 				player.hp += 35;
-				toast.success(`${player.name} heals for 35 HP!`);
+				ctx.addAuditTrail(`${player.name} heals for 35 HP!`);
 			}
 		},
 		{
-			label: 'Transmute - 20 mana → 20 gold',
+			label: 'Transmute - 20 mana -> 20 gold',
 			onWin: () => {
 				player.gold += 20;
-				toast.success(`${player.name} transmutes magical energy into 20 gold!`);
+				ctx.addAuditTrail(`${player.name} transmutes magical energy into 20 gold!`);
 			}
 		},
 		{
 			label: 'Arcane Shield - +15 def (3 turns)',
 			onWin: () => {
 				player.addStatModifier('Arcane Shield', 'defense', 15);
-				toast.success(`${player.name} conjures an Arcane Shield! +15 defense`);
+				ctx.addAuditTrail(`${player.name} conjures an Arcane Shield! +15 defense`);
 			}
 		},
 		{
@@ -263,10 +267,10 @@ export function generateMajorSpellWheel(
 						const drained = Math.min(30, targetMana);
 						setMana(targetPlayer, targetMana - drained);
 						addMana(player, drained);
-						toast.success(`${player.name} drains ${drained} mana from ${targetPlayer.name}!`);
+						ctx.addAuditTrail(`${player.name} drains ${drained} mana from ${targetPlayer.name}!`);
 					} else {
 						targetPlayer.hp -= 25;
-						toast.success(`${player.name} burns ${targetPlayer.name} for 25 damage!`);
+						ctx.addAuditTrail(`${player.name} burns ${targetPlayer.name} for 25 damage!`);
 					}
 				} else {
 					generateRandomPlayerWheel(
@@ -277,10 +281,12 @@ export function generateMajorSpellWheel(
 								const drained = Math.min(30, targetMana);
 								setMana(target, targetMana - drained);
 								addMana(player, drained);
-								toast.success(`${player.name} drains ${drained} mana from ${target.name}!`);
+								ctx.addAuditTrail(`${player.name} drains ${drained} mana from ${target.name}!`);
 							} else {
 								target.hp -= 25;
-								toast.success(`Mana Burn scorches ${target.name} for 25 damage!`);
+								ctx.addAuditTrail(
+									`${player.name}'s Mana Burn scorches ${target.name} for 25 damage!`
+								);
 							}
 						},
 						ctx
@@ -293,7 +299,7 @@ export function generateMajorSpellWheel(
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					ctx.skipNextTurn(targetPlayer);
-					toast.success(
+					ctx.addAuditTrail(
 						`${player.name} polymorphs ${targetPlayer.name}! They skip their next turn!`
 					);
 				} else {
@@ -301,7 +307,7 @@ export function generateMajorSpellWheel(
 						`${player.name}'s Polymorph Target`,
 						(target) => {
 							ctx.skipNextTurn(target);
-							toast.success(`${target.name} is polymorphed! They skip their next turn!`);
+							ctx.addAuditTrail(`${target.name} is polymorphed! They skip their next turn!`);
 						},
 						ctx
 					);
@@ -325,7 +331,7 @@ export function generateUltimateSpellWheel(
 	const player = requirePlayer(ctx, playerName, 'ultimate spell wheel');
 	if (!player || player.dead) return;
 
-	if (!spendMana(player, 100)) return;
+	if (!spendMana(player, 100, ctx)) return;
 
 	const wheel = [
 		{
@@ -333,7 +339,7 @@ export function generateUltimateSpellWheel(
 			onWin: () => {
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 60;
-					toast.success(
+					ctx.addAuditTrail(
 						`${player.name} calls down a METEOR on ${targetPlayer.name} for 60 damage!`
 					);
 				} else {
@@ -341,7 +347,7 @@ export function generateUltimateSpellWheel(
 						`${player.name}'s Meteor Strike Target`,
 						(target) => {
 							target.hp -= 60;
-							toast.success(`METEOR STRIKE obliterates ${target.name} for 60 damage!`);
+							ctx.addAuditTrail(`METEOR STRIKE obliterates ${target.name} for 60 damage!`);
 						},
 						ctx
 					);
@@ -352,14 +358,14 @@ export function generateUltimateSpellWheel(
 			label: 'Time Stop - Extra turn',
 			onWin: () => {
 				ctx.gainAnotherTurn();
-				toast.success(`${player.name} STOPS TIME! Taking another turn!`);
+				ctx.addAuditTrail(`${player.name} STOPS TIME! Taking another turn!`);
 			}
 		},
 		{
 			label: 'Rune of Power - Ascension',
 			onWin: () => {
 				player.statuses.addStatus('RuneOfPower');
-				toast.success(`${player.name} places a RUNE OF POWER! Stay here 5 turns to ascend!`);
+				ctx.addAuditTrail(`${player.name} places a RUNE OF POWER! Stay here 5 turns to ascend!`);
 			}
 		},
 		{
@@ -367,7 +373,7 @@ export function generateUltimateSpellWheel(
 			onWin: () => {
 				player.baseAttack += 25;
 				player.baseDefense += 15;
-				toast.success(
+				ctx.addAuditTrail(
 					`${player.name} achieves ARCANE SUPREMACY! +25 attack, +15 defense permanently!`
 				);
 			}
@@ -378,14 +384,14 @@ export function generateUltimateSpellWheel(
 				if (targetPlayer && !targetPlayer.dead) {
 					targetPlayer.hp -= 40;
 					player.hp += 40;
-					toast.success(`${player.name} DRAINS ${targetPlayer.name}'s SOUL! Stealing 40 HP!`);
+					ctx.addAuditTrail(`${player.name} DRAINS ${targetPlayer.name}'s SOUL! Stealing 40 HP!`);
 				} else {
 					generateRandomPlayerWheel(
 						`${player.name}'s Soul Drain Target`,
 						(target) => {
 							target.hp -= 40;
 							player.hp += 40;
-							toast.success(`${player.name} DRAINS ${target.name}'s SOUL! Stealing 40 HP!`);
+							ctx.addAuditTrail(`${player.name} DRAINS ${target.name}'s SOUL! Stealing 40 HP!`);
 						},
 						ctx
 					);
@@ -397,13 +403,13 @@ export function generateUltimateSpellWheel(
 			onWin: () => {
 				if (player.inShadowRealm) {
 					player.inShadowRealm = false;
-					toast.success(`${player.name} tears open a rift and ESCAPES the Shadow Realm!`);
+					ctx.addAuditTrail(`${player.name} tears open a rift and ESCAPES the Shadow Realm!`);
 				} else {
 					generateRandomPlayerWheel(
 						`${player.name}'s Dimensional Rift Target`,
 						(target) => {
 							target.inShadowRealm = true;
-							toast.success(`${player.name} banishes ${target.name} to the SHADOW REALM!`);
+							ctx.addAuditTrail(`${player.name} banishes ${target.name} to the SHADOW REALM!`);
 						},
 						ctx
 					);
@@ -413,16 +419,18 @@ export function generateUltimateSpellWheel(
 		{
 			label: 'Grand Illusion - 3x Win Wheel',
 			onWin: () => {
-				toast.success(`${player.name} conjures GRAND ILLUSIONS! Spinning the Win Wheel 3 times!`);
+				ctx.addAuditTrail(
+					`${player.name} conjures GRAND ILLUSIONS! Spinning the Win Wheel 3 times!`
+				);
 				generateWinWheel(player.name, ctx);
-				setTimeout(() => generateWinWheel(player.name, ctx), 100);
-				setTimeout(() => generateWinWheel(player.name, ctx), 200);
+				generateWinWheel(player.name, ctx);
+				generateWinWheel(player.name, ctx);
 			}
 		},
 		{
 			label: 'Spin 2 Loot Wheels',
 			onWin: () => {
-				toast.success(`${player.name} manifests arcane treasures!`);
+				ctx.addAuditTrail(`${player.name} manifests arcane treasures!`);
 				generateLootWheel(player.name, ctx, 1);
 				generateLootWheel(player.name, ctx, 2);
 			}

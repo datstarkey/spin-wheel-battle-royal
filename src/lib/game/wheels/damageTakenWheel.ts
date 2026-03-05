@@ -9,7 +9,7 @@ export function generateDamageTakenWheel(playerName: string, ctx: GameContext) {
 
 	let reductionPercentage = 0;
 
-	if (player.class.name == 'Absolute Unit') {
+	if (player.classType === 'absoluteUnit') {
 		reductionPercentage = Math.min(player.baseDefense, 50);
 	}
 
@@ -48,24 +48,14 @@ export function generateDamageTakenWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			label: `Take ${globalHpValue * 10} damage`,
+			weight: 2,
 			onWin: () => {
 				player.hp -= Math.floor(globalHpValue * 10 * reductionPercentageInversion);
 			}
 		},
 		{
 			label: `Take ${globalHpValue * 15} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 15 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 10} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 10 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 15} damage`,
+			weight: 2,
 			onWin: () => {
 				player.hp -= Math.floor(globalHpValue * 15 * reductionPercentageInversion);
 			}

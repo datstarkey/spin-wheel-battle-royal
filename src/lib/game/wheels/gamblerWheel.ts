@@ -11,7 +11,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 	const wheel = [
 		{
 			// POSITIVE: +15 Base Attack
-			label: '💪 Gain 15 Base Attack',
+			label: 'Gain 15 Base Attack',
 			onWin: () => {
 				player.baseAttack += 15;
 				ctx.addAuditTrail(`${playerName} gained 15 Base Attack!`);
@@ -19,8 +19,9 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 			}
 		},
 		{
-			// POSITIVE: Spin Loot Wheel Twice
-			label: '🎁 Spin Loot Wheel Twice',
+			// POSITIVE: Spin Loot Wheel Twice (weight 2 for better odds)
+			label: 'Spin Loot Wheel Twice',
+			weight: 2,
 			onWin: () => {
 				ctx.addAuditTrail(`${playerName} gets to spin the Loot Wheel twice!`);
 				generateLootWheel(player.name, ctx, 1);
@@ -30,7 +31,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// NEGATIVE: Lose 7 Base Defense
-			label: '💔 Lose 7 Base Defense',
+			label: 'Lose 7 Base Defense',
 			onWin: () => {
 				player.baseDefense -= 7;
 				ctx.addAuditTrail(`${playerName} lost 7 Base Defense`);
@@ -39,7 +40,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// POSITIVE: +15 Base Defense
-			label: '🛡️ Gain 15 Base Defense',
+			label: 'Gain 15 Base Defense',
 			onWin: () => {
 				player.baseDefense += 15;
 				ctx.addAuditTrail(`${playerName} gained 15 Base Defense!`);
@@ -48,7 +49,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// NEGATIVE: Lose 7 Base Attack
-			label: '💔 Lose 7 Base Attack',
+			label: 'Lose 7 Base Attack',
 			onWin: () => {
 				player.baseAttack -= 7;
 				ctx.addAuditTrail(`${playerName} lost 7 Base Attack`);
@@ -57,7 +58,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// POSITIVE: Gain HP
-			label: `❤️ Gain ${globalHpValue * 30} Gold/HP`,
+			label: `Gain ${globalHpValue * 30} Gold/HP`,
 			onWin: () => {
 				player.gold += globalHpValue * 30;
 				ctx.addAuditTrail(`${playerName} gained ${globalHpValue * 30} Gold!`);
@@ -66,7 +67,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// NEGATIVE: Lose HP
-			label: `💸 Lose ${globalHpValue * 15} Gold/HP`,
+			label: `Lose ${globalHpValue * 15} Gold/HP`,
 			onWin: () => {
 				player.gold -= globalHpValue * 15;
 				ctx.addAuditTrail(`${playerName} lost ${globalHpValue * 15} Gold`);
@@ -75,7 +76,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// NEGATIVE: Skip Next Turn
-			label: '⏭️ Skip Next Turn',
+			label: 'Skip Next Turn',
 			onWin: () => {
 				ctx.addAuditTrail(`${playerName} must skip their next turn!`);
 				ctx.skipNextTurn(player);
@@ -83,18 +84,8 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 			}
 		},
 		{
-			// POSITIVE: Spin Loot Wheel Twice (duplicate for better odds)
-			label: '🎁 Spin Loot Wheel Twice',
-			onWin: () => {
-				ctx.addAuditTrail(`${playerName} gets to spin the Loot Wheel twice!`);
-				generateLootWheel(player.name, ctx, 1);
-				generateLootWheel(player.name, ctx, 2);
-				incrementLuckyStreak(player);
-			}
-		},
-		{
 			// POSITIVE: Send someone to Shadow Realm
-			label: '👻 Send Someone to Shadow Realm',
+			label: 'Send Someone to Shadow Realm',
 			onWin: () => {
 				ctx.addAuditTrail(`${playerName} sends someone to the Shadow Realm!`);
 				generateRandomPlayerWheel(
@@ -110,7 +101,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// POSITIVE: Double or Nothing (risky but positive EV)
-			label: '🎲 Double or Nothing (+25g or 0)',
+			label: 'Double or Nothing (+25g or 0)',
 			onWin: () => {
 				const roll = Math.random();
 				if (roll >= 0.5) {
@@ -125,10 +116,10 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 		},
 		{
 			// MEGA POSITIVE: Lucky 7 Jackpot
-			label: '🎰 Lucky 7 Jackpot! (+50g)',
+			label: 'Lucky 7 Jackpot! (+50g)',
 			onWin: () => {
 				player.gold += 50;
-				ctx.addAuditTrail(`${playerName} hit the Lucky 7 Jackpot! +50g! 🎰`);
+				ctx.addAuditTrail(`${playerName} hit the Lucky 7 Jackpot! +50g!`);
 				incrementLuckyStreak(player, 3); // Jackpot = triple streak!
 			}
 		}

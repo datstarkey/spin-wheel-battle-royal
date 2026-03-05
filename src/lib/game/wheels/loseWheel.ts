@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
@@ -11,21 +10,20 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 	const globalHpValue = ctx.getGlobalHpReduction() * 15;
 	const wheel = [
 		{
-			//1
 			label: 'Lose 3 Base Attack',
+			weight: 2,
 			onWin: () => {
 				player.baseAttack -= 3;
 			}
 		},
 		{
-			//2
 			label: 'Lose 3 Base Defense',
+			weight: 2,
 			onWin: () => {
 				player.baseDefense -= 3;
 			}
 		},
 		{
-			//3
 			label: 'Go to the shadow realm',
 			onWin: () => {
 				player.inShadowRealm = true;
@@ -33,22 +31,20 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 			}
 		},
 		{
-			//4
 			label: 'Lose 1 gold',
+			weight: 2,
 			onWin: () => {
 				player.gold -= 1;
 			}
 		},
 		{
-			//5
 			label: 'Spin Loot Wheel',
 			onWin: () => generateLootWheel(player.name, ctx)
 		},
 		{
-			//6
 			label: 'Give someone HP',
 			onWin: () => {
-				toast.success(`${playerName} Must spin again`);
+				ctx.addAuditTrail(`${playerName} must spin again`);
 				generateRandomPlayerWheel(
 					`${playerName} Gives ${globalHpValue} Hp To`,
 					(winner) => {
@@ -62,31 +58,9 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 			}
 		},
 		{
-			//7
-			label: 'Lose 3 Base Attack',
-			onWin: () => {
-				player.baseAttack -= 3;
-			}
-		},
-		{
-			//8
-			label: 'Lose 3 Base Defense',
-			onWin: () => {
-				player.baseDefense -= 3;
-			}
-		},
-		{
-			//9
-			label: 'Lose 1 gold',
-			onWin: () => {
-				player.gold -= 1;
-			}
-		},
-		{
-			//10
 			label: 'Send Someone to the Shadow Realm',
 			onWin: () => {
-				toast.success(`${playerName} Must spin again`);
+				ctx.addAuditTrail(`${playerName} must spin again`);
 				generateRandomPlayerWheel(
 					`${playerName} Sends to Shadow Realm`,
 					(winner) => {

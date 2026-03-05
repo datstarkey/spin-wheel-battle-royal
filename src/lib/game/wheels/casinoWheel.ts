@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import { incrementLuckyStreak, resetLuckyStreak } from '../classes/gambler';
 import { requirePlayer, type GameContext } from '../gameContext';
 import { generateLootWheel } from './lootWheel';
@@ -56,7 +55,7 @@ export function generateCasinoWheel(playerName: string, ctx: GameContext) {
 	} else {
 		// Charge entry fee for non-gamblers
 		if (player.gold < CASINO_ENTRY_FEE) {
-			toast.error(`${playerName} needs at least ${CASINO_ENTRY_FEE}g to gamble!`);
+			ctx.addAuditTrail(`${playerName} needs at least ${CASINO_ENTRY_FEE}g to gamble!`);
 			return;
 		}
 		player.gold -= CASINO_ENTRY_FEE;

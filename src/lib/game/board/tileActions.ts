@@ -4,12 +4,12 @@
  * Handles what happens when a player lands on different tile types.
  */
 
+import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
-import type { Position } from './types';
-import { getTileAt, getOtherOuterTeleporters } from './board.svelte';
-import { getServerGameContext } from '$lib/game/serverContext';
 import { generateButtonWheel } from '../wheels/buttonWheel';
 import { generateLootWheel } from '../wheels/lootWheel';
+import type { Position } from './types';
+import { getTileAt, getOtherOuterTeleporters } from './board.svelte';
 
 /**
  * The 4 corner tiles around the center button that trigger the button wheel.
@@ -43,7 +43,11 @@ export interface TileActionResult {
 /**
  * Execute tile action when a player lands on a tile
  */
-export function executeTileAction(player: Player, position: Position): TileActionResult {
+export function executeTileAction(
+	player: Player,
+	position: Position,
+	ctx: GameContext
+): TileActionResult {
 	const tile = getTileAt(position);
 	if (!tile) {
 		return { handled: false };
@@ -51,33 +55,30 @@ export function executeTileAction(player: Player, position: Position): TileActio
 
 	// Check for button trigger tiles (the 4 corners around the center)
 	if (isButtonTriggerTile(position)) {
-		return handleButtonTile(player);
+		return handleButtonTile(player, ctx);
 	}
 
 	switch (tile.type) {
 		case 'shop':
-			return handleShopTile(player);
+			return handleShopTile(player, ctx);
 
 		case 'shadow_realm':
-			return handleShadowRealmTile(player);
+			return handleShadowRealmTile(player, ctx);
 
 		case 'teleporter_outer':
-			return handleOuterTeleporter(player, position);
+			return handleOuterTeleporter(player, position, ctx);
 
 		case 'teleporter_inner':
-			return handleInnerTeleporter(player);
+			return handleInnerTeleporter(player, ctx);
 
 		case 'button':
-			return handleButtonTile(player);
+			return handleButtonTile(player, ctx);
 
 		case 'casino':
-			return handleCasinoTile(player);
+			return handleCasinoTile(player, ctx);
 
 		case 'treasure':
-			return handleTreasureTile(player, position);
-
-		case 'spawn_entry':
-			return handleSpawnEntry(player);
+			return handleTreasureTile(player, position, ctx);
 
 		default:
 			return { handled: false };
@@ -87,8 +88,8 @@ export function executeTileAction(player: Player, position: Position): TileActio
 /**
  * Handle landing on a shop tile
  */
-function handleShopTile(player: Player): TileActionResult {
-	getServerGameContext().addAuditTrail(`${player.name} arrived at the shop!`);
+function handleShopTile(player: Player, ctx: GameContext): TileActionResult {
+	ctx.addAuditTrail(`${player.name} arrived at the shop!`);
 	return {
 		handled: true,
 		openModal: 'shop',
@@ -100,7 +101,7 @@ function handleShopTile(player: Player): TileActionResult {
  * Handle landing on a shadow realm tile
  * Shadeweaver is immune - they can freely enter/exit without becoming trapped
  */
-function handleShadowRealmTile(player: Player): TileActionResult {
+function handleShadowRealmTile(player: Player, ctx: GameContext): TileActionResult {
 	// Shadeweaver is immune to shadow realm entrapment
 	if (player.classType === 'shadeweaver') {
 		return { handled: false };
@@ -108,7 +109,7 @@ function handleShadowRealmTile(player: Player): TileActionResult {
 
 	if (!player.inShadowRealm) {
 		player.inShadowRealm = true;
-		getServerGameContext().addAuditTrail(`${player.name} has entered the Shadow Realm!`);
+		ctx.addAuditTrail(`${player.name} has entered the Shadow Realm!`);
 		return {
 			handled: true,
 			message: `${player.name} has entered the Shadow Realm! They must spin the Shadow Realm wheel each turn.`
@@ -120,9 +121,13 @@ function handleShadowRealmTile(player: Player): TileActionResult {
 /**
  * Handle stepping on an outer teleporter
  */
-function handleOuterTeleporter(player: Player, currentPosition: Position): TileActionResult {
+function handleOuterTeleporter(
+	player: Player,
+	currentPosition: Position,
+	ctx: GameContext
+): TileActionResult {
 	const destinations = getOtherOuterTeleporters(currentPosition);
-	getServerGameContext().addAuditTrail(`${player.name} stepped on a teleporter!`);
+	ctx.addAuditTrail(`${player.name} stepped on a teleporter!`);
 	return {
 		handled: true,
 		openModal: 'teleporter',
@@ -134,10 +139,10 @@ function handleOuterTeleporter(player: Player, currentPosition: Position): TileA
 /**
  * Handle being on the inner (center) teleporter - exit only
  */
-function handleInnerTeleporter(player: Player): TileActionResult {
+function handleInnerTeleporter(player: Player, ctx: GameContext): TileActionResult {
 	// Inner teleporter is exit-only, so landing here doesn't trigger anything special
 	// Players arrive here from outer teleporters
-	getServerGameContext().addAuditTrail(`${player.name} arrived at the center teleporter.`);
+	ctx.addAuditTrail(`${player.name} arrived at the center teleporter.`);
 	return {
 		handled: true,
 		message: `${player.name} teleported to the center!`
@@ -147,9 +152,9 @@ function handleInnerTeleporter(player: Player): TileActionResult {
 /**
  * Handle landing on the button tile
  */
-function handleButtonTile(player: Player): TileActionResult {
-	getServerGameContext().addAuditTrail(`${player.name} pressed THE BUTTON!`);
-	generateButtonWheel(player.name, getServerGameContext());
+function handleButtonTile(player: Player, ctx: GameContext): TileActionResult {
+	ctx.addAuditTrail(`${player.name} pressed THE BUTTON!`);
+	generateButtonWheel(player.name, ctx);
 	return {
 		handled: true,
 		message: `${player.name} pressed THE BUTTON! Spin the Button Wheel!`
@@ -159,8 +164,8 @@ function handleButtonTile(player: Player): TileActionResult {
 /**
  * Handle landing on a casino tile
  */
-function handleCasinoTile(player: Player): TileActionResult {
-	getServerGameContext().addAuditTrail(`${player.name} entered the Casino!`);
+function handleCasinoTile(player: Player, ctx: GameContext): TileActionResult {
+	ctx.addAuditTrail(`${player.name} entered the Casino!`);
 	return {
 		handled: true,
 		openModal: 'casino',
@@ -171,8 +176,12 @@ function handleCasinoTile(player: Player): TileActionResult {
 /**
  * Handle landing on a treasure chest tile
  */
-function handleTreasureTile(player: Player, position: Position): TileActionResult {
-	const game = getServerGameContext().getGame();
+function handleTreasureTile(
+	player: Player,
+	position: Position,
+	ctx: GameContext
+): TileActionResult {
+	const game = ctx.getGame();
 	if (!game) return { handled: false };
 
 	// Check if this treasure has already been looted
@@ -185,8 +194,8 @@ function handleTreasureTile(player: Player, position: Position): TileActionResul
 
 	// Mark the treasure as looted and generate the loot wheel
 	game.lootTreasure(position.x, position.y);
-	getServerGameContext().addAuditTrail(`${player.name} found a treasure chest!`);
-	generateLootWheel(player.name, getServerGameContext());
+	ctx.addAuditTrail(`${player.name} found a treasure chest!`);
+	generateLootWheel(player.name, ctx);
 
 	return {
 		handled: true,
@@ -195,28 +204,19 @@ function handleTreasureTile(player: Player, position: Position): TileActionResul
 }
 
 /**
- * Handle exiting spawn zone through spawn entry
- */
-function handleSpawnEntry(player: Player): TileActionResult {
-	// Check if player was in shadow realm and is now leaving
-	if (player.inShadowRealm) {
-		// Check if they're moving OUT of shadow realm area
-		// This would need more context about where they came from
-		// For now, just log the movement
-	}
-	return { handled: false };
-}
-
-/**
  * Check if player is leaving the shadow realm
  */
-export function checkLeavingShadowRealm(player: Player, newPosition: Position): void {
+export function checkLeavingShadowRealm(
+	player: Player,
+	newPosition: Position,
+	ctx: GameContext
+): void {
 	if (!player.inShadowRealm) return;
 
 	const newTile = getTileAt(newPosition);
 	if (newTile && newTile.type !== 'shadow_realm') {
 		player.inShadowRealm = false;
-		getServerGameContext().addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
+		ctx.addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
 	}
 }
 
@@ -226,16 +226,15 @@ export function checkLeavingShadowRealm(player: Player, newPosition: Position): 
 export function teleportPlayer(
 	player: Player,
 	destination: Position,
-	setPosition: (playerId: string, pos: Position) => void
+	setPosition: (playerId: string, pos: Position) => void,
+	ctx: GameContext
 ): void {
 	setPosition(player.name, destination);
-	getServerGameContext().addAuditTrail(
-		`${player.name} teleported to (${destination.x}, ${destination.y})!`
-	);
+	ctx.addAuditTrail(`${player.name} teleported to (${destination.x}, ${destination.y})!`);
 
 	// Execute tile action at destination (but not for teleporter to avoid loops)
 	const destTile = getTileAt(destination);
 	if (destTile && destTile.type !== 'teleporter_outer' && destTile.type !== 'teleporter_inner') {
-		executeTileAction(player, destination);
+		executeTileAction(player, destination, ctx);
 	}
 }

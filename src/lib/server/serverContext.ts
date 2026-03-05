@@ -1,12 +1,10 @@
 import type { GameContext } from '$lib/game/gameContext';
 
 /**
- * Module-level server GameContext.
- * The server sets this before processing any action so that Player/tileActions/class code
- * can call wheel generators without importing a specific context implementation.
- *
- * This works because server action processing is synchronous —
- * the context won't change between setServerGameContext() and the action completing.
+ * @deprecated Use `$lib/game/serverContext` instead. This module exists for backward
+ * compatibility — the canonical server context lives in `$lib/game/` because it's
+ * imported by shared game logic that also runs on the client during deserialization.
+ * SvelteKit forbids `$lib/server/` imports from reaching the browser.
  */
 let _ctx: GameContext | null = null;
 

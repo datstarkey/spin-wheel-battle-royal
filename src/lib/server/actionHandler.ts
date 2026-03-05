@@ -224,7 +224,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 				}
 
 				// Execute tile action at new position
-				executeTileAction(player, action.position);
+				executeTileAction(player, action.position, ctx);
 				break;
 			}
 
@@ -394,7 +394,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 				}
 
 				player.position = action.destination;
-				executeTileAction(player, action.destination);
+				executeTileAction(player, action.destination, ctx);
 				break;
 			}
 

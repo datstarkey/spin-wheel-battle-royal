@@ -1,4 +1,3 @@
-import toast from '$lib/stores/toaster.svelte';
 import { getRandomSpawnPoint } from '../board/board.svelte';
 import type { Position } from '../board/types';
 import { requirePlayer, type GameContext } from '../gameContext';
@@ -28,8 +27,8 @@ function generateCombatWheel(attacker: Player, defender: Player, ctx: GameContex
 				ctx.addAuditTrail(
 					`${attacker.name} (ATK ${attacker.attack}) beat ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
-				attacker.onAttackWin(defender);
-				defender.onDefendLose(attacker);
+				attacker.onAttackWin(defender, ctx);
+				defender.onDefendLose(attacker, ctx);
 			}
 		},
 		{
@@ -39,8 +38,8 @@ function generateCombatWheel(attacker: Player, defender: Player, ctx: GameContex
 				ctx.addAuditTrail(
 					`${attacker.name} (ATK ${attacker.attack}) lost to ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
-				attacker.onAttackLose(defender);
-				defender.onDefendWin(attacker);
+				attacker.onAttackLose(defender, ctx);
+				defender.onDefendWin(attacker, ctx);
 			}
 		}
 	];
@@ -64,7 +63,7 @@ function generateAttackTargetWheel(attacker: Player, ctx: GameContext) {
 	});
 
 	if (targets.length === 0) {
-		toast.error('No valid attack targets!');
+		ctx.addAuditTrail(`${attacker.name} found no valid attack targets!`);
 		return;
 	}
 
@@ -94,7 +93,7 @@ function rotatePlayersAroundCenter(clockwise: boolean, ctx: GameContext) {
 		.filter((p): p is Player & { position: Position } => p.position !== null);
 
 	if (playersWithPositions.length < 2) {
-		toast.error('Need at least 2 players to rotate!');
+		ctx.addAuditTrail('Need at least 2 players to rotate!');
 		return;
 	}
 
