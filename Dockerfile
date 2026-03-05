@@ -18,7 +18,7 @@ FROM  node:18-alpine
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app/build
-COPY package.json .
+COPY package.json server.js ./
 EXPOSE 3000
 ENV NODE_ENV=production
-CMD [ "node", "build" ]
+CMD [ "node", "server.js" ]
