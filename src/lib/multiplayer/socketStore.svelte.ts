@@ -315,7 +315,8 @@ class SocketStore {
 			callback?.({ success: false, error: 'Not connected' });
 			return;
 		}
-		this.socket.emit('player:action', { action }, callback);
+		const fullAction = { ...action, actionId: action.actionId ?? crypto.randomUUID() };
+		this.socket.emit('player:action', { action: fullAction }, callback);
 	}
 
 	sendSpectatorHint(hint: SpectatorHint) {
@@ -339,7 +340,7 @@ class SocketStore {
 	}
 
 	private dispatch(action: GameAction) {
-		this.sendAction({ ...action, actionId: crypto.randomUUID() }, (response) => {
+		this.sendAction(action, (response) => {
 			if (!response?.success) {
 				console.error('[gameActions]', response?.error ?? 'Action failed');
 			}

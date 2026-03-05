@@ -155,7 +155,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 	}
 
 	// Dedup check — reject duplicate action IDs
-	if (room.isDuplicateAction(playerName, action.actionId)) {
+	const actionId = action.actionId ?? crypto.randomUUID();
+	if (room.isDuplicateAction(playerName, actionId)) {
 		return { success: false, error: 'Duplicate action' };
 	}
 
@@ -261,8 +262,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 							game.addAuditTrail(
 								`${attacker.name} (ATK ${attacker.attack}) beat ${defender.name} (DEF ${defender.defense})`
 							);
-							attacker.onAttackWin(defender);
-							defender.onDefendLose(attacker);
+							attacker.onAttackWin(defender, ctx);
+							defender.onDefendLose(attacker, ctx);
 						}
 					},
 					{
@@ -272,8 +273,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 							game.addAuditTrail(
 								`${attacker.name} (ATK ${attacker.attack}) lost to ${defender.name} (DEF ${defender.defense})`
 							);
-							attacker.onAttackLose(defender);
-							defender.onDefendWin(attacker);
+							attacker.onAttackLose(defender, ctx);
+							defender.onDefendWin(attacker, ctx);
 						}
 					}
 				];

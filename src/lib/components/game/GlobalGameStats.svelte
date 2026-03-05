@@ -35,8 +35,8 @@
 	// Add player to skipped turns
 	function addSkippedPlayer(playerName: string) {
 		if (!game) return;
-		if (!game.skippedNextTurns.includes(playerName)) {
-			game.skippedNextTurns = [...game.skippedNextTurns, playerName];
+		if (!game.skippedNextTurns.has(playerName)) {
+			game.skippedNextTurns.add(playerName);
 			gs.addAuditTrail(`${playerName}'s next turn will be skipped`);
 		}
 	}
@@ -44,13 +44,13 @@
 	// Remove player from skipped turns
 	function removeSkippedPlayer(playerName: string) {
 		if (!game) return;
-		game.skippedNextTurns = game.skippedNextTurns.filter((name) => name !== playerName);
+		game.skippedNextTurns.delete(playerName);
 		toast.success(`${playerName} removed from skip list`);
 	}
 
 	// Players available to skip (not already in skip list)
 	let availableToSkip = $derived(
-		playersInOrder.filter((name) => !game?.skippedNextTurns.includes(name))
+		playersInOrder.filter((name) => !game?.skippedNextTurns.has(name))
 	);
 
 	let selectedPlayerToSkip = $state<string>('');
@@ -220,7 +220,7 @@
 					<span>Skipped Next Turns</span>
 				</div>
 
-				{#if game.skippedNextTurns.length > 0}
+				{#if game.skippedNextTurns.size > 0}
 					<div class="mb-2 flex flex-wrap gap-1">
 						{#each game.skippedNextTurns as playerName (playerName)}
 							<div
@@ -429,7 +429,7 @@
 					type="button"
 					class="btn preset-tonal-surface flex items-center justify-center gap-2 text-xs"
 					onclick={() => {
-						game.skippedNextTurns = [];
+						game.skippedNextTurns.clear();
 						toast.success('Skipped turns cleared!');
 					}}
 				>
