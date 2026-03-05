@@ -1,5 +1,5 @@
-import { getServerGameContext } from '$lib/game/serverContext';
 import toast from '$lib/stores/toaster.svelte';
+import type { GameContext } from '../gameContext';
 import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
@@ -26,11 +26,7 @@ export class PlayerStatuses {
 		if (this._player) {
 			return this._player;
 		}
-		const player = getServerGameContext().getPlayerByName(this._playerName);
-		if (!player) {
-			throw new Error(`Player ${this._playerName} not found`);
-		}
-		return player;
+		throw new Error(`Player ${this._playerName} not resolved — call setPlayer() first`);
 	}
 
 	private _statuses: PlayerStatusEffect[] = $state([]);
@@ -39,7 +35,7 @@ export class PlayerStatuses {
 		return this._statuses;
 	}
 
-	addStatus(status: StatusType) {
+	addStatus(status: StatusType, ctx?: GameContext) {
 		const statusEffect = new PlayerStatusEffect(status);
 		statusEffect.duration = statusEffect.status.turnDuration;
 
@@ -54,7 +50,9 @@ export class PlayerStatuses {
 
 		this.player.game?.addAuditTrail(`${this.player.name} now has ${statusEffect.status.name}!`);
 		this._statuses.push(statusEffect);
-		statusEffect.status.onApply?.(this.player);
+		if (ctx) {
+			statusEffect.status.onApply?.(this.player, ctx);
+		}
 	}
 
 	canHaveStatus(status: StatusType) {
@@ -73,23 +71,25 @@ export class PlayerStatuses {
 		return this._statuses.find((s) => s.statusName === status);
 	}
 
-	removeStatus(status: StatusType) {
+	removeStatus(status: StatusType, ctx?: GameContext) {
 		const statusEffect = this._statuses.find((s) => s.statusName === status);
 		if (!statusEffect) return;
 		this.player.game?.addAuditTrail(
 			`${this.player.name} no longer has ${statusEffect.status.name}!`
 		);
-		statusEffect.status.onRemove?.(this.player);
+		if (ctx) {
+			statusEffect.status.onRemove?.(this.player, ctx);
+		}
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
 	}
 
-	onTurnStart() {
+	onTurnStart(ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onTurnStart?.(this.player);
+			s.status.onTurnStart?.(this.player, ctx);
 		});
 	}
 
-	onTurnEnd() {
+	onTurnEnd(ctx: GameContext) {
 		const statusesToRemove: PlayerStatusEffect[] = [];
 
 		this._statuses.forEach((s) => {
@@ -103,44 +103,44 @@ export class PlayerStatuses {
 
 		statusesToRemove.forEach((s) => {
 			this.player.game?.addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
-			s.status.onRemove?.(this.player);
+			s.status.onRemove?.(this.player, ctx);
 			this._statuses = this._statuses.filter((x) => x !== s);
 		});
 	}
 
-	onAttackWin(defendingPlayer: Player) {
+	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onAttackWin?.(this.player, defendingPlayer);
+			s.status.onAttackWin?.(this.player, defendingPlayer, ctx);
 		});
 	}
 
-	onAttackLose(defendingPlayer: Player) {
+	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onAttackLose?.(this.player, defendingPlayer);
+			s.status.onAttackLose?.(this.player, defendingPlayer, ctx);
 		});
 	}
 
-	onDefendWin(playerAttackingYou: Player) {
+	onDefendWin(playerAttackingYou: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onDefendWin?.(this.player, playerAttackingYou);
+			s.status.onDefendWin?.(this.player, playerAttackingYou, ctx);
 		});
 	}
 
-	onDefendLose(defendingPlayer: Player) {
+	onDefendLose(defendingPlayer: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onDefendLose?.(this.player, defendingPlayer);
+			s.status.onDefendLose?.(this.player, defendingPlayer, ctx);
 		});
 	}
 
-	onDefenseStart(defendingPlayer: Player) {
+	onDefenseStart(defendingPlayer: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onDefenseStart?.(this.player, defendingPlayer);
+			s.status.onDefenseStart?.(this.player, defendingPlayer, ctx);
 		});
 	}
 
-	onDefenseEnd(defendingPlayer: Player) {
+	onDefenseEnd(defendingPlayer: Player, ctx: GameContext) {
 		this._statuses.forEach((s) => {
-			s.status.onDefenseEnd?.(this.player, defendingPlayer);
+			s.status.onDefenseEnd?.(this.player, defendingPlayer, ctx);
 		});
 	}
 
@@ -171,11 +171,10 @@ export class PlayerStatuses {
 		return statuses;
 	}
 
-	// Call this after setPlayer to apply status effects
+	// Note: stat modifiers are restored directly during deserialization via _statModifiers,
+	// so onApply hooks are not re-invoked here (they would require a GameContext).
 	applyDeserializedStatuses() {
-		this._statuses.forEach((status) => {
-			status.status.onApply?.(this.player);
-		});
+		// Intentionally empty — stat modifiers already restored from serialized data
 	}
 }
 

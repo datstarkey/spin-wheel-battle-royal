@@ -1,10 +1,6 @@
-import {
-	teleportFromShadowRealm,
-	teleportToRandomSpawn,
-	teleportToShadowRealm
-} from '$lib/stores/teleportStore.svelte';
+import { teleportToRandomSpawn } from '$lib/stores/teleportStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
-import { getServerGameContext } from '$lib/game/serverContext';
+import type { GameContext } from '../gameContext';
 import type { Game } from '../game.svelte';
 import type { Position } from '../board/types';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
@@ -99,17 +95,7 @@ export class Player {
 		return this._inShadowRealm;
 	}
 	public set inShadowRealm(value: boolean) {
-		const wasInShadowRealm = this._inShadowRealm;
 		this._inShadowRealm = value;
-
-		// Handle teleportation when entering/leaving shadow realm
-		if (value && !wasInShadowRealm) {
-			// Entering shadow realm - teleport to nearest shadow realm tile
-			teleportToShadowRealm(this);
-		} else if (!value && wasInShadowRealm) {
-			// Leaving shadow realm - teleport to random spawn
-			teleportFromShadowRealm(this);
-		}
 	}
 
 	/**
@@ -138,48 +124,49 @@ export class Player {
 		return this._maxHp;
 	}
 	public set hp(value: number) {
-		if (this.dead) {
-			toast.error("Can't change HP of dead player!");
-			return;
-		}
+		if (this.dead) return;
 
-		const oldHp = this._hp;
-
-		if (this.classType == 'gambler') {
-			this._hp = value;
-			this._gold = value;
-		} else {
-			this._hp = value;
+		this._hp = Math.max(0, value);
+		if (this.classType === 'gambler') {
+			this._gold = this._hp;
 		}
-		if (this._hp < 0) this._hp = 0;
 
 		// Track max HP as highest value seen
 		if (this._hp > this._maxHp) {
 			this._maxHp = this._hp;
 		}
+	}
 
-		const delta = this._hp - oldHp;
+	takeDamage(amount: number) {
+		if (this.dead || amount <= 0) return;
+
+		const oldHp = this._hp;
+		this.hp = oldHp - amount;
 
 		if (this._hp === 0) {
-			if (delta < 0) {
-				this._game?.addAuditTrail(`${this.name} took ${Math.abs(delta)} damage and is dead!`);
-			} else {
-				this._game?.addAuditTrail(`${this.name} is dead!`);
-			}
-			this._game?.increaseGlobalHpReduction();
-			this.dead = true;
+			this._game?.addAuditTrail(`${this.name} took ${amount} damage and is dead!`);
+			this.die();
+		} else {
+			this._game?.addAuditTrail(
+				`${this.name} took ${amount} damage (${this._hp}/${this._maxHp} HP)`
+			);
+		}
+	}
 
-			if (this._game?.currentPlayer === this) {
-				this._game?.finishTurn();
-			}
-		} else if (delta !== 0) {
-			if (delta > 0) {
-				this._game?.addAuditTrail(`${this.name} healed ${delta} HP (${this._hp}/${this._maxHp})`);
-			} else {
-				this._game?.addAuditTrail(
-					`${this.name} took ${Math.abs(delta)} damage (${this._hp}/${this._maxHp} HP)`
-				);
-			}
+	heal(amount: number) {
+		if (this.dead || amount <= 0) return;
+
+		this.hp = this._hp + amount;
+		this._game?.addAuditTrail(`${this.name} healed ${amount} HP (${this._hp}/${this._maxHp})`);
+	}
+
+	die() {
+		if (this.dead) return;
+		this.dead = true;
+		this._game?.increaseGlobalHpReduction();
+
+		if (this._game?.currentPlayer === this) {
+			this._game?.finishTurn();
 		}
 	}
 
@@ -274,15 +261,6 @@ export class Player {
 	private _baseAttack = $state(0);
 	attackMultipliers: Record<string, number> = $state({});
 
-	//Brass Knuckles multiplier, increases by your defense value
-	private _brassKnucklesMultiplier = $state(0);
-	public get brassKnucklesMultiplier(): number {
-		return this._brassKnucklesMultiplier * this.defense;
-	}
-	public set brassKnucklesMultiplier(value: number) {
-		this._brassKnucklesMultiplier = value;
-	}
-
 	//Bonus
 	public get bonusAttack(): number {
 		let bonus = this._bonusAttack + this.getTotalStatModifier('attack');
@@ -311,15 +289,12 @@ export class Player {
 	}
 
 	public get attackMultiplier(): number {
-		return Object.values(this.attackMultipliers).reduce((acc, cur) => acc + cur, 1);
+		return Object.values(this.attackMultipliers).reduce((acc, cur) => acc * cur, 1);
 	}
 
 	//Combine both as basic attack
 	public get attack(): number {
-		//Add brass knuckles multiplier after attack multipliers
-		return (
-			(this.bonusAttack + this.baseAttack + this.brassKnucklesMultiplier) * this.attackMultiplier
-		);
+		return (this.bonusAttack + this.baseAttack) * this.attackMultiplier;
 	}
 
 	/**
@@ -364,8 +339,7 @@ export class Player {
 
 	//Combine both when getting defense
 	public get defense(): number {
-		const value = this.bonusDefense > 0 ? this.bonusDefense + this.baseDefense : this.baseDefense;
-		return value * this.defenseMultiplier;
+		return (this.bonusDefense + this.baseDefense) * this.defenseMultiplier;
 	}
 
 	/**
@@ -378,12 +352,15 @@ export class Player {
 		return this._gold;
 	}
 	public set gold(value: number) {
-		this._gold = value;
-		if (this._gold < 0) this._gold = 0;
-		if (this.classType == 'gambler') {
+		const oldGold = this._gold;
+		this._gold = Math.max(0, value);
+		if (this.classType === 'gambler') {
 			this._hp = this._gold;
 		}
-		this._game?.addAuditTrail(`${this.name} now has ${this.gold} gold!`);
+		const delta = this._gold - oldGold;
+		if (delta !== 0) {
+			this._game?.addAuditTrail(`${this.name} now has ${this.gold} gold!`);
+		}
 	}
 
 	/**
@@ -392,9 +369,13 @@ export class Player {
 	 */
 
 	assignClass(classType: ClassType) {
-		// Remove previous class modifiers if any
+		// Remove ALL stat modifiers from previous class
 		if (this._class && this._class !== 'none') {
-			this.removeStatModifier(`Class: ${this.class.name}`, 'defense');
+			const oldClassName = this.class.name;
+			const statTypes: StatType[] = ['attack', 'defense', 'movement', 'attackRange', 'hp'];
+			for (const stat of statTypes) {
+				this.removeStatModifier(`Class: ${oldClassName}`, stat);
+			}
 		}
 
 		this._class = classType;
@@ -404,7 +385,7 @@ export class Player {
 		this._baseAttackRange = this.class.attackRange;
 		this._gold = this.class.startingGold ?? 30;
 
-		if (this.classType == 'gambler') {
+		if (this.classType === 'gambler') {
 			this._hp = this.class.startingGold ?? 0;
 		}
 	}
@@ -485,23 +466,21 @@ export class Player {
 	 * Events
 	 */
 
-	onAttackWin(defendingPlayer: Player) {
+	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
 		this.gold += 1;
-		this.statuses.onAttackWin(defendingPlayer);
-		this.gear.onAttackWin(defendingPlayer);
-		this.class.onAttackWin(this, defendingPlayer);
-		const ctx = getServerGameContext();
+		this.statuses.onAttackWin(defendingPlayer, ctx);
+		this.gear.onAttackWin(defendingPlayer, ctx);
+		this.class.onAttackWin(this, defendingPlayer, ctx);
 		if (this.name) generateWinWheel(this.name, ctx);
 		if (defendingPlayer.name) generateDamageTakenWheel(defendingPlayer.name, ctx);
 	}
 
-	onAttackLose(defendingPlayer: Player) {
+	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
 		defendingPlayer.gold += 1;
-		this.hp -= this._game?.globalHpReduction ?? 0;
-		this.statuses.onAttackLose(defendingPlayer);
-		this.gear.onAttackLose(defendingPlayer);
-		this.class.onAttackLose?.(this, defendingPlayer);
-		const ctx = getServerGameContext();
+		this.takeDamage(this._game?.globalHpReduction ?? 0);
+		this.statuses.onAttackLose(defendingPlayer, ctx);
+		this.gear.onAttackLose(defendingPlayer, ctx);
+		this.class.onAttackLose?.(this, defendingPlayer, ctx);
 		if (this.name) generateLoseWheel(this.name, ctx);
 		if (this.name) generateDamageTakenWheel(this.name, ctx);
 		// Teleport to random spawn on loss (unless in shadow realm)
@@ -510,55 +489,55 @@ export class Player {
 		}
 	}
 
-	onDefendWin(playerAttackingYou: Player) {
-		this.statuses.onDefendWin(playerAttackingYou);
-		this.gear.onDefendWin(playerAttackingYou);
-		this.class.onDefendWin?.(this, playerAttackingYou);
+	onDefendWin(playerAttackingYou: Player, ctx: GameContext) {
+		this.statuses.onDefendWin(playerAttackingYou, ctx);
+		this.gear.onDefendWin(playerAttackingYou, ctx);
+		this.class.onDefendWin?.(this, playerAttackingYou, ctx);
 	}
 
-	onDefendLose(playerAttackingYou: Player) {
-		this.statuses.onDefendLose(playerAttackingYou);
-		this.gear.onDefendLose(playerAttackingYou);
-		this.class.onDefendLose?.(this, playerAttackingYou);
+	onDefendLose(playerAttackingYou: Player, ctx: GameContext) {
+		this.statuses.onDefendLose(playerAttackingYou, ctx);
+		this.gear.onDefendLose(playerAttackingYou, ctx);
+		this.class.onDefendLose?.(this, playerAttackingYou, ctx);
 		// Teleport to random spawn on loss (unless in shadow realm)
 		if (!this.inShadowRealm) {
 			teleportToRandomSpawn(this);
 		}
 	}
 
-	onDefenseStart(playerAttackingYou: Player) {
-		this.statuses.onDefenseStart(playerAttackingYou);
-		this.gear.onDefenseStart(playerAttackingYou);
-		this.class.onDefenseStart?.(this, playerAttackingYou);
+	onDefenseStart(playerAttackingYou: Player, ctx: GameContext) {
+		this.statuses.onDefenseStart(playerAttackingYou, ctx);
+		this.gear.onDefenseStart(playerAttackingYou, ctx);
+		this.class.onDefenseStart?.(this, playerAttackingYou, ctx);
 	}
 
-	onDefenseEnd(playerAttackingYou: Player) {
-		this.statuses.onDefenseEnd(playerAttackingYou);
-		this.gear.onDefenseEnd(playerAttackingYou);
-		this.class.onDefenseEnd?.(this, playerAttackingYou);
+	onDefenseEnd(playerAttackingYou: Player, ctx: GameContext) {
+		this.statuses.onDefenseEnd(playerAttackingYou, ctx);
+		this.gear.onDefenseEnd(playerAttackingYou, ctx);
+		this.class.onDefenseEnd?.(this, playerAttackingYou, ctx);
 	}
 
-	onTurnStart() {
-		this.class.onTurnStart?.(this);
-		this.gear.onTurnStart();
-		this.statuses.onTurnStart();
+	onTurnStart(ctx: GameContext) {
+		this.class.onTurnStart?.(this, ctx);
+		this.gear.onTurnStart(ctx);
+		this.statuses.onTurnStart(ctx);
 		if (this.inShadowRealm) {
 			this._game?.addAuditTrail(`${this.name} is in the Shadow Realm!`);
-			if (this.name) generateShadowRealmWheel(this.name, getServerGameContext());
+			if (this.name) generateShadowRealmWheel(this.name, ctx);
 		}
 	}
 
-	onTurnEnd(context?: { hasMoved: boolean; totalMovement: number }) {
-		this.class.onTurnEnd?.(this, context);
-		this.gear.onTurnEnd();
-		this.statuses.onTurnEnd();
+	onTurnEnd(ctx: GameContext, context?: { hasMoved: boolean; totalMovement: number }) {
+		this.class.onTurnEnd?.(this, ctx, context);
+		this.gear.onTurnEnd(ctx);
+		this.statuses.onTurnEnd(ctx);
 	}
 
-	onAttackStart(attackingPlayer: Player) {
-		this.gear.onAttackStart(attackingPlayer);
+	onAttackStart(attackingPlayer: Player, ctx: GameContext) {
+		this.gear.onAttackStart(attackingPlayer, ctx);
 	}
-	onAttackEnd(attackingPlayer: Player) {
-		this.gear.onAttackEnd(attackingPlayer);
+	onAttackEnd(attackingPlayer: Player, ctx: GameContext) {
+		this.gear.onAttackEnd(attackingPlayer, ctx);
 	}
 
 	/**
@@ -581,7 +560,6 @@ export class Player {
 			bonusAttack: this._bonusAttack,
 			baseAttack: this._baseAttack,
 			attackMultipliers: this.attackMultipliers,
-			brassKnucklesMultiplier: this._brassKnucklesMultiplier,
 			baseDefense: this._baseDefense,
 			bonusDefense: this._bonusDefense,
 			defenseMultipliers: this.defenseMultipliers,
@@ -608,7 +586,6 @@ export class Player {
 		player._bonusAttack = data.bonusAttack;
 		player._baseAttack = data.baseAttack;
 		player.attackMultipliers = data.attackMultipliers;
-		player._brassKnucklesMultiplier = data.brassKnucklesMultiplier;
 		player._baseDefense = data.baseDefense;
 		player._bonusDefense = data.bonusDefense;
 		player.defenseMultipliers = data.defenseMultipliers;

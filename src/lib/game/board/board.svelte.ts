@@ -10,6 +10,11 @@ import { BOARD_HEIGHT, BOARD_WIDTH, SPAWN_ZONES, TELEPORTERS, TILES } from './bo
 import type { Direction, Position, Tile, TileType } from './types';
 import { getAdjacentPosition, getManhattanDistance, isInBounds, positionsEqual } from './types';
 
+/** Convert a position to a string key for Set/Map lookups */
+function posKey(p: Position): string {
+	return `${p.x},${p.y}`;
+}
+
 /**
  * Get a tile at a specific position
  */
@@ -73,33 +78,49 @@ export function getPathDistance(
 ): number {
 	if (positionsEqual(startPos, endPos)) return 0;
 
+	return bfsSearch(startPos, maxRange, {
+		earlyExit: (pos) => positionsEqual(pos, endPos)
+	});
+}
+
+/**
+ * BFS helper for pathfinding and reachability.
+ * Returns distance if earlyExit matches, or -1.
+ * If collecting results, returns all reachable positions.
+ */
+function bfsSearch(
+	startPos: Position,
+	maxRange: number,
+	options: {
+		earlyExit?: (pos: Position) => boolean;
+		excludeShadowRealm?: boolean;
+	} = {}
+): number {
 	const visited = new Set<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
 	let head = 0;
 
-	const posKey = (p: Position) => `${p.x},${p.y}`;
 	visited.add(posKey(startPos));
 
 	while (head < queue.length) {
 		const current = queue[head++];
 
-		// If we've reached max range, don't explore further
-		if (current.distance >= maxRange) {
-			continue;
-		}
+		if (current.distance >= maxRange) continue;
 
-		// Get the current tile
 		const currentTile = getTileAt(current.pos);
 		if (!currentTile) continue;
 
-		// Explore each valid connection
 		for (const direction of currentTile.connections) {
 			const nextPos = getAdjacentPosition(current.pos, direction);
 			const key = posKey(nextPos);
 
 			if (!visited.has(key) && isWalkable(nextPos)) {
-				// Check if we found the target
-				if (positionsEqual(nextPos, endPos)) {
+				if (options.excludeShadowRealm) {
+					const nextTile = getTileAt(nextPos);
+					if (nextTile?.type === 'shadow_realm') continue;
+				}
+
+				if (options.earlyExit?.(nextPos)) {
 					return current.distance + 1;
 				}
 
@@ -109,7 +130,53 @@ export function getPathDistance(
 		}
 	}
 
-	return -1; // No path found
+	return -1;
+}
+
+/**
+ * Collect all reachable positions via BFS within range.
+ */
+function bfsReachable(
+	startPos: Position,
+	range: number,
+	excludeShadowRealm: boolean = false
+): Position[] {
+	const validMoves: Position[] = [];
+	const visited = new Set<string>();
+	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
+	let head = 0;
+
+	visited.add(posKey(startPos));
+
+	while (head < queue.length) {
+		const current = queue[head++];
+
+		if (current.distance > 0) {
+			validMoves.push(current.pos);
+		}
+
+		if (current.distance >= range) continue;
+
+		const currentTile = getTileAt(current.pos);
+		if (!currentTile) continue;
+
+		for (const direction of currentTile.connections) {
+			const nextPos = getAdjacentPosition(current.pos, direction);
+			const key = posKey(nextPos);
+
+			if (!visited.has(key) && isWalkable(nextPos)) {
+				if (excludeShadowRealm) {
+					const nextTile = getTileAt(nextPos);
+					if (nextTile?.type === 'shadow_realm') continue;
+				}
+
+				visited.add(key);
+				queue.push({ pos: nextPos, distance: current.distance + 1 });
+			}
+		}
+	}
+
+	return validMoves;
 }
 
 /**
@@ -124,50 +191,7 @@ export function getValidMoves(
 	range: number,
 	excludeShadowRealm: boolean = false
 ): Position[] {
-	const validMoves: Position[] = [];
-	const visited = new Set<string>();
-	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
-	let head = 0;
-
-	const posKey = (p: Position) => `${p.x},${p.y}`;
-	visited.add(posKey(startPos));
-
-	while (head < queue.length) {
-		const current = queue[head++];
-
-		// Add to valid moves (except starting position)
-		if (current.distance > 0) {
-			validMoves.push(current.pos);
-		}
-
-		// If we've reached max range, don't explore further
-		if (current.distance >= range) {
-			continue;
-		}
-
-		// Get the current tile
-		const currentTile = getTileAt(current.pos);
-		if (!currentTile) continue;
-
-		// Explore each valid connection
-		for (const direction of currentTile.connections) {
-			const nextPos = getAdjacentPosition(current.pos, direction);
-			const key = posKey(nextPos);
-
-			if (!visited.has(key) && isWalkable(nextPos)) {
-				// Skip shadow realm tiles if excluded
-				const nextTile = getTileAt(nextPos);
-				if (excludeShadowRealm && nextTile?.type === 'shadow_realm') {
-					continue;
-				}
-
-				visited.add(key);
-				queue.push({ pos: nextPos, distance: current.distance + 1 });
-			}
-		}
-	}
-
-	return validMoves;
+	return bfsReachable(startPos, range, excludeShadowRealm);
 }
 
 /**
@@ -302,13 +326,14 @@ export class GameBoard {
 	}
 
 	/**
-	 * Calculate and highlight valid moves for a player
+	 * Calculate and highlight valid moves for a player.
+	 * Returns true if there are valid moves, false otherwise.
 	 */
-	showValidMoves(playerId: string, range: number): void {
+	showValidMoves(playerId: string, range: number): boolean {
 		const pos = this.getPlayerPosition(playerId);
-		if (pos) {
-			this.highlightedMoves = getValidMoves(pos, range);
-		}
+		if (!pos) return false;
+		this.highlightedMoves = getValidMoves(pos, range);
+		return this.highlightedMoves.length > 0;
 	}
 
 	/**
@@ -327,17 +352,14 @@ export class GameBoard {
 	}
 
 	/**
-	 * Move a player to a new position (with validation)
+	 * Move a player to a new position (with validation).
+	 * Requires showValidMoves() to have been called first — no fallback range.
 	 */
 	movePlayer(playerId: string, to: Position): boolean {
 		const from = this.getPlayerPosition(playerId);
 		if (!from) return false;
 
-		// Check if destination is in valid moves
-		const validMoves =
-			this.highlightedMoves.length > 0 ? this.highlightedMoves : getValidMoves(from, 10); // Fallback to max range
-
-		if (!validMoves.some((p) => positionsEqual(p, to))) {
+		if (!this.highlightedMoves.some((p) => positionsEqual(p, to))) {
 			return false;
 		}
 
@@ -378,5 +400,6 @@ export class GameBoard {
 	}
 }
 
-// Export singleton instance
+// TODO: This singleton prevents multiple game rooms from running concurrently.
+// Should be moved to per-room state (e.g., stored on GameRoom or passed via context).
 export const gameBoard = new GameBoard();

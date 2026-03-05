@@ -2,8 +2,10 @@ import { shuffle } from '$lib/components/wheel/utils';
 import type { GameStateDelta } from '$lib/multiplayer/types';
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import type { GameContext } from './gameContext';
 import items, { getItemByType, type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
+import { getServerGameContext } from './serverContext';
 import { validateGame } from './serialization';
 import type { CustomWheelConfig } from './wheels/wheels';
 
@@ -61,8 +63,7 @@ export class Game {
 		return true;
 	}
 
-	//playerNames
-	skippedNextTurns = $state<string[]>([]);
+	skippedNextTurns = new SvelteSet<string>();
 
 	/**
 	 * --------------------------------------------------------------------------
@@ -137,11 +138,6 @@ export class Game {
 		return true;
 	}
 
-	// Legacy getters for backwards compatibility during transition
-	get unlockedShopCategory(): string {
-		return this.shopItems[0]?.[2] ?? 'mainhand';
-	}
-
 	auditTrail = $state<string[]>([]);
 
 	getItemCostModifier(item: AllItems): number {
@@ -214,18 +210,21 @@ export class Game {
 
 		const alivePlayers = this.alivePlayers;
 		if (alivePlayers.length === 0) return undefined;
-		if (alivePlayers.length === 1) {
-			if (!this.winner) {
-				this.winner = alivePlayers[0];
-				this.addAuditTrail(`${alivePlayers[0].name} has won the game!`);
-			}
-			return alivePlayers[0];
-		}
 
 		const playerName = this.playerOrder[this.currentTurn];
 		if (!playerName) return undefined;
 
 		return this.getPlayerByName(playerName);
+	}
+
+	/** Check and declare a winner if only one player remains alive */
+	private checkForWinner() {
+		if (this.winner) return;
+		const alivePlayers = this.alivePlayers;
+		if (alivePlayers.length === 1) {
+			this.winner = alivePlayers[0];
+			this.addAuditTrail(`${alivePlayers[0].name} has won the game!`);
+		}
 	}
 
 	/**
@@ -249,7 +248,12 @@ export class Game {
 		return undefined;
 	}
 
-	startTurn() {
+	/** Resolve ctx — use provided value or fall back to server singleton */
+	private resolveCtx(ctx?: GameContext): GameContext {
+		return ctx ?? getServerGameContext();
+	}
+
+	startTurn(ctx?: GameContext) {
 		if (this.hasTurnStarted) return;
 
 		const player = this.currentPlayer;
@@ -274,8 +278,8 @@ export class Game {
 		}
 
 		// Skip players who have their turn skipped
-		if (this.skippedNextTurns.includes(player.name)) {
-			this.skippedNextTurns = this.skippedNextTurns.filter((name) => name !== player.name);
+		if (this.skippedNextTurns.has(player.name)) {
+			this.skippedNextTurns.delete(player.name);
 			this.addAuditTrail(`${player.name}'s turn was skipped!`);
 			const nextAlive = this.advanceToNextAlivePlayer();
 			if (!nextAlive) {
@@ -288,7 +292,7 @@ export class Game {
 
 		// Actually start the turn
 		this.randomizeShopItems(true);
-		player.onTurnStart();
+		player.onTurnStart(this.resolveCtx(ctx));
 		this.addAuditTrail(`${player.name} starts their turn!`);
 		this.hasTurnStarted = true;
 	}
@@ -299,10 +303,11 @@ export class Game {
 		this.resetTurnActions();
 	}
 
-	finishTurn() {
+	finishTurn(ctx?: GameContext) {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 
-		this.currentPlayer?.onTurnEnd({
+		const resolvedCtx = this.resolveCtx(ctx);
+		this.currentPlayer?.onTurnEnd(resolvedCtx, {
 			hasMoved: this.hasMoved,
 			totalMovement: this.currentPlayer.movement
 		});
@@ -310,6 +315,9 @@ export class Game {
 		this.incrementTurn();
 		this.hasTurnStarted = false;
 		this.resetTurnActions();
+
+		// Check for winner after turn ends
+		this.checkForWinner();
 
 		// Track turns this round and check for round completion
 		// A round completes when all alive players have had a turn
@@ -331,18 +339,17 @@ export class Game {
 
 			// Check for HP reduction increase (every 20 rounds, doubles infinitely)
 			if (this.globalTurnCount % Game.TURNS_PER_HP_REDUCTION_INCREASE === 0) {
-				this.globalHpReduction *= 2;
-				this.addAuditTrail(`Global HP reduction doubled to ${this.globalHpReduction}!`);
+				this.increaseGlobalHpReduction();
 			}
 		}
 
 		// Note: startTurn is called here but it's now safe because startTurn
 		// no longer calls finishTurn recursively - it just returns early if needed
-		this.startTurn();
+		this.startTurn(ctx);
 	}
 
 	skipNextTurn(player: Player) {
-		this.skippedNextTurns.push(player.name);
+		this.skippedNextTurns.add(player.name);
 	}
 
 	/**
@@ -351,7 +358,6 @@ export class Game {
 	 */
 	private _shadowRealm: Player[] = $state([]);
 	public get shadowRealm(): Player[] {
-		this._shadowRealm ??= [];
 		return this._shadowRealm;
 	}
 	//Private so it can't be set outside of the class
@@ -408,7 +414,7 @@ export class Game {
 			shopItems: this.shopItems,
 			shopRerollCost: this.shopRerollCost,
 			hasTurnStarted: this.hasTurnStarted,
-			skippedNextTurns: this.skippedNextTurns,
+			skippedNextTurns: Array.from(this.skippedNextTurns),
 			hasMoved: this.hasMoved,
 			hasFought: this.hasFought,
 			hasShopped: this.hasShopped,
@@ -467,7 +473,7 @@ export class Game {
 			game.randomizeShopItems();
 		}
 		game.hasTurnStarted = data.hasTurnStarted ?? false;
-		game.skippedNextTurns = data.skippedNextTurns ?? [];
+		game.skippedNextTurns = new SvelteSet(data.skippedNextTurns ?? []);
 		game.hasMoved = data.hasMoved ?? false;
 		game.hasFought = data.hasFought ?? false;
 		game.hasShopped = data.hasShopped ?? false;

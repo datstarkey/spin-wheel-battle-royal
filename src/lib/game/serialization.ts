@@ -115,7 +115,6 @@ export interface SerializedPlayer {
 	bonusAttack: number;
 	baseAttack: number;
 	attackMultipliers: Record<string, number>;
-	brassKnucklesMultiplier: number;
 	baseDefense: number;
 	bonusDefense: number;
 	defenseMultipliers: Record<string, number>;
@@ -136,7 +135,7 @@ export interface SerializedGame {
 	customWheels: [string, unknown][];
 	playerOrder: Record<number, string>;
 	_currentTurn: number;
-	_shadowRealm: SerializedPlayer[];
+	_shadowRealm: { name: string }[];
 	itemCostModifiers: [AllItems, number][];
 	auditTrail: string[];
 	shopCostModifier: number;
@@ -165,6 +164,8 @@ function validateNumberRecord(
 	for (const [key, value] of Object.entries(data)) {
 		if (isNumber(value)) {
 			result[key] = value;
+		} else {
+			console.warn(`validateNumberRecord: skipping entry "${key}" with non-number value:`, value);
 		}
 	}
 	return result;
@@ -283,9 +284,6 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 		bonusAttack: isNumber(data.bonusAttack) ? data.bonusAttack : 0,
 		baseAttack: isNumber(data.baseAttack) ? data.baseAttack : 1,
 		attackMultipliers: validateNumberRecord(data.attackMultipliers),
-		brassKnucklesMultiplier: isNumber(data.brassKnucklesMultiplier)
-			? data.brassKnucklesMultiplier
-			: 0,
 		baseDefense: isNumber(data.baseDefense) ? data.baseDefense : 0,
 		bonusDefense: isNumber(data.bonusDefense) ? data.bonusDefense : 0,
 		// Handle both the typo (defenseMultiplier) and correct name (defenseMultipliers)
@@ -316,13 +314,12 @@ export function validateGame(data: unknown): SerializedGame | null {
 		}
 	}
 
-	// Validate shadow realm players
-	const shadowRealm: SerializedPlayer[] = [];
+	// Validate shadow realm (stored as name references, not full player data)
+	const shadowRealm: { name: string }[] = [];
 	if (isArray(data._shadowRealm)) {
-		for (const playerData of data._shadowRealm) {
-			const validated = validatePlayer(playerData);
-			if (validated) {
-				shadowRealm.push(validated);
+		for (const entry of data._shadowRealm) {
+			if (isObject(entry) && isString(entry.name)) {
+				shadowRealm.push({ name: entry.name });
 			}
 		}
 	}
@@ -393,7 +390,13 @@ export function validateGame(data: unknown): SerializedGame | null {
 	if (isArray(data.shopItems)) {
 		shopItems = [];
 		for (const entry of data.shopItems) {
-			if (isArray(entry) && entry.length === 3 && isString(entry[0]) && isString(entry[2])) {
+			if (
+				isArray(entry) &&
+				entry.length === 3 &&
+				isString(entry[0]) &&
+				isObject(entry[1]) &&
+				isString(entry[2])
+			) {
 				shopItems.push([entry[0], entry[1], entry[2]]);
 			}
 		}

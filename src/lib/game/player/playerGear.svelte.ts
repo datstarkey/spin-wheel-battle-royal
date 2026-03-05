@@ -1,5 +1,5 @@
-import { getServerGameContext } from '$lib/game/serverContext';
 import toast from '$lib/stores/toaster.svelte';
+import type { GameContext } from '../gameContext';
 import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
 import items, {
 	getItemByType,
@@ -8,6 +8,7 @@ import items, {
 	type MainHands,
 	type OffHands
 } from '../items/itemTypes';
+import { getServerGameContext } from '../serverContext';
 import type { SerializedPlayerGear } from '../serialization';
 import type { Player } from './player.svelte';
 
@@ -32,11 +33,12 @@ export class PlayerGear {
 		if (this._player) {
 			return this._player;
 		}
-		const player = getServerGameContext().getPlayerByName(this._playerName);
-		if (!player) {
-			throw new Error(`Player ${this._playerName} not found`);
-		}
-		return player;
+		throw new Error(`Player ${this._playerName} not resolved — call setPlayer() first`);
+	}
+
+	/** Resolve ctx — use provided value or fall back to server singleton */
+	private resolveCtx(ctx?: GameContext): GameContext {
+		return ctx ?? getServerGameContext();
 	}
 
 	private get gearItems(): Item[] {
@@ -56,44 +58,44 @@ export class PlayerGear {
 	 * Events
 	 */
 
-	onAttackWin(defendingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackWin?.(this.player, defendingPlayer));
+	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onAttackWin?.(this.player, defendingPlayer, ctx));
 	}
 
-	onAttackLose(defendingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackLose?.(this.player, defendingPlayer));
+	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onAttackLose?.(this.player, defendingPlayer, ctx));
 	}
 
-	onDefendWin(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onDefendWin?.(this.player, attackingPlayer));
+	onDefendWin(attackingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onDefendWin?.(this.player, attackingPlayer, ctx));
 	}
 
-	onDefendLose(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onDefendLose?.(this.player, attackingPlayer));
+	onDefendLose(attackingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onDefendLose?.(this.player, attackingPlayer, ctx));
 	}
 
-	onAttackStart(defendingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, defendingPlayer));
+	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, defendingPlayer, ctx));
 	}
 
-	onAttackEnd(defendingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onAttackEnd?.(this.player, defendingPlayer));
+	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onAttackEnd?.(this.player, defendingPlayer, ctx));
 	}
 
-	onDefenseStart(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onDefenseStart?.(this.player, attackingPlayer));
+	onDefenseStart(attackingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onDefenseStart?.(this.player, attackingPlayer, ctx));
 	}
 
-	onDefenseEnd(attackingPlayer: Player) {
-		this.gearItems.forEach((x) => x.onDefenseEnd?.(this.player, attackingPlayer));
+	onDefenseEnd(attackingPlayer: Player, ctx: GameContext) {
+		this.gearItems.forEach((x) => x.onDefenseEnd?.(this.player, attackingPlayer, ctx));
 	}
 
-	onTurnStart() {
-		this.gearItems.forEach((s) => s.onTurnStart?.(this.player));
+	onTurnStart(ctx: GameContext) {
+		this.gearItems.forEach((s) => s.onTurnStart?.(this.player, ctx));
 	}
 
-	onTurnEnd() {
-		this.gearItems.forEach((s) => s.onTurnEnd?.(this.player));
+	onTurnEnd(ctx: GameContext) {
+		this.gearItems.forEach((s) => s.onTurnEnd?.(this.player, ctx));
 	}
 
 	/**
@@ -130,33 +132,34 @@ export class PlayerGear {
 		}
 	}
 
-	unequipItem(key: ItemType) {
+	unequipItem(key: ItemType, ctx?: GameContext) {
+		const resolvedCtx = this.resolveCtx(ctx);
 		switch (key) {
 			case 'mainhand':
 				if (this._mainHand) {
 					const actualItem = getItemByType(this._mainHand);
-					actualItem?.onUnequip?.(this.player, 'mainhand');
+					actualItem?.onUnequip?.(this.player, 'mainhand', resolvedCtx);
 					this._mainHand = null;
 				}
 				break;
 			case 'offHand':
 				if (this._offHand) {
 					const actualItem = getItemByType(this._offHand);
-					actualItem?.onUnequip?.(this.player, 'offHand');
+					actualItem?.onUnequip?.(this.player, 'offHand', resolvedCtx);
 					this._offHand = null;
 				}
 				break;
 			case 'helm':
 				if (this._helm) {
 					const actualItem = getItemByType(this._helm);
-					actualItem?.onUnequip?.(this.player, 'helm');
+					actualItem?.onUnequip?.(this.player, 'helm', resolvedCtx);
 					this._helm = null;
 				}
 				break;
 			case 'chest':
 				if (this._chest) {
 					const actualItem = getItemByType(this._chest);
-					actualItem?.onUnequip?.(this.player, 'chest');
+					actualItem?.onUnequip?.(this.player, 'chest', resolvedCtx);
 					this._chest = null;
 				}
 				break;
@@ -202,7 +205,7 @@ export class PlayerGear {
 		}
 	}
 
-	useConsumable(item: Consumables) {
+	useConsumable(item: Consumables, ctx?: GameContext) {
 		const index = this._consumables.indexOf(item);
 		if (index === -1) {
 			toast.error('Consumable not found in inventory');
@@ -210,7 +213,7 @@ export class PlayerGear {
 		}
 
 		const actualItem = getItemByType(item);
-		actualItem?.onUse?.(this.player);
+		actualItem?.onUse?.(this.player, this.resolveCtx(ctx));
 
 		this.player.game?.addAuditTrail(`${this.player.name} uses ${item}!`);
 		this._consumables.splice(index, 1);
@@ -229,7 +232,7 @@ export class PlayerGear {
 		return this._mainHand ? getItemByType(this._mainHand) : null;
 	}
 
-	addMainHand(item: AllItems) {
+	addMainHand(item: AllItems, ctx?: GameContext) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
@@ -240,10 +243,10 @@ export class PlayerGear {
 			return;
 		}
 		if (this._mainHand) {
-			this.unequipItem('mainhand');
+			this.unequipItem('mainhand', ctx);
 		}
 		this._mainHand = item as MainHands;
-		actualItem.onEquip?.(this.player, 'mainhand');
+		actualItem.onEquip?.(this.player, 'mainhand', this.resolveCtx(ctx));
 	}
 
 	/**
@@ -259,7 +262,7 @@ export class PlayerGear {
 		return this._offHand ? getItemByType(this._offHand) : null;
 	}
 
-	addOffHand(item: AllItems) {
+	addOffHand(item: AllItems, ctx?: GameContext) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
@@ -270,10 +273,10 @@ export class PlayerGear {
 			return;
 		}
 		if (this._offHand) {
-			this.unequipItem('offHand');
+			this.unequipItem('offHand', ctx);
 		}
 		this._offHand = item as OffHands;
-		actualItem.onEquip?.(this.player, 'offHand');
+		actualItem.onEquip?.(this.player, 'offHand', this.resolveCtx(ctx));
 	}
 
 	/**
@@ -285,7 +288,7 @@ export class PlayerGear {
 		return this._helm;
 	}
 
-	addHelm(item: AllItems) {
+	addHelm(item: AllItems, ctx?: GameContext) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
@@ -296,10 +299,10 @@ export class PlayerGear {
 			return;
 		}
 		if (this._helm) {
-			this.unequipItem('helm');
+			this.unequipItem('helm', ctx);
 		}
 		this._helm = item as Helms;
-		actualItem.onEquip?.(this.player, 'helm');
+		actualItem.onEquip?.(this.player, 'helm', this.resolveCtx(ctx));
 	}
 
 	/**
@@ -311,7 +314,7 @@ export class PlayerGear {
 		return this._chest;
 	}
 
-	addChest(item: AllItems) {
+	addChest(item: AllItems, ctx?: GameContext) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
@@ -322,10 +325,10 @@ export class PlayerGear {
 			return;
 		}
 		if (this._chest) {
-			this.unequipItem('chest');
+			this.unequipItem('chest', ctx);
 		}
 		this._chest = item as Chests;
-		actualItem.onEquip?.(this.player, 'chest');
+		actualItem.onEquip?.(this.player, 'chest', this.resolveCtx(ctx));
 	}
 
 	/**
