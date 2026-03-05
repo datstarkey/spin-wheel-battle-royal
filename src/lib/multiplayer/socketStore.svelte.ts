@@ -9,6 +9,7 @@ import type {
 	GameAction,
 	Role,
 	ServerToClientEvents,
+	SpectatorHint,
 	WheelSpinBroadcast
 } from './types';
 import { loadSession } from './multiplayerStore.svelte';
@@ -115,6 +116,13 @@ class SocketStore {
 				const currentPlayerName = this.gameStore.game?.started
 					? (this.gameStore.game.currentPlayer?.name ?? '')
 					: '';
+
+				// Clear stale spectator hints on turn change
+				const prevPlayer = this.mpStore.currentPlayerName;
+				if (currentPlayerName && currentPlayerName !== prevPlayer) {
+					this.mpStore.clearSpectatorHints();
+				}
+
 				this.mpStore.setCurrentPlayerName(currentPlayerName);
 			} catch (err) {
 				console.error('[socket] Failed to process state update, falling back to full sync:', err);
@@ -158,6 +166,21 @@ class SocketStore {
 
 		this.socket.on('room:started', () => {
 			console.log('[socket] Game started!');
+		});
+
+		this.socket.on('room:spectator_hint', (data) => {
+			const hint = data.hint;
+			switch (hint.kind) {
+				case 'movement_mode':
+					this.mpStore.setSpectatorMoves(hint.playerName, hint.validMoves);
+					break;
+				case 'movement_cancel':
+					this.mpStore.clearSpectatorMoves();
+					break;
+				case 'shopping':
+					this.mpStore.setShoppingPlayer(hint.playerName, hint.open);
+					break;
+			}
 		});
 
 		return this.socket;
@@ -271,6 +294,10 @@ class SocketStore {
 			return;
 		}
 		this.socket.emit('player:action', { action }, callback);
+	}
+
+	sendSpectatorHint(hint: SpectatorHint) {
+		this.socket?.emit('room:spectator_hint', { hint });
 	}
 
 	requestWheelSpin(wheelKey: string) {

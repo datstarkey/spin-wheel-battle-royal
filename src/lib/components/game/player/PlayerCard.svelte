@@ -29,6 +29,7 @@
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
+	let isMe = $derived(player.name === mp.myPlayerName);
 	let mpCanAct = $derived(mp.canAct);
 	let mpIsGM = $derived(mp.iAmGM);
 	let hpPercent = $derived(
@@ -92,6 +93,12 @@
 				{isDead ? 'text-surface-500' : ''}"
 			>
 				{player.name}
+				{#if isMe}
+					<span
+						class="border-success-500/40 bg-success-500/20 text-success-400 rounded px-1.5 py-0.5 text-[0.55rem] font-bold tracking-widest"
+						>YOU</span
+					>
+				{/if}
 				{#if isDead}
 					<Icon icon="mdi:skull" class="text-error-500 animate-bounce" />
 				{/if}

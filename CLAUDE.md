@@ -550,6 +550,7 @@ Players auto-added as game players on `room:join` (no GM_ADD_PLAYER action)
 ### Single-Page Routing
 
 The entire app lives on `/` — no separate routes. The root page is a state machine:
+
 - **Not connected** → Create/Join lobby menu
 - **Connected, game not started** → Room lobby (waiting, turn_order, class_selection phases)
 - **Game started** → Game UI

@@ -131,6 +131,15 @@ export interface GameStateDelta {
 }
 
 // ============================================================================
+// Spectator Hints (ephemeral UI state relayed to other clients)
+// ============================================================================
+
+export type SpectatorHint =
+	| { kind: 'movement_mode'; playerName: string; validMoves: Position[] }
+	| { kind: 'movement_cancel'; playerName: string }
+	| { kind: 'shopping'; playerName: string; open: boolean };
+
+// ============================================================================
 // Socket.IO Event Maps
 // ============================================================================
 
@@ -166,6 +175,8 @@ export interface ClientToServerEvents {
 		data: { wheelKey: string },
 		callback?: (response: { success: boolean; error?: string }) => void
 	) => void;
+
+	'room:spectator_hint': (data: { hint: SpectatorHint }) => void;
 }
 
 export interface StateUpdatePayload {
@@ -187,4 +198,5 @@ export interface ServerToClientEvents {
 	'room:player_left': (data: { playerName: string }) => void;
 	'room:error': (data: { message: string }) => void;
 	'room:started': () => void;
+	'room:spectator_hint': (data: { hint: SpectatorHint }) => void;
 }

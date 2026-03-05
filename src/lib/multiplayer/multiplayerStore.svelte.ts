@@ -1,4 +1,5 @@
 import { createContext } from 'svelte';
+import type { Position } from '$lib/game/board/types';
 import type {
 	CombatState,
 	PendingWheelPayload,
@@ -48,6 +49,11 @@ class MultiplayerStore {
 	private _combatState = $state<CombatState | null>(null);
 	private _roomPhase = $state<RoomPhase>('waiting');
 
+	// Spectator hint state (ephemeral, visual-only)
+	private _spectatorMoves = $state<Position[]>([]);
+	private _spectatorMovePlayer = $state('');
+	private _shoppingPlayerName = $state('');
+
 	// -----------------------------------------------------------
 	// Reactive getters
 	// -----------------------------------------------------------
@@ -75,6 +81,18 @@ class MultiplayerStore {
 	}
 	get roomPhase() {
 		return this._roomPhase;
+	}
+	get currentPlayerName() {
+		return this._currentPlayerName;
+	}
+	get spectatorMoves() {
+		return this._spectatorMoves;
+	}
+	get spectatorMovePlayer() {
+		return this._spectatorMovePlayer;
+	}
+	get shoppingPlayerName() {
+		return this._shoppingPlayerName;
 	}
 
 	// -----------------------------------------------------------
@@ -173,6 +191,29 @@ class MultiplayerStore {
 	}
 
 	// -----------------------------------------------------------
+	// Spectator hints
+	// -----------------------------------------------------------
+
+	setSpectatorMoves(playerName: string, moves: Position[]) {
+		this._spectatorMovePlayer = playerName;
+		this._spectatorMoves = moves;
+	}
+
+	clearSpectatorMoves() {
+		this._spectatorMovePlayer = '';
+		this._spectatorMoves = [];
+	}
+
+	setShoppingPlayer(name: string, open: boolean) {
+		this._shoppingPlayerName = open ? name : '';
+	}
+
+	clearSpectatorHints() {
+		this.clearSpectatorMoves();
+		this.setShoppingPlayer('', false);
+	}
+
+	// -----------------------------------------------------------
 	// Session persistence
 	// -----------------------------------------------------------
 
@@ -209,6 +250,7 @@ class MultiplayerStore {
 		this._connectedPlayers = [];
 		this._pendingWheels = [];
 		this._roomPhase = 'waiting';
+		this.clearSpectatorHints();
 		this.clearSession();
 	}
 }

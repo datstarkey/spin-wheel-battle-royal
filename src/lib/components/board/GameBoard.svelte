@@ -5,10 +5,22 @@
 	import { positionsEqual } from '$lib/game/board/types';
 	import { getGameStore } from '$lib/stores/gameStore.svelte';
 	import { getMovementStore } from '$lib/stores/movementStore.svelte';
+	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+
+	import PlayerToken from './PlayerToken.svelte';
 
 	const gs = getGameStore();
 	const movement = getMovementStore();
-	import PlayerToken from './PlayerToken.svelte';
+	const mp = getMultiplayerStore();
+
+	// Spectator movement highlights (from other players' movement mode)
+	let spectatorMoveSet = $derived.by(() => {
+		const moves = mp.spectatorMoves;
+		if (moves.length === 0) return null;
+		const set = new Set<string>();
+		for (const m of moves) set.add(`${m.x},${m.y}`);
+		return set;
+	});
 
 	// Check if a position has an unlooted treasure chest
 	function hasUnlootedTreasure(pos: Position): boolean {
@@ -245,6 +257,8 @@
 			{#each walkableTiles as tile (tile.position.x + '-' + tile.position.y)}
 				{@const players = getPlayersAtPosition(tile.position)}
 				{@const isHighlighted = showValidMoves && gameBoard.isHighlighted(tile.position)}
+				{@const isSpectatorHighlighted =
+					!isHighlighted && spectatorMoveSet?.has(`${tile.position.x},${tile.position.y}`)}
 				{@const isSelected =
 					gameBoard.selectedTile !== null && positionsEqual(gameBoard.selectedTile, tile.position)}
 				{@const hasTreasure = hasUnlootedTreasure(tile.position)}
@@ -263,6 +277,10 @@
 					{#if isHighlighted}
 						<div
 							class="absolute inset-0 animate-pulse border-2 border-yellow-400/80 bg-yellow-400/40"
+						></div>
+					{:else if isSpectatorHighlighted}
+						<div
+							class="border-secondary-400/50 bg-secondary-400/20 absolute inset-0 animate-pulse border-2"
 						></div>
 					{/if}
 					{#if isSelected}

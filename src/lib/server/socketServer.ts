@@ -351,6 +351,15 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		});
 
 		// ================================================================
+		// Spectator Hints (fire-and-forget relay)
+		// ================================================================
+		socket.on('room:spectator_hint', (data) => {
+			if (actionLimiter.isThrottled(socket.id)) return;
+			if (!currentRoomCode) return;
+			socket.to(currentRoomCode).emit('room:spectator_hint', data);
+		});
+
+		// ================================================================
 		// Disconnect
 		// ================================================================
 		function handleDisconnect() {

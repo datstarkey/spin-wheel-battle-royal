@@ -67,11 +67,24 @@ class MovementStore {
 			excludeShadowRealm
 		);
 		gameBoard.highlightedMoves = validMoves;
+
+		// Broadcast to spectators
+		this.socketStore?.sendSpectatorHint({
+			kind: 'movement_mode',
+			playerName: currentPlayer.name,
+			validMoves
+		});
 	}
 
 	exitMovementMode() {
 		this._isMovementMode = false;
 		gameBoard.clearHighlights();
+
+		// Broadcast cancel to spectators
+		const playerName = this.gameStore.game?.currentPlayer?.name;
+		if (playerName) {
+			this.socketStore?.sendSpectatorHint({ kind: 'movement_cancel', playerName });
+		}
 	}
 
 	moveCurrentPlayerTo(position: Position): boolean {

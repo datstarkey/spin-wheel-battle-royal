@@ -4,6 +4,8 @@
 	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
 	import PlayerCardSmall from './player/PlayerCardSmall.svelte';
+	import TurnBanner from './TurnBanner.svelte';
+	import SpectatorStatus from './SpectatorStatus.svelte';
 
 	const gs = getGameStore();
 
@@ -12,6 +14,12 @@
 	// All players in turn order
 	let allPlayers = $derived(gs.game ? Object.values(gs.game.playerOrder) : []);
 </script>
+
+<!-- Turn change notification -->
+<TurnBanner />
+
+<!-- Spectator activity status -->
+<SpectatorStatus />
 
 <!-- Game board as background layer (1:1 pixel mapping at 480x480) -->
 <GameBoard />

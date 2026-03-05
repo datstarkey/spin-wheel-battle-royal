@@ -1,9 +1,12 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
+	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
 	import WheelDropdown from './WheelDropdown.svelte';
+
+	const mp = getMultiplayerStore();
 
 	interface Props {
 		player: Player;
@@ -16,6 +19,7 @@
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
+	let isMe = $derived(player.name === mp.myPlayerName);
 	let hpPercent = $derived(
 		Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100))
 	);
@@ -109,6 +113,12 @@
 				>
 					{player.name}
 				</span>
+				{#if isMe}
+					<span
+						class="border-success-500/40 bg-success-500/20 text-success-400 shrink-0 rounded px-1 py-0.5 text-[0.5rem] font-bold tracking-widest"
+						>YOU</span
+					>
+				{/if}
 				{#if player.inShadowRealm}
 					<Icon icon="mdi:star-four-points" class="text-tertiary-400 shrink-0 text-xs" />
 				{/if}

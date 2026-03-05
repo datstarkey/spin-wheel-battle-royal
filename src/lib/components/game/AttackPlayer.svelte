@@ -86,6 +86,19 @@
 
 	let shopOpen = $state(false);
 
+	// Broadcast shop state to spectators
+	$effect(() => {
+		const shouldBroadcast = mp.canAct && shopOpen;
+		if (shouldBroadcast) {
+			socket.sendSpectatorHint({ kind: 'shopping', playerName: mp.myPlayerName, open: true });
+		}
+		return () => {
+			if (shouldBroadcast) {
+				socket.sendSpectatorHint({ kind: 'shopping', playerName: mp.myPlayerName, open: false });
+			}
+		};
+	});
+
 	let totalWeight = $derived((player?.attack ?? 0) + (defendingPlayer?.defense ?? 0));
 	let attackerWinChance = $derived(
 		totalWeight > 0 ? ((player?.attack ?? 0) / totalWeight) * 100 : 50
