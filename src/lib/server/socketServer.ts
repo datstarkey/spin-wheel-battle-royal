@@ -1,9 +1,13 @@
+import { randomUUID } from 'crypto';
 import { Server as SocketServer, type Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type { ClientToServerEvents, ServerToClientEvents } from '$lib/multiplayer/types';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
 import { handleAction, weightedRandomIndex, type ActionResult } from './actionHandler';
 import { PerSocketRateLimiter } from './rateLimiter';
+
+/** Max spectator hint payload size in bytes */
+const MAX_SPECTATOR_HINT_SIZE = 4096;
 
 type TypedServer = SocketServer<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -59,9 +63,10 @@ export function getIO(): TypedServer | null {
 export function initSocketServer(httpServer: HttpServer): TypedServer {
 	if (io) return io;
 
+	const corsOrigin = process.env.ORIGIN ?? 'http://localhost:7654';
 	io = new SocketServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 		cors: {
-			origin: '*',
+			origin: corsOrigin,
 			methods: ['GET', 'POST']
 		},
 		path: '/socket.io'
@@ -80,13 +85,17 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			currentRoomCode = room.code;
 			socket.join(room.code);
 
+			// Generate rejoin token for the GM
+			const rejoinToken = randomUUID();
+			room.rejoinTokens.set(data.gmName, rejoinToken);
+
 			// Send initial state to the GM (includes themselves as a game player)
 			socket.emit('room:state_update', {
 				gameState: room.game.serialize(),
 				roomState: room.getRoomState()
 			});
 
-			callback({ success: true, roomCode: room.code });
+			callback({ success: true, roomCode: room.code, rejoinToken });
 		});
 
 		// ================================================================
@@ -99,7 +108,7 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				return;
 			}
 
-			if (room.password && room.password !== data.password) {
+			if (!room.checkPassword(data.password)) {
 				callback({ success: false, error: 'Incorrect password' });
 				return;
 			}
@@ -119,6 +128,10 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			currentRoomCode = room.code;
 			socket.join(room.code);
 
+			// Generate rejoin token
+			const rejoinToken = randomUUID();
+			room.rejoinTokens.set(data.playerName, rejoinToken);
+
 			// Notify others
 			socket.to(room.code).emit('room:player_joined', {
 				playerName: data.playerName,
@@ -128,13 +141,14 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			// Broadcast updated state to all (including the new player joining)
 			io?.to(room.code).emit('room:state_update', {
 				gameState: room.game.serialize(),
-				roomState: room.getRoomState()
+				roomState: room.getRoomState(),
+				combatState: room.combatState ?? undefined
 			});
 
 			// Send any pending wheels to the joining player
 			sendPendingWheels(socket, room);
 
-			callback({ success: true, role });
+			callback({ success: true, role, rejoinToken });
 		});
 
 		// ================================================================
@@ -144,6 +158,13 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			const room = getRoom(data.roomCode);
 			if (!room) {
 				callback({ success: false, error: 'Room not found' });
+				return;
+			}
+
+			// Validate rejoin token
+			const storedToken = room.rejoinTokens.get(data.playerName);
+			if (!storedToken || storedToken !== data.rejoinToken) {
+				callback({ success: false, error: 'Invalid rejoin token' });
 				return;
 			}
 
@@ -157,10 +178,11 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			const role = room.getPlayerRole(data.playerName);
 			socket.join(room.code);
 
-			// Send full state
+			// Send full state including combat state
 			socket.emit('room:state_update', {
 				gameState: room.game.serialize(),
-				roomState: room.getRoomState()
+				roomState: room.getRoomState(),
+				combatState: room.combatState ?? undefined
 			});
 
 			// Send any pending wheels
@@ -209,6 +231,11 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				return;
 			}
 
+			// Track combat state on the room for join/rejoin
+			if (result.combat) {
+				room.combatState = result.combat;
+			}
+
 			// Broadcast updated state to all clients in the room
 			if (result.gameState) {
 				io?.to(currentRoomCode).emit('room:state_update', {
@@ -233,6 +260,11 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		// Wheel: Request Spin (server picks winner, broadcasts to all)
 		// ================================================================
 		socket.on('wheel:request_spin', (data, callback) => {
+			if (actionLimiter.isThrottled(socket.id)) {
+				callback?.({ success: false, error: 'Too many actions, slow down' });
+				return;
+			}
+
 			if (!currentRoomCode) {
 				callback?.({ success: false, error: 'Not in a room' });
 				return;
@@ -331,6 +363,9 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 
 			// Broadcast updated state (include combatState: null if this was a combat wheel)
 			const combatEnded = wheelType === 'combat';
+			if (combatEnded) {
+				room.combatState = null;
+			}
 			if (result.gameState) {
 				io?.to(currentRoomCode).emit('room:state_update', {
 					gameState: result.gameState,
@@ -356,6 +391,13 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		socket.on('room:spectator_hint', (data) => {
 			if (actionLimiter.isThrottled(socket.id)) return;
 			if (!currentRoomCode) return;
+
+			// Validate payload structure and size
+			if (!data || typeof data !== 'object' || !data.hint || typeof data.hint.kind !== 'string')
+				return;
+			const serialized = JSON.stringify(data);
+			if (serialized.length > MAX_SPECTATOR_HINT_SIZE) return;
+
 			socket.to(currentRoomCode).emit('room:spectator_hint', data);
 		});
 

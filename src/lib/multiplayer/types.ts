@@ -70,14 +70,13 @@ export interface PendingWheelPayload {
 /** Base fields shared by all actions */
 interface ActionBase {
 	/** Unique ID for deduplication (generated client-side) */
-	actionId?: string;
+	actionId: string;
 }
 
 export type GameAction = ActionBase &
 	(
 		| { type: 'MOVE'; position: Position }
 		| { type: 'FINISH_TURN' }
-		| { type: 'ATTACK_START'; defenderName: string }
 		| { type: 'ATTACK_RESOLVE'; attackerName: string; defenderName: string }
 		| { type: 'SHOP_BUY'; item: AllItems }
 		| { type: 'SHOP_REROLL' }
@@ -146,16 +145,26 @@ export type SpectatorHint =
 export interface ClientToServerEvents {
 	'room:create': (
 		data: { gmName: string; password?: string },
-		callback: (response: { success: boolean; roomCode?: string; error?: string }) => void
+		callback: (response: {
+			success: boolean;
+			roomCode?: string;
+			rejoinToken?: string;
+			error?: string;
+		}) => void
 	) => void;
 
 	'room:join': (
 		data: { roomCode: string; playerName: string; password?: string; role?: Role },
-		callback: (response: { success: boolean; role?: Role; error?: string }) => void
+		callback: (response: {
+			success: boolean;
+			role?: Role;
+			rejoinToken?: string;
+			error?: string;
+		}) => void
 	) => void;
 
 	'room:rejoin': (
-		data: { roomCode: string; playerName: string },
+		data: { roomCode: string; playerName: string; rejoinToken: string },
 		callback: (response: { success: boolean; role?: Role; error?: string }) => void
 	) => void;
 

@@ -7,7 +7,7 @@ import type { WheelBase } from './wheels/wheels';
 
 export interface GameContext {
 	getPlayerByName(name: string): Player | undefined;
-	addCustomWheel(key: string, wheel: WheelBase, theme?: WheelTheme): void;
+	addCustomWheel(key: string, wheel: WheelBase, theme?: WheelTheme, forPlayerName?: string): void;
 	addAuditTrail(message: string): void;
 	increaseShopCostModifier(amount?: number): void;
 	setHasUsedCasinoThisTurn(value: boolean): void;

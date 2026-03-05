@@ -19,12 +19,17 @@ export function createServerGameContext(room: GameRoom, forPlayerName: string): 
 			return room.game.players.find((p) => p.name === name);
 		},
 
-		addCustomWheel(key: string, wheel: WheelBase, theme?: WheelTheme): void {
+		addCustomWheel(
+			key: string,
+			wheel: WheelBase,
+			theme?: WheelTheme,
+			wheelForPlayer?: string
+		): void {
 			// Store wheel with closures server-side (NOT in game.customWheels)
 			room.pendingWheels.set(key, {
 				items: wheel,
 				theme,
-				forPlayerName,
+				forPlayerName: wheelForPlayer ?? forPlayerName,
 				shuffledOrder: generateShuffleOrder(wheel.length)
 			});
 		},

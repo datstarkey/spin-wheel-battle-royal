@@ -63,8 +63,8 @@ class SocketStore {
 		this.socket.on('connect', () => {
 			this.mpStore.setConnectionStatus('connected');
 			const session = loadSession();
-			if (session) {
-				this.rejoinRoom(session.roomCode, session.playerName);
+			if (session?.rejoinToken) {
+				this.rejoinRoom(session.roomCode, session.playerName, session.rejoinToken);
 			}
 		});
 
@@ -273,6 +273,7 @@ class SocketStore {
 					this.mpStore.setMyRole(response.role ?? role ?? 'player');
 					this.mpStore.setMyPlayerName(playerName);
 					this.mpStore.setRoomCode(roomCode);
+					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();
 				}
 				resolve(response);
@@ -282,12 +283,13 @@ class SocketStore {
 
 	async rejoinRoom(
 		roomCode: string,
-		playerName: string
+		playerName: string,
+		rejoinToken: string
 	): Promise<{ success: boolean; error?: string }> {
 		if (!this.socket?.connected) return { success: false, error: 'Not connected' };
 
 		return new Promise((resolve) => {
-			this.socket!.emit('room:rejoin', { roomCode, playerName }, (response) => {
+			this.socket!.emit('room:rejoin', { roomCode, playerName, rejoinToken }, (response) => {
 				if (response.success) {
 					this.mpStore.setMyRole(response.role ?? 'player');
 					this.mpStore.setMyPlayerName(playerName);

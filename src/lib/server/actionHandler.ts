@@ -6,10 +6,12 @@ import {
 	isOuterTeleporter,
 	isInnerTeleporter
 } from '$lib/game/board/board.svelte';
+import { getManhattanDistance } from '$lib/game/board/types';
 import { SPAWN_ZONES } from '$lib/game/board/boardData';
 import { executeTileAction } from '$lib/game/board/tileActions';
 import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
 import { classMap, type ClassType } from '$lib/game/classes/classType';
+import items, { getItemByType } from '$lib/game/items/itemTypes';
 import type {
 	CombatState,
 	GameAction,
@@ -71,6 +73,8 @@ function generateDelta(
 	afterJson: string,
 	version: number
 ): GameStateDelta | null {
+	if (beforeJson === afterJson) return null;
+
 	const before = JSON.parse(beforeJson);
 	const after = JSON.parse(afterJson);
 
@@ -230,9 +234,22 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'ATTACK_RESOLVE': {
+				if (action.attackerName !== playerName)
+					return { success: false, error: 'Cannot attack as another player' };
+				if (game.hasFought) return { success: false, error: 'Already fought this turn' };
+
 				const attacker = game.getPlayerByName(action.attackerName);
 				const defender = game.getPlayerByName(action.defenderName);
 				if (!attacker || !defender) return { success: false, error: 'Player not found' };
+				if (attacker.dead) return { success: false, error: 'Attacker is dead' };
+				if (defender.dead) return { success: false, error: 'Defender is dead' };
+
+				// Range validation
+				if (attacker.position && defender.position) {
+					const distance = getManhattanDistance(attacker.position, defender.position);
+					if (distance > attacker.attackRange)
+						return { success: false, error: 'Target out of range' };
+				}
 
 				// Store combat wheel closures server-side (keyed for later resolution)
 				const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
@@ -313,11 +330,24 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'CASINO': {
+				if (ctx.getHasUsedCasinoThisTurn())
+					return { success: false, error: 'Already used casino this turn' };
 				generateCasinoWheel(playerName, ctx);
 				break;
 			}
 
 			case 'SPELL_CAST': {
+				const caster = game.getPlayerByName(playerName);
+				if (!caster) return { success: false, error: 'Player not found' };
+				if (caster.classType !== 'magicman')
+					return { success: false, error: 'Only Magic Man can cast spells' };
+
+				const manaCosts = { minor: 25, major: 50, ultimate: 100 } as const;
+				const cost = manaCosts[action.spellLevel];
+				const mana = caster.resources['Mana'] ?? 0;
+				if (mana < cost)
+					return { success: false, error: `Not enough mana (need ${cost}, have ${mana})` };
+
 				const target = action.targetName ? game.getPlayerByName(action.targetName) : undefined;
 				switch (action.spellLevel) {
 					case 'minor':
@@ -337,8 +367,18 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			case 'USE_CONSUMABLE': {
 				const player = game.getPlayerByName(playerName);
 				if (!player) return { success: false, error: 'Player not found' };
-				// Cast to Consumables type since the action carries AllItems
-				player.gear.useConsumable(action.item as import('$lib/game/items/itemTypes').Consumables);
+
+				// Validate item is a consumable
+				if (!(action.item in items.consumables))
+					return { success: false, error: 'Item is not a consumable' };
+
+				const consumableItem = action.item as import('$lib/game/items/itemTypes').Consumables;
+
+				// Validate player owns the consumable
+				if (!player.gear.consumables.includes(consumableItem))
+					return { success: false, error: 'Player does not own this consumable' };
+
+				player.gear.useConsumable(consumableItem);
 				break;
 			}
 
@@ -410,6 +450,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_HP': {
+				if (typeof action.hp !== 'number' || !isFinite(action.hp) || action.hp < 0)
+					return { success: false, error: 'Invalid HP value' };
 				const player = game.getPlayerByName(action.playerName);
 				if (!player) return { success: false, error: 'Player not found' };
 				player.hp = action.hp;
@@ -417,6 +459,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_GOLD': {
+				if (typeof action.gold !== 'number' || !isFinite(action.gold) || action.gold < 0)
+					return { success: false, error: 'Invalid gold value' };
 				const player = game.getPlayerByName(action.playerName);
 				if (!player) return { success: false, error: 'Player not found' };
 				player.gold = action.gold;
@@ -424,6 +468,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_ATTACK': {
+				if (typeof action.attack !== 'number' || !isFinite(action.attack) || action.attack < 0)
+					return { success: false, error: 'Invalid attack value' };
 				const player = game.getPlayerByName(action.playerName);
 				if (!player) return { success: false, error: 'Player not found' };
 				player.baseAttack = action.attack;
@@ -431,6 +477,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_DEFENSE': {
+				if (typeof action.defense !== 'number' || !isFinite(action.defense) || action.defense < 0)
+					return { success: false, error: 'Invalid defense value' };
 				const player = game.getPlayerByName(action.playerName);
 				if (!player) return { success: false, error: 'Player not found' };
 				player.baseDefense = action.defense;
@@ -455,6 +503,23 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 				const player = game.getPlayerByName(action.playerName);
 				if (!player) return { success: false, error: 'Player not found' };
 				player.hp = player.maxHp;
+				break;
+			}
+
+			case 'GM_REMOVE_ITEM': {
+				const player = game.getPlayerByName(action.playerName);
+				if (!player) return { success: false, error: 'Player not found' };
+				const itemDef = getItemByType(action.item);
+				if (!itemDef) return { success: false, error: 'Invalid item' };
+				if (itemDef.type === 'consumables') {
+					const idx = player.gear.consumables.indexOf(
+						action.item as import('$lib/game/items/itemTypes').Consumables
+					);
+					if (idx < 0) return { success: false, error: 'Player does not have this consumable' };
+					player.gear.deleteItem('consumables', idx);
+				} else {
+					player.gear.unequipItem(itemDef.type);
+				}
 				break;
 			}
 

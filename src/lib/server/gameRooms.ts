@@ -1,8 +1,14 @@
+import { createHash } from 'crypto';
 import { Game } from '$lib/game/game.svelte';
 import { Player } from '$lib/game/player/player.svelte';
 import type { WheelBase } from '$lib/game/wheels/wheels';
 import type { WheelTheme } from '$lib/components/wheel/types';
-import type { Role, RoomPhase, RoomPlayer, RoomState } from '$lib/multiplayer/types';
+import type { CombatState, Role, RoomPhase, RoomPlayer, RoomState } from '$lib/multiplayer/types';
+
+/** Hash a password with SHA-256 */
+function hashPassword(password: string): string {
+	return createHash('sha256').update(password).digest('hex');
+}
 
 // ============================================================================
 // Room Types
@@ -26,6 +32,7 @@ export class GameRoom {
 	game: Game;
 	gmSocketId: string;
 	gmName: string;
+	createdAt: number;
 	lastActivity: number;
 	phase: RoomPhase = 'waiting';
 
@@ -35,8 +42,12 @@ export class GameRoom {
 	socketToPlayer = new Map<string, string>();
 	/** playerName → Role */
 	playerRoles = new Map<string, Role>();
+	/** playerName → rejoin auth token */
+	rejoinTokens = new Map<string, string>();
 	/** wheelKey → WheelBase (closures stay server-side) */
 	pendingWheels = new Map<string, PendingWheel>();
+	/** Active combat state (set when combat starts, cleared when combat wheel resolves) */
+	combatState: CombatState | null = null;
 
 	/** Monotonically increasing version for delta updates */
 	stateVersion = 0;
@@ -44,17 +55,24 @@ export class GameRoom {
 	turnOrder: string[] = [];
 	/** Classes assigned during setup phase */
 	assignedClasses = new Map<string, string>();
-	/** Recent action IDs per player for deduplication (ring buffer of last 20) */
-	private recentActionIds = new Map<string, string[]>();
+	/** Recent action IDs per player for deduplication (Set for O(1) lookup + FIFO array for eviction) */
+	private recentActionIds = new Map<string, { set: Set<string>; fifo: string[] }>();
+	private static readonly MAX_RECENT_ACTIONS = 20;
 
 	/** Check and record action ID. Returns true if duplicate. */
-	isDuplicateAction(playerName: string, actionId: string | undefined): boolean {
-		if (!actionId) return false; // No ID = no dedup (backwards compat)
-		const recent = this.recentActionIds.get(playerName) ?? [];
-		if (recent.includes(actionId)) return true;
-		recent.push(actionId);
-		if (recent.length > 20) recent.shift();
-		this.recentActionIds.set(playerName, recent);
+	isDuplicateAction(playerName: string, actionId: string): boolean {
+		let recent = this.recentActionIds.get(playerName);
+		if (!recent) {
+			recent = { set: new Set(), fifo: [] };
+			this.recentActionIds.set(playerName, recent);
+		}
+		if (recent.set.has(actionId)) return true;
+		recent.set.add(actionId);
+		recent.fifo.push(actionId);
+		if (recent.fifo.length > GameRoom.MAX_RECENT_ACTIONS) {
+			const evicted = recent.fifo.shift()!;
+			recent.set.delete(evicted);
+		}
 		return false;
 	}
 
@@ -62,8 +80,9 @@ export class GameRoom {
 		this.code = code;
 		this.gmName = gmName;
 		this.gmSocketId = gmSocketId;
-		this.password = password;
+		this.password = password ? hashPassword(password) : undefined;
 		this.game = new Game();
+		this.createdAt = Date.now();
 		this.lastActivity = Date.now();
 
 		this.connectedPlayers.set(gmName, gmSocketId);
@@ -74,6 +93,13 @@ export class GameRoom {
 		const gmPlayer = new Player(gmName);
 		gmPlayer.setGame(this.game);
 		this.game.players.push(gmPlayer);
+	}
+
+	/** Check if a plaintext password matches the stored hash */
+	checkPassword(password?: string): boolean {
+		if (!this.password) return true; // No password set
+		if (!password) return false;
+		return this.password === hashPassword(password);
 	}
 
 	touch() {
@@ -200,7 +226,8 @@ export class GameRoom {
 const rooms = new Map<string, GameRoom>();
 
 const ROOM_CODE_LENGTH = 6;
-const ROOM_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const ROOM_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours idle
+const ROOM_MAX_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours absolute max lifetime
 const CLEANUP_INTERVAL_MS = 15 * 60 * 1000; // Check every 15 minutes
 
 function generateRoomCode(): string {
@@ -240,7 +267,9 @@ export function getRoomCount(): number {
 function cleanupStaleRooms() {
 	const now = Date.now();
 	for (const [code, room] of rooms) {
-		if (!room.hasActiveConnections() && now - room.lastActivity > ROOM_TTL_MS) {
+		const idleExpired = !room.hasActiveConnections() && now - room.lastActivity > ROOM_TTL_MS;
+		const maxLifetimeExpired = now - room.createdAt > ROOM_MAX_TTL_MS;
+		if (idleExpired || maxLifetimeExpired) {
 			rooms.delete(code);
 		}
 	}

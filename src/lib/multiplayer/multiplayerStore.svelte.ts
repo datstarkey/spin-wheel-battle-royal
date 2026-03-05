@@ -19,6 +19,7 @@ interface SessionData {
 	roomCode: string;
 	playerName: string;
 	role: Role;
+	rejoinToken?: string;
 }
 
 export function loadSession(): SessionData | null {
@@ -48,6 +49,7 @@ class MultiplayerStore {
 	private _pendingWheels = $state<PendingWheelPayload[]>([]);
 	private _combatState = $state<CombatState | null>(null);
 	private _roomPhase = $state<RoomPhase>('waiting');
+	private _rejoinToken = $state('');
 
 	// Spectator hint state (ephemeral, visual-only)
 	private _spectatorMoves = $state<Position[]>([]);
@@ -139,6 +141,14 @@ class MultiplayerStore {
 		this._roomCode = code;
 	}
 
+	get rejoinToken() {
+		return this._rejoinToken;
+	}
+
+	setRejoinToken(token: string) {
+		this._rejoinToken = token;
+	}
+
 	setConnectedPlayers(players: RoomPlayer[]) {
 		this._connectedPlayers = players;
 	}
@@ -221,7 +231,8 @@ class MultiplayerStore {
 		const data: SessionData = {
 			roomCode: this._roomCode,
 			playerName: this._myPlayerName,
-			role: this._myRole
+			role: this._myRole,
+			rejoinToken: this._rejoinToken || undefined
 		};
 		try {
 			sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
