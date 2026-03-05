@@ -16,16 +16,17 @@ export const init: ServerInit = async () => {
 	}
 };
 
+const ICONIFY_APIS = 'https://api.iconify.design https://api.unisvg.com https://api.simplesvg.com';
+
 const CSP_DIRECTIVES = [
 	"default-src 'self'",
 	// SvelteKit requires inline scripts/styles for hydration
 	"script-src 'self' 'unsafe-inline'",
-	"style-src 'self' 'unsafe-inline'",
-	// WebSocket connections for socket.io
-	`connect-src 'self' ws: wss:`,
-	// Iconify icons load from CDN
-	"img-src 'self' data: https://api.iconify.design",
-	"font-src 'self'",
+	"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+	// WebSocket connections for socket.io, Iconify icon data
+	`connect-src 'self' ws: wss: ${ICONIFY_APIS}`,
+	"img-src 'self' data:",
+	"font-src 'self' https://fonts.gstatic.com",
 	"object-src 'none'",
 	"base-uri 'self'",
 	"form-action 'self'",
