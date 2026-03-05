@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { currentGame, getPlayerByName } from '$lib/stores/gameStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
 	import GameBoard from '$lib/components/board/GameBoard.svelte';
 	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
 	import PlayerCardSmall from './player/PlayerCardSmall.svelte';
 
-	let currentTurnPlayer = $derived(currentGame.value?.currentPlayer);
+	const gs = getGameStore();
+
+	let currentTurnPlayer = $derived(gs.game?.currentPlayer);
 
 	// All players in turn order
-	let allPlayers = $derived(currentGame.value ? Object.values(currentGame.value.playerOrder) : []);
+	let allPlayers = $derived(gs.game ? Object.values(gs.game.playerOrder) : []);
 </script>
 
 <!-- Game board as background layer (1:1 pixel mapping at 480x480) -->
@@ -16,8 +18,8 @@
 
 <GameHistory />
 
-{#if currentGame.value}
-	{#if !currentGame.value.players}
+{#if gs.game}
+	{#if !gs.game.players}
 		<p>No Players</p>
 	{/if}
 
@@ -53,7 +55,7 @@
 			</div>
 			<div class="flex flex-col gap-2">
 				{#each allPlayers as name (name)}
-					{@const player = getPlayerByName(name)}
+					{@const player = gs.getPlayerByName(name)}
 					{#if player}
 						<PlayerCardSmall {player} {currentTurnPlayer} />
 					{/if}

@@ -1,24 +1,14 @@
-import {
-	addAuditTrail,
-	addCustomWheel,
-	currentGame,
-	getPlayerByName
-} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
+import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
-export function generateLoseWheel(playerName: string) {
-	const player = getPlayerByName(playerName);
-	if (!player) {
-		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
-		return;
-	}
+export function generateLoseWheel(playerName: string, ctx: GameContext) {
+	const player = requirePlayer(ctx, playerName, 'lose wheel');
+	if (!player || player.dead) return;
 
-	if (player.dead) return;
-
-	const globalHpValue = (currentGame.value?.globalHpReduction ?? 1) * 15;
+	const globalHpValue = ctx.getGlobalHpReduction() * 15;
 	const wheel = [
 		{
 			//1
@@ -39,7 +29,7 @@ export function generateLoseWheel(playerName: string) {
 			label: 'Go to the shadow realm',
 			onWin: () => {
 				player.inShadowRealm = true;
-				addAuditTrail(`${player.name} was sent to the Shadow Realm!`);
+				ctx.addAuditTrail(`${player.name} was sent to the Shadow Realm!`);
 			}
 		},
 		{
@@ -52,19 +42,23 @@ export function generateLoseWheel(playerName: string) {
 		{
 			//5
 			label: 'Spin Loot Wheel',
-			onWin: () => generateLootWheel(player.name)
+			onWin: () => generateLootWheel(player.name, ctx)
 		},
 		{
 			//6
 			label: 'Give someone HP',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
-				generateRandomPlayerWheel(`${playerName} Gives ${globalHpValue} Hp To`, (winner) => {
-					const hpAmount = Math.min(player.hp, globalHpValue);
-					addAuditTrail(`${player.name} transfers ${hpAmount} HP to ${winner.name}`);
-					player.hp -= hpAmount;
-					winner.hp += hpAmount;
-				});
+				generateRandomPlayerWheel(
+					`${playerName} Gives ${globalHpValue} Hp To`,
+					(winner) => {
+						const hpAmount = Math.min(player.hp, globalHpValue);
+						ctx.addAuditTrail(`${player.name} transfers ${hpAmount} HP to ${winner.name}`);
+						player.hp -= hpAmount;
+						winner.hp += hpAmount;
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -93,20 +87,24 @@ export function generateLoseWheel(playerName: string) {
 			label: 'Send Someone to the Shadow Realm',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
-				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
-					winner.inShadowRealm = true;
-					addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
-				});
+				generateRandomPlayerWheel(
+					`${playerName} Sends to Shadow Realm`,
+					(winner) => {
+						winner.inShadowRealm = true;
+						ctx.addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
 			label: 'Emotional damage',
 			onWin: () => {
 				player.statuses.addStatus('EmotionalDamage');
-				addAuditTrail(`${player.name} suffered Emotional Damage!`);
+				ctx.addAuditTrail(`${player.name} suffered Emotional Damage!`);
 			}
 		}
 	];
-	if (player.classType == 'gambler') generateGamblerWheel(player.name);
-	else addCustomWheel(`Lose Wheel - ${player.name}`, wheel, 'lose');
+	if (player.classType == 'gambler') generateGamblerWheel(player.name, ctx);
+	else ctx.addCustomWheel(`Lose Wheel - ${player.name}`, wheel, 'lose');
 }

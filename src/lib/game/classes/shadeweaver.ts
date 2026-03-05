@@ -1,4 +1,4 @@
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource } from '../player/playerResources';
 import { generateRandomPlayerWheel } from '../wheels/randomPlayerWheel';
@@ -11,7 +11,9 @@ export const SHADE_RESOURCE = 'Shade';
 // Helper to add Shade to a Shadeweaver
 export function addShade(player: Player, amount: number = 1) {
 	const totalShade = addResource(player, SHADE_RESOURCE, amount);
-	addAuditTrail(`${player.name}'s Shade grows to ${totalShade}! (+${totalShade}% ATK/DEF)`);
+	player.game?.addAuditTrail(
+		`${player.name}'s Shade grows to ${totalShade}! (+${totalShade}% ATK/DEF)`
+	);
 }
 
 export const Shadeweaver: ClassBase = {
@@ -41,8 +43,9 @@ export const Shadeweaver: ClassBase = {
 		generateRandomPlayerWheel(
 			`${player.name} Makes someone roll the Shadow Realm Wheel`,
 			(winner) => {
-				generateShadowRealmWheel(winner.name);
-			}
+				generateShadowRealmWheel(winner.name, getServerGameContext());
+			},
+			getServerGameContext()
 		);
 	}
 };

@@ -1,4 +1,3 @@
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
 import {
 	MANA_REGEN_PER_TURN,
@@ -27,7 +26,7 @@ export const Magicman: ClassBase = {
 	onAttackWin: (player) => {
 		// Magic Man generates mana on attack win instead of normal win wheel
 		addMana(player, 10);
-		addAuditTrail(`${player.name} channels arcane energy, gaining 10 mana`);
+		player.game?.addAuditTrail(`${player.name} channels arcane energy, gaining 10 mana`);
 	},
 
 	onTurnStart(player) {
@@ -40,12 +39,12 @@ export const Magicman: ClassBase = {
 		if (player.statuses.hasStatus('RuneOfPower')) {
 			incrementRuneOfPowerTurns(player);
 			const turns = getRuneOfPowerTurns(player);
-			addAuditTrail(`${player.name} stands on Rune of Power (${turns}/5 turns)`);
+			player.game?.addAuditTrail(`${player.name} stands on Rune of Power (${turns}/5 turns)`);
 
 			if (turns >= 5 && !player.statuses.hasStatus('Archmage')) {
 				// ASCENSION! Become Archmage
 				player.statuses.addStatus('Archmage');
-				addAuditTrail(`${player.name} ASCENDS to become an ARCHMAGE!`);
+				player.game?.addAuditTrail(`${player.name} ASCENDS to become an ARCHMAGE!`);
 			}
 		}
 
@@ -62,7 +61,9 @@ export const Magicman: ClassBase = {
 			if (isArchmage) unusedMovement *= 2;
 			if (unusedMovement > 0) {
 				addMana(player, unusedMovement);
-				addAuditTrail(`${player.name} gains ${unusedMovement} mana from unused movement`);
+				player.game?.addAuditTrail(
+					`${player.name} gains ${unusedMovement} mana from unused movement`
+				);
 			}
 		}
 
@@ -71,13 +72,15 @@ export const Magicman: ClassBase = {
 		if (isArchmage) manaRegen *= 2;
 
 		addMana(player, manaRegen);
-		addAuditTrail(`${player.name} regenerates ${manaRegen} mana (${getMana(player)}/${MAX_MANA})`);
+		player.game?.addAuditTrail(
+			`${player.name} regenerates ${manaRegen} mana (${getMana(player)}/${MAX_MANA})`
+		);
 
 		// Check if ran out of mana while on Rune of Power
 		if (player.statuses.hasStatus('RuneOfPower') && getMana(player) <= 0) {
 			player.statuses.removeStatus('RuneOfPower');
 			resetRuneOfPowerTurns(player);
-			addAuditTrail(`${player.name}'s Rune of Power fades due to mana exhaustion!`);
+			player.game?.addAuditTrail(`${player.name}'s Rune of Power fades due to mana exhaustion!`);
 		}
 	}
 };
@@ -98,6 +101,6 @@ export function grantUnusedMovementMana(player: Player, unusedMovement: number) 
 
 	if (bonus > 0) {
 		addMana(player, bonus);
-		addAuditTrail(`${player.name} gains ${bonus} mana from unused movement`);
+		player.game?.addAuditTrail(`${player.name} gains ${bonus} mana from unused movement`);
 	}
 }

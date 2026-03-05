@@ -1,4 +1,4 @@
-import { addCustomWheel } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
@@ -32,7 +32,7 @@ export const Swe: ClassBase = {
 			}
 		});
 
-		addCustomWheel(`Swenergy for ${player.name}`, wheel);
+		getServerGameContext().addCustomWheel(`Swenergy for ${player.name}`, wheel);
 	},
 
 	onTurnStart(player) {

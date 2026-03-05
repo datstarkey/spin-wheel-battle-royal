@@ -5,7 +5,7 @@
  * valid moves calculation, and tile interactions.
  */
 
-import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import { SvelteMap } from 'svelte/reactivity';
 import { BOARD_HEIGHT, BOARD_WIDTH, SPAWN_ZONES, TELEPORTERS, TILES } from './boardData';
 import type { Direction, Position, Tile, TileType } from './types';
 import { getAdjacentPosition, getManhattanDistance, isInBounds, positionsEqual } from './types';
@@ -73,14 +73,15 @@ export function getPathDistance(
 ): number {
 	if (positionsEqual(startPos, endPos)) return 0;
 
-	const visited = new SvelteSet<string>();
+	const visited = new Set<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
+	let head = 0;
 
 	const posKey = (p: Position) => `${p.x},${p.y}`;
 	visited.add(posKey(startPos));
 
-	while (queue.length > 0) {
-		const current = queue.shift()!;
+	while (head < queue.length) {
+		const current = queue[head++];
 
 		// If we've reached max range, don't explore further
 		if (current.distance >= maxRange) {
@@ -124,14 +125,15 @@ export function getValidMoves(
 	excludeShadowRealm: boolean = false
 ): Position[] {
 	const validMoves: Position[] = [];
-	const visited = new SvelteSet<string>();
+	const visited = new Set<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
+	let head = 0;
 
 	const posKey = (p: Position) => `${p.x},${p.y}`;
 	visited.add(posKey(startPos));
 
-	while (queue.length > 0) {
-		const current = queue.shift()!;
+	while (head < queue.length) {
+		const current = queue[head++];
 
 		// Add to valid moves (except starting position)
 		if (current.distance > 0) {

@@ -1,12 +1,6 @@
-import {
-	addAuditTrail,
-	addCustomWheel,
-	getPlayerByName,
-	getHasUsedCasinoThisTurn,
-	setHasUsedCasinoThisTurn
-} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { incrementLuckyStreak, resetLuckyStreak } from '../classes/gambler';
+import { requirePlayer, type GameContext } from '../gameContext';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
@@ -16,8 +10,11 @@ const CASINO_ENTRY_FEE = 5;
  * Check if a player can gamble at the casino
  * Gamblers get free entry!
  */
-export function canGambleAtCasino(playerName: string): { canGamble: boolean; reason?: string } {
-	const player = getPlayerByName(playerName);
+export function canGambleAtCasino(
+	playerName: string,
+	ctx: GameContext
+): { canGamble: boolean; reason?: string } {
+	const player = ctx.getPlayerByName(playerName);
 	if (!player) {
 		return { canGamble: false, reason: 'Player not found' };
 	}
@@ -26,7 +23,7 @@ export function canGambleAtCasino(playerName: string): { canGamble: boolean; rea
 		return { canGamble: false, reason: 'Dead players cannot gamble' };
 	}
 
-	if (getHasUsedCasinoThisTurn()) {
+	if (ctx.getHasUsedCasinoThisTurn()) {
 		return { canGamble: false, reason: 'Already used the casino this turn' };
 	}
 
@@ -47,20 +44,15 @@ export function canGambleAtCasino(playerName: string): { canGamble: boolean; rea
  * Entry fee: 5 gold (FREE for Gamblers!)
  * Gamblers also build Lucky Streak from casino outcomes
  */
-export function generateCasinoWheel(playerName: string) {
-	const player = getPlayerByName(playerName);
-	if (!player) {
-		toast.error(`Could not generate casino wheel, Player ${playerName} not found!`);
-		return;
-	}
-
-	if (player.dead) return;
+export function generateCasinoWheel(playerName: string, ctx: GameContext) {
+	const player = requirePlayer(ctx, playerName, 'casino wheel');
+	if (!player || player.dead) return;
 
 	const isGambler = player.classType === 'gambler';
 
 	// Gamblers get FREE entry!
 	if (isGambler) {
-		addAuditTrail(`${playerName} entered the casino (VIP - FREE entry!) 🎰`);
+		ctx.addAuditTrail(`${playerName} entered the casino (VIP - FREE entry!) 🎰`);
 	} else {
 		// Charge entry fee for non-gamblers
 		if (player.gold < CASINO_ENTRY_FEE) {
@@ -68,10 +60,10 @@ export function generateCasinoWheel(playerName: string) {
 			return;
 		}
 		player.gold -= CASINO_ENTRY_FEE;
-		addAuditTrail(`${playerName} entered the casino (paid ${CASINO_ENTRY_FEE}g)`);
+		ctx.addAuditTrail(`${playerName} entered the casino (paid ${CASINO_ENTRY_FEE}g)`);
 	}
 
-	setHasUsedCasinoThisTurn(true);
+	ctx.setHasUsedCasinoThisTurn(true);
 
 	const wheel = [
 		{
@@ -80,7 +72,7 @@ export function generateCasinoWheel(playerName: string) {
 			onWin: () => {
 				const bonus = Math.min(player.gold, 50); // Cap at +50g
 				player.gold += bonus;
-				addAuditTrail(`${playerName} hit the JACKPOT! Won ${bonus}g at the casino!`);
+				ctx.addAuditTrail(`${playerName} hit the JACKPOT! Won ${bonus}g at the casino!`);
 				if (isGambler) incrementLuckyStreak(player, 3); // Jackpot = big streak!
 			}
 		},
@@ -89,7 +81,7 @@ export function generateCasinoWheel(playerName: string) {
 			label: '🍀 Lucky 7s: +15 Gold',
 			onWin: () => {
 				player.gold += 15;
-				addAuditTrail(`${playerName} won 15g at Lucky 7s!`);
+				ctx.addAuditTrail(`${playerName} won 15g at Lucky 7s!`);
 				if (isGambler) incrementLuckyStreak(player);
 			}
 		},
@@ -98,7 +90,7 @@ export function generateCasinoWheel(playerName: string) {
 			label: '🏠 House Edge: -10 Gold',
 			onWin: () => {
 				player.gold = Math.max(0, player.gold - 10);
-				addAuditTrail(`${playerName} lost 10g to the House Edge`);
+				ctx.addAuditTrail(`${playerName} lost 10g to the House Edge`);
 				if (isGambler) resetLuckyStreak(player);
 			}
 		},
@@ -110,12 +102,12 @@ export function generateCasinoWheel(playerName: string) {
 				if (roll >= 0.5) {
 					const bonus = Math.min(player.gold, 40);
 					player.gold += bonus;
-					addAuditTrail(`${playerName} went ALL IN and won ${bonus}g!`);
+					ctx.addAuditTrail(`${playerName} went ALL IN and won ${bonus}g!`);
 					if (isGambler) incrementLuckyStreak(player, 2);
 				} else {
 					const loss = Math.min(Math.floor(player.gold / 2), 40);
 					player.gold -= loss;
-					addAuditTrail(`${playerName} went ALL IN and lost ${loss}g!`);
+					ctx.addAuditTrail(`${playerName} went ALL IN and lost ${loss}g!`);
 					if (isGambler) resetLuckyStreak(player);
 				}
 			}
@@ -125,7 +117,7 @@ export function generateCasinoWheel(playerName: string) {
 			label: '💪 Trade: +5 Base Attack',
 			onWin: () => {
 				player.baseAttack += 5;
-				addAuditTrail(`${playerName} traded chips for +5 Base Attack`);
+				ctx.addAuditTrail(`${playerName} traded chips for +5 Base Attack`);
 				if (isGambler) incrementLuckyStreak(player);
 			}
 		},
@@ -135,7 +127,7 @@ export function generateCasinoWheel(playerName: string) {
 			onWin: () => {
 				player.hp += 20;
 				player.gold = Math.max(0, player.gold - 5);
-				addAuditTrail(`${playerName} got comp drinks: +20 HP, -5g`);
+				ctx.addAuditTrail(`${playerName} got comp drinks: +20 HP, -5g`);
 				// Neutral - no streak change
 			}
 		},
@@ -143,12 +135,18 @@ export function generateCasinoWheel(playerName: string) {
 			// POSITIVE - Card Shark (PvP)
 			label: '🃏 Card Shark: Steal 10g',
 			onWin: () => {
-				generateRandomPlayerWheel(`${playerName} Steals From`, (victim) => {
-					const stolen = Math.min(10, victim.gold);
-					victim.gold -= stolen;
-					player.gold += stolen;
-					addAuditTrail(`${playerName} used Card Shark to steal ${stolen}g from ${victim.name}!`);
-				});
+				generateRandomPlayerWheel(
+					`${playerName} Steals From`,
+					(victim) => {
+						const stolen = Math.min(10, victim.gold);
+						victim.gold -= stolen;
+						player.gold += stolen;
+						ctx.addAuditTrail(
+							`${playerName} used Card Shark to steal ${stolen}g from ${victim.name}!`
+						);
+					},
+					ctx
+				);
 				if (isGambler) incrementLuckyStreak(player);
 			}
 		},
@@ -158,7 +156,7 @@ export function generateCasinoWheel(playerName: string) {
 			onWin: () => {
 				const loss = Math.floor(player.gold * 0.25);
 				player.gold -= loss;
-				addAuditTrail(`${playerName} went bust at the casino! Lost ${loss}g`);
+				ctx.addAuditTrail(`${playerName} went bust at the casino! Lost ${loss}g`);
 				if (isGambler) resetLuckyStreak(player);
 			}
 		},
@@ -166,8 +164,8 @@ export function generateCasinoWheel(playerName: string) {
 			// POSITIVE - VIP Spin (bonus wheel)
 			label: '⭐ VIP Access: Spin Loot Wheel',
 			onWin: () => {
-				addAuditTrail(`${playerName} got VIP access to the Loot Wheel!`);
-				generateLootWheel(playerName);
+				ctx.addAuditTrail(`${playerName} got VIP access to the Loot Wheel!`);
+				generateLootWheel(playerName, ctx);
 				if (isGambler) incrementLuckyStreak(player);
 			}
 		},
@@ -177,11 +175,11 @@ export function generateCasinoWheel(playerName: string) {
 			onWin: () => {
 				if (isGambler) {
 					player.gold += 30;
-					addAuditTrail(`${playerName} received Gambler's Favor: +30g!`);
+					ctx.addAuditTrail(`${playerName} received Gambler's Favor: +30g!`);
 					incrementLuckyStreak(player, 2); // Extra streak for class bonus!
 				} else {
 					player.gold += 5;
-					addAuditTrail(`${playerName} received Gambler's Favor: +5g`);
+					ctx.addAuditTrail(`${playerName} received Gambler's Favor: +5g`);
 				}
 			}
 		},
@@ -190,7 +188,7 @@ export function generateCasinoWheel(playerName: string) {
 			label: '🛡️ Trade: +5 Base Defense',
 			onWin: () => {
 				player.baseDefense += 5;
-				addAuditTrail(`${playerName} traded chips for +5 Base Defense`);
+				ctx.addAuditTrail(`${playerName} traded chips for +5 Base Defense`);
 				if (isGambler) incrementLuckyStreak(player);
 			}
 		},
@@ -198,12 +196,12 @@ export function generateCasinoWheel(playerName: string) {
 			// POSITIVE - Hot Streak (another spin)
 			label: '🔥 Hot Streak: Spin Again FREE',
 			onWin: () => {
-				addAuditTrail(`${playerName} is on a Hot Streak! Free spin!`);
+				ctx.addAuditTrail(`${playerName} is on a Hot Streak! Free spin!`);
 				if (isGambler) incrementLuckyStreak(player, 2); // Hot streak = double streak!
 				// Refund entry fee for non-gamblers and spin again
 				if (!isGambler) player.gold += CASINO_ENTRY_FEE;
-				setHasUsedCasinoThisTurn(false); // Allow another spin
-				generateCasinoWheel(playerName);
+				ctx.setHasUsedCasinoThisTurn(false); // Allow another spin
+				generateCasinoWheel(playerName, ctx);
 			}
 		},
 		{
@@ -212,13 +210,13 @@ export function generateCasinoWheel(playerName: string) {
 			onWin: () => {
 				player.baseAttack = Math.max(0, player.baseAttack - 3);
 				player.baseDefense = Math.max(0, player.baseDefense - 3);
-				addAuditTrail(`${playerName} suffered a Bad Beat! -3 Base Attack and -3 Base Defense`);
+				ctx.addAuditTrail(`${playerName} suffered a Bad Beat! -3 Base Attack and -3 Base Defense`);
 				if (isGambler) resetLuckyStreak(player);
 			}
 		}
 	];
 
-	addCustomWheel(`Casino - ${player.name} - ${Date.now()}`, wheel, 'casino');
+	ctx.addCustomWheel(`Casino - ${player.name} - ${Date.now()}`, wheel, 'casino');
 }
 
 /**

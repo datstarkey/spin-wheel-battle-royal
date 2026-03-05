@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { mount, unmount } from 'svelte';
 
 	interface Props {
 		children: import('svelte').Snippet;

@@ -1,22 +1,11 @@
-import {
-	addAuditTrail,
-	addCustomWheel,
-	currentGame,
-	getPlayerByName
-} from '$lib/stores/gameStore.svelte';
-import toast from '$lib/stores/toaster.svelte';
+import { requirePlayer, type GameContext } from '../gameContext';
 import type { WheelBase } from './wheels';
 
-export function generateDamageTakenWheel(playerName: string) {
-	const player = getPlayerByName(playerName);
-	if (!player) {
-		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
-		return;
-	}
+export function generateDamageTakenWheel(playerName: string, ctx: GameContext) {
+	const player = requirePlayer(ctx, playerName, 'damage taken wheel');
+	if (!player || player.dead) return;
 
-	if (player.dead) return;
-
-	const globalHpValue = currentGame.value?.globalHpReduction ?? 1;
+	const globalHpValue = ctx.getGlobalHpReduction();
 
 	let reductionPercentage = 0;
 
@@ -86,10 +75,10 @@ export function generateDamageTakenWheel(playerName: string) {
 			onWin: () => {
 				player.hp -= Math.floor(globalHpValue * 20 * reductionPercentageInversion);
 				player.inShadowRealm = true;
-				addAuditTrail(`${player.name} was banished to the Shadow Realm!`);
+				ctx.addAuditTrail(`${player.name} was banished to the Shadow Realm!`);
 			}
 		}
 	];
 
-	addCustomWheel(`Damage Taken Wheel - ${player.name}`, wheel, 'damage');
+	ctx.addCustomWheel(`Damage Taken Wheel - ${player.name}`, wheel, 'damage');
 }

@@ -3,11 +3,12 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Stepper from '$lib/components/ui/Stepper.svelte';
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
-	import { currentGame, getPlayerByName, addAuditTrail } from '$lib/stores/gameStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
 	import toast from '$lib/stores/toaster.svelte';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
-	let game = $derived(currentGame.value);
+	const gs = getGameStore();
+	let game = $derived(gs.game);
 
 	// Get current player name from turn order
 	let currentPlayerName = $derived(game ? game.playerOrder[game.currentTurn] : null);
@@ -17,19 +18,17 @@
 		game
 			? Object.entries(game.playerOrder)
 					.sort(([a], [b]) => Number(a) - Number(b))
-					.map(([_, name]) => name)
+					.map(([, name]) => name)
 			: []
 	);
 
 	// Set current turn by player name
 	function setCurrentTurnByPlayer(playerName: string) {
 		if (!game) return;
-		const turnIndex = Object.entries(game.playerOrder).find(
-			([_, name]) => name === playerName
-		)?.[0];
+		const turnIndex = Object.entries(game.playerOrder).find(([, name]) => name === playerName)?.[0];
 		if (turnIndex !== undefined) {
 			game.currentTurn = Number(turnIndex);
-			addAuditTrail(`Turn manually set to ${playerName}`);
+			gs.addAuditTrail(`Turn manually set to ${playerName}`);
 		}
 	}
 
@@ -38,7 +37,7 @@
 		if (!game) return;
 		if (!game.skippedNextTurns.includes(playerName)) {
 			game.skippedNextTurns = [...game.skippedNextTurns, playerName];
-			addAuditTrail(`${playerName}'s next turn will be skipped`);
+			gs.addAuditTrail(`${playerName}'s next turn will be skipped`);
 		}
 	}
 
@@ -108,7 +107,7 @@
 						onchange={(e) => setCurrentTurnByPlayer(e.currentTarget.value)}
 					>
 						{#each playersInOrder as playerName, index (playerName)}
-							{@const player = getPlayerByName(playerName)}
+							{@const player = gs.getPlayerByName(playerName)}
 							<option value={playerName} disabled={player?.dead}>
 								{index + 1}. {playerName}
 								{player?.dead ? '(Dead)' : ''}
@@ -126,7 +125,7 @@
 					value={game.globalTurnCount}
 					onChange={(val) => {
 						game.globalTurnCount = val;
-						addAuditTrail(
+						gs.addAuditTrail(
 							`Global round count set to ${val} (movement bonus: +${game.globalMovementBonus})`
 						);
 					}}
@@ -284,7 +283,7 @@
 					value={game.globalHpReduction}
 					onChange={(val) => {
 						game.globalHpReduction = val;
-						addAuditTrail(`Global HP reduction set to ${val}`);
+						gs.addAuditTrail(`Global HP reduction set to ${val}`);
 					}}
 					icon="mdi:heart-broken"
 					label="HP Reduction"
@@ -326,7 +325,7 @@
 						class="btn preset-tonal-warning flex items-center gap-1.5 text-xs"
 						onclick={() => {
 							game.randomizeShopItems();
-							addAuditTrail(`Shop items randomized`);
+							gs.addAuditTrail(`Shop items randomized`);
 							toast.success(`Shop items refreshed`);
 						}}
 					>
@@ -342,7 +341,7 @@
 					value={game.shopRerollCost}
 					onChange={(val) => {
 						game.shopRerollCost = val;
-						addAuditTrail(`Shop reroll cost set to ${val}g`);
+						gs.addAuditTrail(`Shop reroll cost set to ${val}g`);
 					}}
 					icon="mdi:refresh"
 					label="Reroll Cost"

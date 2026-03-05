@@ -13,7 +13,6 @@
 	let { player, currentTurnPlayer }: Props = $props();
 
 	let isExpanded = $state(false);
-	let isAttackWindowOpen = $state(false);
 
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
@@ -397,7 +396,7 @@
 			<!-- Attack Button (for active player) -->
 			{#if isActiveTurn}
 				<div class="border-primary-500/20 border-t pt-3">
-					<AttackPlayer bind:showWheel={isAttackWindowOpen} {player} />
+					<AttackPlayer {player} />
 				</div>
 			{/if}
 		</div>

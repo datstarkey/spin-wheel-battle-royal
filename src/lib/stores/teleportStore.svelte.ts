@@ -3,7 +3,7 @@ import { SHADOW_REALM_TILES, SPAWN_ZONES } from '$lib/game/board/boardData';
 import type { Position } from '$lib/game/board/types';
 import type { Player } from '$lib/game/player/player.svelte';
 import toast from '$lib/stores/toaster.svelte';
-import { addAuditTrail } from './gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 
 // ============================================================================
 // Helpers
@@ -51,7 +51,7 @@ function teleportPlayerToSpawn(player: Player, auditMessage: string): void {
 	player.position = { ...randomSpawn };
 	gameBoard.setPlayerPosition(player.name, randomSpawn);
 
-	addAuditTrail(
+	getServerGameContext().addAuditTrail(
 		auditMessage.replace('{x}', String(randomSpawn.x)).replace('{y}', String(randomSpawn.y))
 	);
 }
@@ -96,7 +96,7 @@ export function teleportToShadowRealm(player: Player): void {
 	player.position = { ...nearestShadowTile };
 	gameBoard.setPlayerPosition(player.name, nearestShadowTile);
 
-	addAuditTrail(
+	getServerGameContext().addAuditTrail(
 		`${player.name} was teleported to the Shadow Realm at (${nearestShadowTile.x}, ${nearestShadowTile.y})`
 	);
 }

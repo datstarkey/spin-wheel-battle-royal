@@ -1,22 +1,12 @@
-import {
-	addAuditTrail,
-	addCustomWheel,
-	currentGame,
-	getPlayerByName
-} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
+import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
 
-export function generateWinWheel(playerName: string) {
-	const player = getPlayerByName(playerName);
-	if (!player) {
-		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
-		return;
-	}
-
-	if (player.dead) return;
+export function generateWinWheel(playerName: string, ctx: GameContext) {
+	const player = requirePlayer(ctx, playerName, 'win wheel');
+	if (!player || player.dead) return;
 
 	const wheel = [
 		{
@@ -50,12 +40,12 @@ export function generateWinWheel(playerName: string) {
 		{
 			//5
 			label: 'Take another turn',
-			onWin: () => currentGame.value?.gainAnotherTurn()
+			onWin: () => ctx.gainAnotherTurn()
 		},
 		{
 			//6
 			label: 'Spin Loot Wheel',
-			onWin: () => generateLootWheel(player.name)
+			onWin: () => generateLootWheel(player.name, ctx)
 		},
 		{
 			//7
@@ -90,14 +80,18 @@ export function generateWinWheel(playerName: string) {
 			label: 'Send Someone to the Shadow Realm',
 			onWin: () => {
 				toast.success(`${playerName} Must spin again`);
-				generateRandomPlayerWheel(`${playerName} Sends to Shadow Realm`, (winner) => {
-					winner.inShadowRealm = true;
-					addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
-				});
+				generateRandomPlayerWheel(
+					`${playerName} Sends to Shadow Realm`,
+					(winner) => {
+						winner.inShadowRealm = true;
+						ctx.addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
+					},
+					ctx
+				);
 			}
 		}
 	];
 
-	if (player.classType == 'gambler') generateGamblerWheel(player.name);
-	else addCustomWheel(`Win Wheel - ${player.name} - ${Date.now()}`, wheel, 'win');
+	if (player.classType == 'gambler') generateGamblerWheel(player.name, ctx);
+	else ctx.addCustomWheel(`Win Wheel - ${player.name} - ${Date.now()}`, wheel, 'win');
 }

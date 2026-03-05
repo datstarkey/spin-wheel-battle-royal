@@ -3,13 +3,16 @@
 	import { gameBoard } from '$lib/game/board/board.svelte';
 	import type { Position, Tile } from '$lib/game/board/types';
 	import { positionsEqual } from '$lib/game/board/types';
-	import { currentGame } from '$lib/stores/gameStore.svelte';
-	import { getIsMovementMode, moveCurrentPlayerTo } from '$lib/stores/movementStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import { getMovementStore } from '$lib/stores/movementStore.svelte';
+
+	const gs = getGameStore();
+	const movement = getMovementStore();
 	import PlayerToken from './PlayerToken.svelte';
 
 	// Check if a position has an unlooted treasure chest
 	function hasUnlootedTreasure(pos: Position): boolean {
-		const game = currentGame.value;
+		const game = gs.game;
 		if (!game) return false;
 		const isTreasureTile = TREASURE_CHESTS.some((t) => t.x === pos.x && t.y === pos.y);
 		if (!isTreasureTile) return false;
@@ -26,7 +29,7 @@
 	let { tileSize = 16, onTileClick, showValidMoves = true }: Props = $props();
 
 	// Derive movement mode state
-	let isMovementMode = $derived(getIsMovementMode());
+	let isMovementMode = $derived(movement.isMovementMode);
 
 	// Only render interactive overlays for walkable tiles
 	const walkableTiles = $derived(TILES.flat().filter((tile: Tile) => tile.walkable));
@@ -57,14 +60,14 @@
 	// Get players at each position for rendering tokens
 	function getPlayersAtPosition(pos: Position) {
 		const playerNames = gameBoard.getPlayersAt(pos);
-		if (!currentGame.value) return [];
-		return currentGame.value.players.filter((p) => playerNames.includes(p.name));
+		if (!gs.game) return [];
+		return gs.game.players.filter((p) => playerNames.includes(p.name));
 	}
 
 	function handleTileClick(position: Position) {
 		// If in movement mode, try to move the player
 		if (isMovementMode) {
-			moveCurrentPlayerTo(position);
+			movement.moveCurrentPlayerTo(position);
 			return;
 		}
 
@@ -293,7 +296,7 @@
 						{#each players as player (player.name)}
 							<PlayerToken
 								{player}
-								isCurrentPlayer={currentGame.value?.currentPlayer === player}
+								isCurrentPlayer={gs.game?.currentPlayer === player}
 								size={Math.max(12, tileSize - 4)}
 							/>
 						{/each}

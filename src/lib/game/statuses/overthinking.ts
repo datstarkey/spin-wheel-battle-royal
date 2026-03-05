@@ -1,4 +1,3 @@
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { StatusEffect } from './statusTypes';
 
 export const overthinking: StatusEffect = {
@@ -14,7 +13,9 @@ export const overthinking: StatusEffect = {
 		player.attackMultipliers['Overthinking'] = 0.7; // 30% less attack
 		player.defenseMultipliers['Overthinking'] = 0.7; // 30% less defense
 		player.addStatModifier('Overthinking', 'movement', -1); // Paralyzed by indecision
-		addAuditTrail(`${player.name} is overthinking everything! -30% ATK, -30% DEF, -1 Movement`);
+		player.game?.addAuditTrail(
+			`${player.name} is overthinking everything! -30% ATK, -30% DEF, -1 Movement`
+		);
 	},
 
 	onRemove(player) {
@@ -25,7 +26,7 @@ export const overthinking: StatusEffect = {
 
 	onTurnStart(player) {
 		// Spiral deeper into doubt
-		addAuditTrail(
+		player.game?.addAuditTrail(
 			`${player.name}: "But what if I'm wrong? I should double-check everything again..."`
 		);
 	}

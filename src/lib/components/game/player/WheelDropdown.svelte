@@ -1,13 +1,9 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { generateButtonWheel } from '$lib/game/wheels/buttonWheel';
-	import { generateDamageTakenWheel } from '$lib/game/wheels/damageTakenWheel';
-	import { generateGamblerWheel } from '$lib/game/wheels/gamblerWheel';
-	import { generateLootWheel } from '$lib/game/wheels/lootWheel';
-	import { generateLoseWheel } from '$lib/game/wheels/loseWheel';
-	import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
-	import { generateWinWheel } from '$lib/game/wheels/winWheel';
+	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+
+	const socket = getSocketStore();
 	import toast from '$lib/stores/toaster.svelte';
 
 	interface Props {
@@ -20,25 +16,23 @@
 	let wheelDropdownOpen = $state(false);
 
 	const wheels = [
-		{ name: 'Loot Wheel', action: () => generateLootWheel(player.name) },
-		{ name: 'Win Wheel', action: () => generateWinWheel(player.name) },
-		{ name: 'Lose Wheel', action: () => generateLoseWheel(player.name) },
-		{ name: 'Button Wheel', action: () => generateButtonWheel(player.name) },
-		{ name: 'Damage Taken Wheel', action: () => generateDamageTakenWheel(player.name) },
+		{ name: 'Loot Wheel', type: 'loot' },
+		{ name: 'Button Wheel', type: 'button' },
+		{ name: 'Casino Wheel', type: 'casino' },
 		{
 			name: 'Shadow Realm Wheel',
-			action: () => generateShadowRealmWheel(player.name),
+			type: 'shadow',
 			condition: () => player.inShadowRealm
 		},
 		{
 			name: 'Gambler Wheel',
-			action: () => generateGamblerWheel(player.name),
+			type: 'gambler',
 			condition: () => player.classType === 'gambler'
 		}
 	];
 
 	function addWheel(wheel: (typeof wheels)[0]) {
-		wheel.action();
+		socket.gmAddWheel(player.name, wheel.type);
 		toast.success(`${wheel.name} Added`);
 		wheelDropdownOpen = false;
 	}
@@ -52,7 +46,7 @@
 	<button
 		class="text-surface-300 hover:border-primary-500 hover:text-surface-100 flex h-8 w-8 items-center justify-center rounded-sm border border-white/10 bg-white/5 transition-all hover:bg-white/10"
 		onclick={() => (wheelDropdownOpen = !wheelDropdownOpen)}
-		title="Add Wheel"
+		title="Add Wheel (GM)"
 	>
 		<Icon icon="mdi:tire" />
 	</button>

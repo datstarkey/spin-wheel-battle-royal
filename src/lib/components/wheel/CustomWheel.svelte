@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { WheelTheme } from '$lib/components/wheel/types';
+	import type { WheelSpinParams, WheelSpinState } from '$lib/multiplayer/types';
 	import type { WheelBase } from '$lib/game/wheels/wheels';
 	import { tick, untrack } from 'svelte';
 	import SpinWheel from './SpinWheel.svelte';
@@ -8,14 +9,45 @@
 		key: string;
 		wheel: WheelBase;
 		theme?: WheelTheme;
-		onComplete: () => void;
+		/** If true, skip calling item.onWin() — used in multiplayer */
+		skipOnWin?: boolean;
+		/** Whether the current user can spin this wheel */
+		canSpin?: boolean;
+		/** Name of the player who should spin (shown when canSpin is false) */
+		forPlayerName?: string;
+		onComplete: (selectedIndex?: number) => void;
 		onCancel?: () => void;
+		/** Server-provided spin parameters for synchronized spins */
+		spinParams?: WheelSpinParams;
+		/** Current spin state for UI feedback */
+		spinState?: WheelSpinState;
+		/** Called after wheel comes to rest in sync mode */
+		onSpinComplete?: () => void;
+		/** Called to request a spin from the server */
+		onRequestSpin?: () => void;
+		/** Server-provided item ordering */
+		shuffledOrder?: number[];
 	}
 
-	let { key, wheel, theme, onComplete, onCancel }: Props = $props();
+	let {
+		key,
+		wheel,
+		theme,
+		skipOnWin = false,
+		canSpin = true,
+		forPlayerName,
+		onComplete,
+		onCancel,
+		spinParams = undefined,
+		spinState = undefined,
+		onSpinComplete = undefined,
+		onRequestSpin = undefined,
+		shuffledOrder = undefined
+	}: Props = $props();
 
 	let hasWon = $state(false);
 	let winningLabel = $state<string | null>(null);
+	let winningIndex = $state<number | undefined>(undefined);
 	let resultSection = $state<HTMLDivElement | null>(null);
 
 	// Use provided theme or derive from key for backward compatibility
@@ -258,11 +290,39 @@
 			items={wheel}
 			buttonText="SPIN"
 			showSpin={!hasWon}
-			onWinner={(item) => {
+			{canSpin}
+			{skipOnWin}
+			syncSpinParams={spinParams}
+			{onRequestSpin}
+			{onSpinComplete}
+			{shuffledOrder}
+			onWinner={(item, index) => {
 				hasWon = true;
 				winningLabel = item.label;
+				winningIndex = index;
 			}}
 		></SpinWheel>
+		{#if !canSpin && !hasWon}
+			<div class="mt-4 flex items-center justify-center gap-2">
+				{#if spinState === 'spinning'}
+					<iconify-icon icon="mdi:loading" class="text-primary-400 animate-spin text-lg"
+					></iconify-icon>
+					<span class="text-surface-300 font-mono text-sm tracking-wider"> Spinning... </span>
+				{:else if spinState === 'landed'}
+					<iconify-icon icon="mdi:timer-sand" class="text-surface-400 animate-pulse text-lg"
+					></iconify-icon>
+					<span class="text-surface-400 font-mono text-sm tracking-wider">
+						Waiting for <span class="text-surface-100 font-bold">{forPlayerName}</span> to continue...
+					</span>
+				{:else}
+					<iconify-icon icon="mdi:timer-sand" class="text-surface-400 animate-pulse text-lg"
+					></iconify-icon>
+					<span class="text-surface-400 font-mono text-sm tracking-wider">
+						Waiting for <span class="text-surface-100 font-bold">{forPlayerName}</span> to spin...
+					</span>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Result & Continue Section -->
@@ -318,22 +378,33 @@
 				</div>
 			</div>
 
-			<!-- Continue button -->
-			<button
-				onclick={() => onComplete()}
-				class="group relative mx-auto flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-lg border-2 {currentTheme.borderColor} from-surface-800 to-surface-900 hover:from-surface-700 hover:to-surface-800 bg-gradient-to-br px-8 py-4 font-mono text-lg font-black tracking-widest text-white uppercase transition-all duration-300 hover:scale-[1.02] {currentTheme.glowColor}"
-			>
-				<!-- Shine effect on hover -->
-				<div
-					class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full"
-				></div>
+			{#if canSpin}
+				<!-- Continue button (only for designated spinner) -->
+				<button
+					onclick={() => onComplete(winningIndex)}
+					class="group relative mx-auto flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-lg border-2 {currentTheme.borderColor} from-surface-800 to-surface-900 hover:from-surface-700 hover:to-surface-800 bg-gradient-to-br px-8 py-4 font-mono text-lg font-black tracking-widest text-white uppercase transition-all duration-300 hover:scale-[1.02] {currentTheme.glowColor}"
+				>
+					<!-- Shine effect on hover -->
+					<div
+						class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-500 group-hover:translate-x-full"
+					></div>
 
-				<span class="relative z-10">Continue</span>
-				<iconify-icon
-					icon="mdi:chevron-right"
-					class="relative z-10 text-2xl transition-transform group-hover:translate-x-1"
-				></iconify-icon>
-			</button>
+					<span class="relative z-10">Continue</span>
+					<iconify-icon
+						icon="mdi:chevron-right"
+						class="relative z-10 text-2xl transition-transform group-hover:translate-x-1"
+					></iconify-icon>
+				</button>
+			{:else}
+				<!-- Non-spinner waiting message -->
+				<div class="flex items-center justify-center gap-2 py-4">
+					<iconify-icon icon="mdi:timer-sand" class="text-surface-400 animate-pulse text-lg"
+					></iconify-icon>
+					<span class="text-surface-400 font-mono text-sm tracking-wider">
+						Waiting for <span class="text-surface-100 font-bold">{forPlayerName}</span> to continue...
+					</span>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

@@ -1,0 +1,190 @@
+import type { Position } from '$lib/game/board/types';
+import type { ClassType } from '$lib/game/classes/classType';
+import type { AllItems } from '$lib/game/items/itemTypes';
+import type { WheelTheme } from '$lib/components/wheel/types';
+
+// ============================================================================
+// Roles
+// ============================================================================
+
+export type Role = 'gm' | 'player' | 'spectator';
+
+// ============================================================================
+// Room State
+// ============================================================================
+
+export type RoomPhase = 'waiting' | 'turn_order' | 'class_selection' | 'playing';
+
+export interface RoomPlayer {
+	name: string;
+	role: Role;
+	connected: boolean;
+}
+
+export interface RoomState {
+	roomCode: string;
+	players: RoomPlayer[];
+	gmName: string;
+	started: boolean;
+	phase: RoomPhase;
+	/** Who should spin next during setup phases */
+	currentSpinnerName?: string;
+}
+
+// ============================================================================
+// Pending Wheel (visual-only data sent to clients)
+// ============================================================================
+
+export interface PendingWheelItem {
+	label: string;
+	weight?: number;
+}
+
+export type WheelSpinState = 'idle' | 'spinning' | 'landed';
+
+export interface WheelSpinParams {
+	selectedIndex: number;
+	duration: number;
+	numberOfRevolutions: number;
+	direction: 1 | -1;
+}
+
+export interface WheelSpinBroadcast extends WheelSpinParams {
+	wheelKey: string;
+}
+
+export interface PendingWheelPayload {
+	key: string;
+	items: PendingWheelItem[];
+	theme?: WheelTheme;
+	forPlayerName: string;
+	shuffledOrder?: number[];
+	spinState?: WheelSpinState;
+	spinParams?: WheelSpinParams;
+}
+
+// ============================================================================
+// Game Actions (client → server)
+// ============================================================================
+
+/** Base fields shared by all actions */
+interface ActionBase {
+	/** Unique ID for deduplication (generated client-side) */
+	actionId?: string;
+}
+
+export type GameAction = ActionBase &
+	(
+		| { type: 'MOVE'; position: Position }
+		| { type: 'FINISH_TURN' }
+		| { type: 'ATTACK_START'; defenderName: string }
+		| { type: 'ATTACK_RESOLVE'; attackerName: string; defenderName: string }
+		| { type: 'SHOP_BUY'; item: AllItems }
+		| { type: 'SHOP_REROLL' }
+		| { type: 'CASINO' }
+		| { type: 'SPELL_CAST'; spellLevel: 'minor' | 'major' | 'ultimate'; targetName?: string }
+		| { type: 'USE_CONSUMABLE'; item: AllItems }
+		| { type: 'WHEEL_SPIN_RESULT'; wheelKey: string; selectedIndex: number }
+		| { type: 'TELEPORT'; destination: Position }
+		// GM-only actions
+		| { type: 'GM_SET_CLASS'; playerName: string; classType: ClassType }
+		| { type: 'GM_START_GAME' }
+		| { type: 'GM_REMOVE_PLAYER'; playerName: string }
+		| { type: 'GM_SET_HP'; playerName: string; hp: number }
+		| { type: 'GM_SET_GOLD'; playerName: string; gold: number }
+		| { type: 'GM_SET_ATTACK'; playerName: string; attack: number }
+		| { type: 'GM_SET_DEFENSE'; playerName: string; defense: number }
+		| { type: 'GM_GIVE_ITEM'; playerName: string; item: AllItems }
+		| { type: 'GM_REMOVE_ITEM'; playerName: string; item: AllItems; slot?: string }
+		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: string }
+		| { type: 'GM_KILL_PLAYER'; playerName: string }
+		| { type: 'GM_REVIVE_PLAYER'; playerName: string }
+	);
+
+// ============================================================================
+// Combat State (broadcasted to all clients during battle)
+// ============================================================================
+
+export interface CombatState {
+	attackerName: string;
+	defenderName: string;
+	attackWeight: number;
+	defenseWeight: number;
+	/** Server-side wheel key for sending the result back */
+	wheelKey: string;
+}
+
+// ============================================================================
+// Delta Updates (incremental state sync)
+// ============================================================================
+
+/** Partial game state update — only includes changed fields */
+export interface GameStateDelta {
+	/** Monotonically increasing version for ordering/gap detection */
+	version: number;
+	/** Full serialized data for players that changed (keyed by player name) */
+	players?: Record<string, unknown>;
+	/** Top-level game fields that changed */
+	game?: Record<string, unknown>;
+	/** New audit trail entries to append (not the full array) */
+	auditTrailAppend?: string[];
+}
+
+// ============================================================================
+// Socket.IO Event Maps
+// ============================================================================
+
+export interface ClientToServerEvents {
+	'room:create': (
+		data: { gmName: string; password?: string },
+		callback: (response: { success: boolean; roomCode?: string; error?: string }) => void
+	) => void;
+
+	'room:join': (
+		data: { roomCode: string; playerName: string; password?: string; role?: Role },
+		callback: (response: { success: boolean; role?: Role; error?: string }) => void
+	) => void;
+
+	'room:rejoin': (
+		data: { roomCode: string; playerName: string },
+		callback: (response: { success: boolean; role?: Role; error?: string }) => void
+	) => void;
+
+	'room:leave': () => void;
+
+	'player:action': (
+		data: { action: GameAction },
+		callback?: (response: { success: boolean; error?: string }) => void
+	) => void;
+
+	'wheel:spin_result': (
+		data: { wheelKey: string; selectedIndex: number },
+		callback?: (response: { success: boolean; error?: string }) => void
+	) => void;
+
+	'wheel:request_spin': (
+		data: { wheelKey: string },
+		callback?: (response: { success: boolean; error?: string }) => void
+	) => void;
+}
+
+export interface StateUpdatePayload {
+	/** Full serialized game state (always included as fallback) */
+	gameState: string;
+	roomState: RoomState;
+	/** Combat state: present = combat started, null = combat ended, undefined = no change */
+	combatState?: CombatState | null;
+	/** Incremental delta (if available — client can apply this instead of full deserialize) */
+	delta?: GameStateDelta;
+}
+
+export interface ServerToClientEvents {
+	'room:state_update': (data: StateUpdatePayload) => void;
+	'room:wheel_pending': (data: PendingWheelPayload) => void;
+	'room:wheel_dismiss': (data: { wheelKey: string }) => void;
+	'room:wheel_spin': (data: WheelSpinBroadcast) => void;
+	'room:player_joined': (data: { playerName: string; role: Role }) => void;
+	'room:player_left': (data: { playerName: string }) => void;
+	'room:error': (data: { message: string }) => void;
+	'room:started': () => void;
+}

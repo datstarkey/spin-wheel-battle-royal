@@ -1,4 +1,4 @@
-import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import toast from '$lib/stores/toaster.svelte';
 import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
 import items, {
@@ -32,7 +32,7 @@ export class PlayerGear {
 		if (this._player) {
 			return this._player;
 		}
-		const player = getPlayerByName(this._playerName);
+		const player = getServerGameContext().getPlayerByName(this._playerName);
 		if (!player) {
 			throw new Error(`Player ${this._playerName} not found`);
 		}
@@ -212,7 +212,7 @@ export class PlayerGear {
 		const actualItem = getItemByType(item);
 		actualItem?.onUse?.(this.player);
 
-		addAuditTrail(`${this.player.name} uses ${item}!`);
+		this.player.game?.addAuditTrail(`${this.player.name} uses ${item}!`);
 		this._consumables.splice(index, 1);
 	}
 

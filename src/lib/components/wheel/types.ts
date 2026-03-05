@@ -1,7 +1,7 @@
 export type SpinWheelItem = {
 	label: string;
 	weight?: number;
-	data?: any;
+	data?: unknown;
 	onWin?: (...args: never[]) => void;
 };
 

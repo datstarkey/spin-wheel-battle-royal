@@ -1,4 +1,3 @@
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
 import type { ClassBase } from './classType';
 
@@ -15,7 +14,7 @@ function setGrudge(player: Player, attackerName: string) {
 	const oldGrudge = grudgeTargets.get(player.name);
 	if (oldGrudge !== attackerName) {
 		grudgeTargets.set(player.name, attackerName);
-		addAuditTrail(`${player.name} marks ${attackerName} for revenge! 🎯`);
+		player.game?.addAuditTrail(`${player.name} marks ${attackerName} for revenge! 🎯`);
 	}
 }
 
@@ -29,7 +28,9 @@ function clearGrudge(player: Player) {
 	const oldGrudge = grudgeTargets.get(player.name);
 	if (oldGrudge) {
 		grudgeTargets.delete(player.name);
-		addAuditTrail(`${player.name} got their revenge on ${oldGrudge}! Grudge cleared. 💀`);
+		player.game?.addAuditTrail(
+			`${player.name} got their revenge on ${oldGrudge}! Grudge cleared. 💀`
+		);
 	}
 }
 
@@ -62,12 +63,13 @@ export const Gorf: ClassBase = {
 		// Grudge: +25% damage vs last attacker
 		if (isGrudgeTarget(player, defendingPlayer.name)) {
 			player.attackMultipliers[GRUDGE_BONUS] = 1.25;
-			addAuditTrail(
+			player.game?.addAuditTrail(
 				`${player.name} attacks their Grudge target ${defendingPlayer.name}! +25% damage! 🔥`
 			);
 		}
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackEnd(player, _defendingPlayer) {
 		// Clean up multipliers
 		delete player.attackMultipliers[DOUBLE_TAP_ATTACK];
@@ -81,7 +83,7 @@ export const Gorf: ClassBase = {
 		}
 		// Bonus gold for the win
 		player.gold += 2;
-		addAuditTrail(`${player.name} two-tapped ${defendingPlayer.name}! +2 gold 💰`);
+		player.game?.addAuditTrail(`${player.name} two-tapped ${defendingPlayer.name}! +2 gold 💰`);
 	},
 
 	// When Gorf defends, apply Double Tap (50% more damage taken)

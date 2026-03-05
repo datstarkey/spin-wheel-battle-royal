@@ -5,13 +5,12 @@
 	interface Props extends HTMLButtonAttributes {
 		icon?: string | undefined;
 		children?: import('svelte').Snippet;
-		[key: string]: any;
 	}
 
-	let { icon = undefined, children, ...rest }: Props = $props();
+	let { icon = undefined, children, class: className, ...rest }: Props = $props();
 
 	let isIconOnly = $derived(!!icon && !children);
-	let classStr = $derived(typeof rest.class === 'string' ? rest.class : '');
+	let classStr = $derived(typeof className === 'string' ? className : '');
 	let isSmall = $derived(classStr.includes('btn-icon-sm'));
 </script>
 

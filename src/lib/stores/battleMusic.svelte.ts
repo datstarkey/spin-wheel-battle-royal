@@ -6,6 +6,8 @@
  * Only one track plays at a time. Background position is preserved.
  */
 
+import { createContext } from 'svelte';
+
 // LocalStorage keys
 const STORAGE_KEY_MUTED = 'battleMusic:muted';
 const STORAGE_KEY_VOLUME = 'battleMusic:volume';
@@ -22,238 +24,206 @@ function loadVolumeState(): number {
 	return stored ? Math.max(0, Math.min(100, Number(stored))) : 50;
 }
 
-// Audio elements
-let backgroundAudio: HTMLAudioElement | null = null;
-let battleAudio: HTMLAudioElement | null = null;
-let victoryAudio: HTMLAudioElement | null = null;
-
-// Track background position for resuming
-let backgroundPosition = 0;
-
-// State machine
 type MusicState = 'idle' | 'background' | 'battle' | 'victory';
-let currentState = $state<MusicState>('idle');
-let isReady = $state(false);
-let isMuted = $state(loadMutedState());
-let volume = $state(loadVolumeState());
 
-/**
- * Stop all audio elements without changing state
- */
-function stopAllAudio(): void {
-	if (backgroundAudio && !backgroundAudio.paused) {
-		backgroundPosition = backgroundAudio.currentTime;
-		backgroundAudio.pause();
+class BattleMusicStore {
+	// Audio elements (not reactive — internal only)
+	private backgroundAudio: HTMLAudioElement | null = null;
+	private battleAudio: HTMLAudioElement | null = null;
+	private victoryAudio: HTMLAudioElement | null = null;
+	private backgroundPosition = 0;
+
+	// Reactive state
+	private _currentState = $state<MusicState>('idle');
+	private _isReady = $state(false);
+	private _isMuted = $state(loadMutedState());
+	private _volume = $state(loadVolumeState());
+
+	// Reactive getters
+	get isPlaying() {
+		return this._currentState !== 'idle';
 	}
-	if (battleAudio) battleAudio.pause();
-	if (victoryAudio) victoryAudio.pause();
-}
-
-/**
- * Transition to a new state
- */
-function transitionTo(newState: MusicState): void {
-	if (currentState === newState) return;
-
-	// Save background position before stopping
-	if (currentState === 'background' && backgroundAudio) {
-		backgroundPosition = backgroundAudio.currentTime;
+	get isBackgroundPlaying() {
+		return this._currentState === 'background';
+	}
+	get isBattlePlaying() {
+		return this._currentState === 'battle';
+	}
+	get isVictoryPlaying() {
+		return this._currentState === 'victory';
+	}
+	get currentState() {
+		return this._currentState;
+	}
+	get isReady() {
+		return this._isReady;
+	}
+	get isMuted() {
+		return this._isMuted;
+	}
+	get volume() {
+		return this._volume;
 	}
 
-	// Stop all audio
-	stopAllAudio();
+	// -----------------------------------------------------------
+	// Internal helpers
+	// -----------------------------------------------------------
 
-	// Update state
-	currentState = newState;
-
-	// If muted, don't play anything
-	if (isMuted) return;
-
-	// Start the appropriate audio
-	switch (newState) {
-		case 'background':
-			if (backgroundAudio) {
-				backgroundAudio.currentTime = backgroundPosition;
-				backgroundAudio.play().catch(() => {});
-			}
-			break;
-		case 'battle':
-			if (battleAudio) {
-				battleAudio.currentTime = 0;
-				battleAudio.play().catch(() => {});
-			}
-			break;
-		case 'victory':
-			if (victoryAudio) {
-				victoryAudio.currentTime = 0;
-				victoryAudio.play().catch(() => {});
-			}
-			break;
-		case 'idle':
-			// Nothing to play
-			break;
-	}
-}
-
-/**
- * Initialize audio elements (call this on mount)
- */
-export function initAudio(): void {
-	if (typeof window === 'undefined') return;
-	if (isReady) return; // Already initialized
-
-	// Create audio elements
-	backgroundAudio = new Audio('/audio/background.mp3');
-	battleAudio = new Audio('/audio/battle.mp3');
-	victoryAudio = new Audio('/audio/victory.mp3');
-
-	// Configure looping
-	backgroundAudio.loop = true;
-	battleAudio.loop = true;
-	victoryAudio.loop = false;
-
-	// Set initial volume
-	const vol = volume / 100;
-	backgroundAudio.volume = vol;
-	battleAudio.volume = vol;
-	victoryAudio.volume = vol;
-
-	// When victory ends, return to background
-	victoryAudio.addEventListener('ended', () => {
-		transitionTo('background');
-	});
-
-	// Mark as ready once background audio can play
-	const checkReady = () => {
-		if (backgroundAudio && backgroundAudio.readyState >= 3) {
-			isReady = true;
+	private stopAllAudio(): void {
+		if (this.backgroundAudio && !this.backgroundAudio.paused) {
+			this.backgroundPosition = this.backgroundAudio.currentTime;
+			this.backgroundAudio.pause();
 		}
-	};
-	backgroundAudio.addEventListener('canplaythrough', checkReady);
-
-	// Preload
-	backgroundAudio.load();
-	battleAudio.load();
-	victoryAudio.load();
-
-	// Check immediately in case audio is already cached
-	checkReady();
-}
-
-/**
- * Play background music
- */
-export function playBackgroundMusic(): void {
-	transitionTo('background');
-}
-
-/**
- * Play battle music (pauses background, saves position)
- */
-export function playBattleMusic(): void {
-	transitionTo('battle');
-}
-
-/**
- * Play victory music (pauses battle)
- */
-export function playVictoryMusic(): void {
-	transitionTo('victory');
-}
-
-/**
- * Stop battle/victory music and resume background
- */
-export function endBattleAndResumeBackground(): void {
-	transitionTo('background');
-}
-
-/**
- * Stop all music
- */
-export function stopAllMusic(): void {
-	transitionTo('idle');
-}
-
-/**
- * Set volume (0-100)
- */
-export function setMusicVolume(newVolume: number): void {
-	volume = Math.max(0, Math.min(100, newVolume));
-	if (typeof window !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY_VOLUME, String(volume));
+		if (this.battleAudio) this.battleAudio.pause();
+		if (this.victoryAudio) this.victoryAudio.pause();
 	}
-	const vol = volume / 100;
-	if (backgroundAudio) backgroundAudio.volume = vol;
-	if (battleAudio) battleAudio.volume = vol;
-	if (victoryAudio) victoryAudio.volume = vol;
-}
 
-/**
- * Toggle mute state
- */
-export function toggleMute(): void {
-	isMuted = !isMuted;
-	if (typeof window !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY_MUTED, String(isMuted));
-	}
-	if (isMuted) {
-		stopAllAudio();
-	} else if (currentState !== 'idle') {
-		// Resume current state when unmuting
-		const state = currentState;
-		currentState = 'idle'; // Force re-transition
-		transitionTo(state);
-	}
-}
+	private transitionTo(newState: MusicState): void {
+		if (this._currentState === newState) return;
 
-/**
- * Set mute state directly
- */
-export function setMuted(muted: boolean): void {
-	if (isMuted === muted) return;
-	isMuted = muted;
-	if (typeof window !== 'undefined') {
-		localStorage.setItem(STORAGE_KEY_MUTED, String(isMuted));
-	}
-	if (isMuted) {
-		stopAllAudio();
-	} else if (currentState !== 'idle') {
-		// Resume current state when unmuting
-		const state = currentState;
-		currentState = 'idle';
-		transitionTo(state);
-	}
-}
-
-/**
- * Reactive state exports
- */
-export function getBattleMusicState() {
-	return {
-		get isPlaying() {
-			return currentState !== 'idle';
-		},
-		get isBackgroundPlaying() {
-			return currentState === 'background';
-		},
-		get isBattlePlaying() {
-			return currentState === 'battle';
-		},
-		get isVictoryPlaying() {
-			return currentState === 'victory';
-		},
-		get currentState() {
-			return currentState;
-		},
-		get isReady() {
-			return isReady;
-		},
-		get isMuted() {
-			return isMuted;
-		},
-		get volume() {
-			return volume;
+		// Save background position before stopping
+		if (this._currentState === 'background' && this.backgroundAudio) {
+			this.backgroundPosition = this.backgroundAudio.currentTime;
 		}
-	};
+
+		this.stopAllAudio();
+		this._currentState = newState;
+
+		// If muted, don't play anything
+		if (this._isMuted) return;
+
+		switch (newState) {
+			case 'background':
+				if (this.backgroundAudio) {
+					this.backgroundAudio.currentTime = this.backgroundPosition;
+					this.backgroundAudio.play().catch(() => {});
+				}
+				break;
+			case 'battle':
+				if (this.battleAudio) {
+					this.battleAudio.currentTime = 0;
+					this.battleAudio.play().catch(() => {});
+				}
+				break;
+			case 'victory':
+				if (this.victoryAudio) {
+					this.victoryAudio.currentTime = 0;
+					this.victoryAudio.play().catch(() => {});
+				}
+				break;
+			case 'idle':
+				break;
+		}
+	}
+
+	// -----------------------------------------------------------
+	// Public methods
+	// -----------------------------------------------------------
+
+	initAudio(): void {
+		if (typeof window === 'undefined') return;
+		if (this._isReady) return;
+
+		this.backgroundAudio = new Audio('/audio/background.mp3');
+		this.battleAudio = new Audio('/audio/battle.mp3');
+		this.victoryAudio = new Audio('/audio/victory.mp3');
+
+		this.backgroundAudio.loop = true;
+		this.battleAudio.loop = true;
+		this.victoryAudio.loop = false;
+
+		const vol = this._volume / 100;
+		this.backgroundAudio.volume = vol;
+		this.battleAudio.volume = vol;
+		this.victoryAudio.volume = vol;
+
+		this.victoryAudio.addEventListener('ended', () => {
+			this.transitionTo('background');
+		});
+
+		const checkReady = () => {
+			if (this.backgroundAudio && this.backgroundAudio.readyState >= 3) {
+				this._isReady = true;
+			}
+		};
+		this.backgroundAudio.addEventListener('canplaythrough', checkReady);
+
+		this.backgroundAudio.load();
+		this.battleAudio.load();
+		this.victoryAudio.load();
+
+		checkReady();
+	}
+
+	playBackgroundMusic(): void {
+		this.transitionTo('background');
+	}
+
+	playBattleMusic(): void {
+		this.transitionTo('battle');
+	}
+
+	playVictoryMusic(): void {
+		this.transitionTo('victory');
+	}
+
+	endBattleAndResumeBackground(): void {
+		this.transitionTo('background');
+	}
+
+	stopAllMusic(): void {
+		this.transitionTo('idle');
+	}
+
+	setVolume(newVolume: number): void {
+		this._volume = Math.max(0, Math.min(100, newVolume));
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(STORAGE_KEY_VOLUME, String(this._volume));
+		}
+		const vol = this._volume / 100;
+		if (this.backgroundAudio) this.backgroundAudio.volume = vol;
+		if (this.battleAudio) this.battleAudio.volume = vol;
+		if (this.victoryAudio) this.victoryAudio.volume = vol;
+	}
+
+	toggleMute(): void {
+		this._isMuted = !this._isMuted;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(STORAGE_KEY_MUTED, String(this._isMuted));
+		}
+		if (this._isMuted) {
+			this.stopAllAudio();
+		} else if (this._currentState !== 'idle') {
+			const state = this._currentState;
+			this._currentState = 'idle';
+			this.transitionTo(state);
+		}
+	}
+
+	setMuted(muted: boolean): void {
+		if (this._isMuted === muted) return;
+		this._isMuted = muted;
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(STORAGE_KEY_MUTED, String(this._isMuted));
+		}
+		if (this._isMuted) {
+			this.stopAllAudio();
+		} else if (this._currentState !== 'idle') {
+			const state = this._currentState;
+			this._currentState = 'idle';
+			this.transitionTo(state);
+		}
+	}
+}
+
+const [get, set] = createContext<BattleMusicStore>();
+
+export function getBattleMusicStore() {
+	return get();
+}
+
+export function setBattleMusicStore() {
+	const store = new BattleMusicStore();
+	set(store);
+	return store;
 }

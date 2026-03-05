@@ -1,7 +1,8 @@
 import { shuffle } from '$lib/components/wheel/utils';
+import type { GameStateDelta } from '$lib/multiplayer/types';
 import toast from '$lib/stores/toaster.svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import items, { type AllItems, type Item } from './items/itemTypes';
+import items, { getItemByType, type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { validateGame } from './serialization';
 import type { CustomWheelConfig } from './wheels/wheels';
@@ -151,9 +152,33 @@ export class Game {
 		this.itemCostModifiers.set(item, this.getItemCostModifier(item) + amount);
 	}
 
+	getConsumableItemCostModifier(): number {
+		return this.shopConsumableCostModifier;
+	}
+
+	getItemCost(item: AllItems): number {
+		const modifier = this.getItemCostModifier(item);
+		const actualItem = getItemByType(item);
+		const baseCost = actualItem?.baseCost ?? 0;
+		const isConsumable = actualItem?.type === 'consumables';
+		if (isConsumable) return baseCost + this.getConsumableItemCostModifier() + modifier;
+		return baseCost + modifier + this.shopCostModifier;
+	}
+
+	increaseGlobalHpReduction(amount: number = 0) {
+		if (amount === 0) {
+			this.globalHpReduction *= 2;
+		} else {
+			this.globalHpReduction += amount;
+		}
+		this.addAuditTrail(`Global HP reduction is now ${this.globalHpReduction}`);
+	}
+
 	addAuditTrail(message: string) {
 		this.auditTrail.push(message);
-		toast.success(message);
+		if (typeof window !== 'undefined') {
+			toast.success(message);
+		}
 	}
 
 	/**
@@ -184,11 +209,11 @@ export class Game {
 	}
 
 	get currentPlayer(): Player | undefined {
-		const alivePlayers = this.players.filter((player) => !player.dead);
-		if (alivePlayers.length === 0) {
-			toast.error(`No players alive!`);
-			return;
-		}
+		if (!this.started) return undefined;
+		if (this.playerOrderLength === 0) return undefined;
+
+		const alivePlayers = this.alivePlayers;
+		if (alivePlayers.length === 0) return undefined;
 		if (alivePlayers.length === 1) {
 			if (!this.winner) {
 				this.winner = alivePlayers[0];
@@ -197,15 +222,10 @@ export class Game {
 			return alivePlayers[0];
 		}
 
-		const player = this.getPlayerByName(this.playerOrder[this.currentTurn]);
-		if (!player) {
-			toast.error(
-				`Could not get current turn, player ${this.playerOrder[this.currentTurn]} not found!`
-			);
-			return;
-		}
+		const playerName = this.playerOrder[this.currentTurn];
+		if (!playerName) return undefined;
 
-		return player;
+		return this.getPlayerByName(playerName);
 	}
 
 	/**
@@ -408,7 +428,11 @@ export class Game {
 		}
 
 		const game = new Game();
-		game.players = data.players.map((p) => Player.deserialize(p));
+		game.players = data.players.map((p) => {
+			const player = Player.deserialize(p);
+			player.setGame(game);
+			return player;
+		});
 		game.started = data.started;
 		game.globalHpReduction = data.globalHpReduction;
 		game.globalTurnCount = data.globalTurnCount ?? 0;
@@ -450,5 +474,56 @@ export class Game {
 		game.hasUsedCasino = data.hasUsedCasino ?? false;
 		game.lootedTreasures = new SvelteSet(data.lootedTreasures ?? []);
 		return game;
+	}
+
+	/**
+	 * Apply an incremental delta to this game instance in-place.
+	 * Avoids full deserialization — only updates changed fields and players.
+	 */
+	public applyDelta(delta: GameStateDelta) {
+		// Apply top-level game field changes
+		if (delta.game) {
+			for (const [key, value] of Object.entries(delta.game)) {
+				if (key === '_shadowRealm') continue; // Handled below after player replacement
+				(this as Record<string, unknown>)[key] = value;
+			}
+		}
+
+		// Append new audit trail entries
+		if (delta.auditTrailAppend) {
+			for (const entry of delta.auditTrailAppend) {
+				this.auditTrail.push(entry);
+			}
+		}
+
+		// Replace changed players (full serialized player data for any that changed)
+		if (delta.players) {
+			for (const [name, playerData] of Object.entries(delta.players)) {
+				const idx = this.players.findIndex((p) => p.name === name);
+				if (idx >= 0) {
+					const updated = Player.deserialize(
+						playerData as Parameters<typeof Player.deserialize>[0]
+					);
+					updated.setGame(this);
+					this.players[idx] = updated;
+				}
+			}
+		}
+
+		// Resolve shadow realm references (names → Player instances)
+		if (delta.players || delta.game?._shadowRealm) {
+			if (delta.game?._shadowRealm) {
+				// Shadow realm membership changed — resolve from new data
+				const srData = delta.game._shadowRealm as { name: string }[];
+				this._shadowRealm = srData
+					.map((sr) => this.players.find((p) => p.name === sr.name))
+					.filter((p): p is Player => p !== undefined);
+			} else {
+				// Players changed but shadow realm didn't — re-link to new instances
+				this._shadowRealm = this._shadowRealm
+					.map((sr) => this.players.find((p) => p.name === sr.name))
+					.filter((p): p is Player => p !== undefined);
+			}
+		}
 	}
 }

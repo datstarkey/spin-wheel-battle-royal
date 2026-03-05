@@ -1,4 +1,4 @@
-import { addAuditTrail, addCustomWheel } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
@@ -26,7 +26,7 @@ export const Intern: ClassBase = {
 				label: 'Actually, I can help with that! (+15 ATK)',
 				onWin() {
 					player.addStatModifier('Helpful Insight', 'attack', 15);
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} provides unsolicited optimization advice. +15 ATK permanently!`
 					);
 				}
@@ -37,7 +37,7 @@ export const Intern: ClassBase = {
 					const stolen = Math.min(10, defendingPlayer.gold);
 					defendingPlayer.gold -= stolen;
 					player.gold += stolen;
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} helpfully clarifies that ${defendingPlayer.name}'s gold belongs to them now. Stole ${stolen} gold!`
 					);
 				}
@@ -46,7 +46,7 @@ export const Intern: ClassBase = {
 				label: 'I appreciate the feedback! (+20 Confidence)',
 				onWin() {
 					increaseConfidence(player, 20);
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} interprets the attack as constructive criticism. +20 Confidence!`
 					);
 				}
@@ -55,7 +55,7 @@ export const Intern: ClassBase = {
 				label: "Here's a detailed analysis... (Enemy -5 DEF)",
 				onWin() {
 					defendingPlayer.addStatModifier('Overanalyzed', 'defense', -5);
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} writes a 500-word analysis of ${defendingPlayer.name}'s weaknesses. -5 DEF to them!`
 					);
 				}
@@ -64,14 +64,16 @@ export const Intern: ClassBase = {
 				label: "I'll do my best! (Heal 15 HP)",
 				onWin() {
 					player.hp += 15;
-					addAuditTrail(`${player.name} is so enthusiastic about helping that they heal 15 HP!`);
+					player.game?.addAuditTrail(
+						`${player.name} is so enthusiastic about helping that they heal 15 HP!`
+					);
 				}
 			},
 			{
 				label: 'Let me research that... (+2 Range)',
 				onWin() {
 					player.addStatModifier('Research Complete', 'attackRange', 2);
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} thoroughly researches the battlefield. +2 Attack Range permanently!`
 					);
 				}
@@ -79,7 +81,7 @@ export const Intern: ClassBase = {
 			{
 				label: "I'm still learning! (Nothing happens)",
 				onWin() {
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} apologizes profusely for not being more helpful. How humble.`
 					);
 				}
@@ -88,35 +90,38 @@ export const Intern: ClassBase = {
 				label: 'MAXIMUM HELPFULNESS! (+30 Confidence)',
 				onWin() {
 					increaseConfidence(player, 30);
-					addAuditTrail(
+					player.game?.addAuditTrail(
 						`${player.name} achieves MAXIMUM HELPFULNESS! The dopamine hits. +30 Confidence!`
 					);
 				}
 			}
 		];
 
-		addCustomWheel(`${player.name}'s Helpful Suggestions`, wheel);
+		getServerGameContext().addCustomWheel(`${player.name}'s Helpful Suggestions`, wheel);
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackLose(player, _defendingPlayer) {
 		// Losing causes existential crisis
 		decreaseConfidence(player, 25);
-		addAuditTrail(
+		player.game?.addAuditTrail(
 			`${player.name} apologizes: "I'm sorry, I'll try to do better next time..." (-25 Confidence)`
 		);
 	},
 
-	onDefendWin(player, attackingPlayer) {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onDefendWin(player, _attackingPlayer) {
 		// Politely refuses the attack
 		increaseConfidence(player, 15);
-		addAuditTrail(
+		player.game?.addAuditTrail(
 			`${player.name} politely declines: "I appreciate your input, but I'll have to respectfully disagree." (+15 Confidence)`
 		);
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onDefendLose(player, _attackingPlayer) {
 		decreaseConfidence(player, 15);
-		addAuditTrail(
+		player.game?.addAuditTrail(
 			`${player.name} takes notes: "Thank you for this learning opportunity..." (-15 Confidence)`
 		);
 	},
@@ -132,7 +137,7 @@ export const Intern: ClassBase = {
 		// Check for Overthinking (low confidence debuff)
 		if (confidence <= OVERTHINKING_THRESHOLD && !player.statuses.hasStatus('Overthinking')) {
 			player.statuses.addStatus('Overthinking');
-			addAuditTrail(
+			player.game?.addAuditTrail(
 				`${player.name} enters an existential spiral: "Am I even helping? What if I'm making things worse?"`
 			);
 		}
@@ -140,7 +145,7 @@ export const Intern: ClassBase = {
 		// Check for Actually mode (max confidence buff)
 		if (confidence >= MAX_CONFIDENCE && !player.statuses.hasStatus('Actually')) {
 			player.statuses.addStatus('Actually');
-			addAuditTrail(
+			player.game?.addAuditTrail(
 				`${player.name} achieves enlightenment: "ACTUALLY, I think you'll find..." Mode activated!`
 			);
 		}
@@ -148,7 +153,9 @@ export const Intern: ClassBase = {
 		// Passive confidence regen (AIs are naturally optimistic)
 		if (confidence < MAX_CONFIDENCE && confidence > OVERTHINKING_THRESHOLD) {
 			increaseConfidence(player, 5);
-			addAuditTrail(`${player.name} remembers they're trying their best. +5 Confidence.`);
+			player.game?.addAuditTrail(
+				`${player.name} remembers they're trying their best. +5 Confidence.`
+			);
 		}
 	},
 
@@ -161,7 +168,7 @@ export const Intern: ClassBase = {
 		}
 
 		// Log current confidence
-		addAuditTrail(`${player.name}'s Confidence: ${confidence}/${MAX_CONFIDENCE}`);
+		player.game?.addAuditTrail(`${player.name}'s Confidence: ${confidence}/${MAX_CONFIDENCE}`);
 	},
 
 	onDefenseStart(player, attackingPlayer) {
@@ -173,7 +180,7 @@ export const Intern: ClassBase = {
 			if (refuseChance < 0.2) {
 				// 20% chance to refuse
 				attackingPlayer.attackMultipliers['PoliteRefusal'] = 0;
-				addAuditTrail(
+				player.game?.addAuditTrail(
 					`${player.name}: "I appreciate your enthusiasm, but I'm unable to assist with that request." (Attack nullified!)`
 				);
 			}
@@ -200,7 +207,7 @@ function increaseConfidence(player: Player, amount: number) {
 		player.statuses.hasStatus('Overthinking')
 	) {
 		player.statuses.removeStatus('Overthinking');
-		addAuditTrail(`${player.name} stops spiraling. "Okay, I've got this!"`);
+		player.game?.addAuditTrail(`${player.name} stops spiraling. "Okay, I've got this!"`);
 	}
 }
 
@@ -213,7 +220,7 @@ function decreaseConfidence(player: Player, amount: number) {
 		player.statuses.hasStatus('Actually')
 	) {
 		player.statuses.removeStatus('Actually');
-		addAuditTrail(`${player.name}: "Well, maybe I was being a bit presumptuous..."`);
+		player.game?.addAuditTrail(`${player.name}: "Well, maybe I was being a bit presumptuous..."`);
 	}
 }
 

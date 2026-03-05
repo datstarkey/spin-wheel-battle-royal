@@ -7,7 +7,7 @@
  * Board is 480x480 tiles (1:1 pixel mapping from Map.svg)
  */
 
-import type { BoardConfig, Tile, SpawnZone, Position, TeleporterConfig } from './types';
+import type { BoardConfig } from './types';
 
 export const BOARD_CONFIG: BoardConfig = {
 	width: 30,

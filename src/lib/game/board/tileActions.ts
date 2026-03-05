@@ -5,17 +5,11 @@
  */
 
 import type { Player } from '../player/player.svelte';
-import type { Position, TileType } from './types';
-import {
-	getTileAt,
-	isOuterTeleporter,
-	getOtherOuterTeleporters,
-	getInnerTeleporter
-} from './board.svelte';
+import type { Position } from './types';
+import { getTileAt, getOtherOuterTeleporters } from './board.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import { generateButtonWheel } from '../wheels/buttonWheel';
-import { generateCasinoWheel } from '../wheels/casinoWheel';
 import { generateLootWheel } from '../wheels/lootWheel';
-import { addAuditTrail, currentGame } from '$lib/stores/gameStore.svelte';
 
 /**
  * The 4 corner tiles around the center button that trigger the button wheel.
@@ -94,7 +88,7 @@ export function executeTileAction(player: Player, position: Position): TileActio
  * Handle landing on a shop tile
  */
 function handleShopTile(player: Player): TileActionResult {
-	addAuditTrail(`${player.name} arrived at the shop!`);
+	getServerGameContext().addAuditTrail(`${player.name} arrived at the shop!`);
 	return {
 		handled: true,
 		openModal: 'shop',
@@ -114,7 +108,7 @@ function handleShadowRealmTile(player: Player): TileActionResult {
 
 	if (!player.inShadowRealm) {
 		player.inShadowRealm = true;
-		addAuditTrail(`${player.name} has entered the Shadow Realm!`);
+		getServerGameContext().addAuditTrail(`${player.name} has entered the Shadow Realm!`);
 		return {
 			handled: true,
 			message: `${player.name} has entered the Shadow Realm! They must spin the Shadow Realm wheel each turn.`
@@ -128,7 +122,7 @@ function handleShadowRealmTile(player: Player): TileActionResult {
  */
 function handleOuterTeleporter(player: Player, currentPosition: Position): TileActionResult {
 	const destinations = getOtherOuterTeleporters(currentPosition);
-	addAuditTrail(`${player.name} stepped on a teleporter!`);
+	getServerGameContext().addAuditTrail(`${player.name} stepped on a teleporter!`);
 	return {
 		handled: true,
 		openModal: 'teleporter',
@@ -143,7 +137,7 @@ function handleOuterTeleporter(player: Player, currentPosition: Position): TileA
 function handleInnerTeleporter(player: Player): TileActionResult {
 	// Inner teleporter is exit-only, so landing here doesn't trigger anything special
 	// Players arrive here from outer teleporters
-	addAuditTrail(`${player.name} arrived at the center teleporter.`);
+	getServerGameContext().addAuditTrail(`${player.name} arrived at the center teleporter.`);
 	return {
 		handled: true,
 		message: `${player.name} teleported to the center!`
@@ -154,8 +148,8 @@ function handleInnerTeleporter(player: Player): TileActionResult {
  * Handle landing on the button tile
  */
 function handleButtonTile(player: Player): TileActionResult {
-	addAuditTrail(`${player.name} pressed THE BUTTON!`);
-	generateButtonWheel(player.name);
+	getServerGameContext().addAuditTrail(`${player.name} pressed THE BUTTON!`);
+	generateButtonWheel(player.name, getServerGameContext());
 	return {
 		handled: true,
 		message: `${player.name} pressed THE BUTTON! Spin the Button Wheel!`
@@ -166,7 +160,7 @@ function handleButtonTile(player: Player): TileActionResult {
  * Handle landing on a casino tile
  */
 function handleCasinoTile(player: Player): TileActionResult {
-	addAuditTrail(`${player.name} entered the Casino!`);
+	getServerGameContext().addAuditTrail(`${player.name} entered the Casino!`);
 	return {
 		handled: true,
 		openModal: 'casino',
@@ -178,10 +172,8 @@ function handleCasinoTile(player: Player): TileActionResult {
  * Handle landing on a treasure chest tile
  */
 function handleTreasureTile(player: Player, position: Position): TileActionResult {
-	const game = currentGame.value;
-	if (!game) {
-		return { handled: false };
-	}
+	const game = getServerGameContext().getGame();
+	if (!game) return { handled: false };
 
 	// Check if this treasure has already been looted
 	if (game.isTreasureLooted(position.x, position.y)) {
@@ -193,8 +185,8 @@ function handleTreasureTile(player: Player, position: Position): TileActionResul
 
 	// Mark the treasure as looted and generate the loot wheel
 	game.lootTreasure(position.x, position.y);
-	addAuditTrail(`${player.name} found a treasure chest!`);
-	generateLootWheel(player.name);
+	getServerGameContext().addAuditTrail(`${player.name} found a treasure chest!`);
+	generateLootWheel(player.name, getServerGameContext());
 
 	return {
 		handled: true,
@@ -224,7 +216,7 @@ export function checkLeavingShadowRealm(player: Player, newPosition: Position): 
 	const newTile = getTileAt(newPosition);
 	if (newTile && newTile.type !== 'shadow_realm') {
 		player.inShadowRealm = false;
-		addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
+		getServerGameContext().addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
 	}
 }
 
@@ -237,7 +229,9 @@ export function teleportPlayer(
 	setPosition: (playerId: string, pos: Position) => void
 ): void {
 	setPosition(player.name, destination);
-	addAuditTrail(`${player.name} teleported to (${destination.x}, ${destination.y})!`);
+	getServerGameContext().addAuditTrail(
+		`${player.name} teleported to (${destination.x}, ${destination.y})!`
+	);
 
 	// Execute tile action at destination (but not for teleporter to avoid loops)
 	const destTile = getTileAt(destination);

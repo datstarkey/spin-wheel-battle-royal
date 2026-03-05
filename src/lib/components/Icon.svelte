@@ -7,10 +7,10 @@
 		icon: string;
 		size?: 'sm' | 'md' | 'lg' | 'xl';
 		onclick?: (() => void) | undefined;
-		[key: string]: any;
+		class?: string;
 	}
 
-	let { icon, size = 'md', onclick = undefined, ...rest }: Props = $props();
+	let { icon, size = 'md', onclick = undefined, class: className }: Props = $props();
 
 	let role = $derived(onclick ? 'button' : 'img');
 
@@ -27,7 +27,7 @@
 	{role}
 	tabindex="0"
 	{icon}
-	class="{map[size]} {rest.class}"
+	class="{map[size]} {className ?? ''}"
 	onclick={() => {
 		if (onclick) {
 			onclick();

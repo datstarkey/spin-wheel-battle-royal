@@ -1,14 +1,13 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
-	import type { AllItems, Item } from '$lib/game/items/itemTypes';
+	import type { AllItems } from '$lib/game/items/itemTypes';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import {
-		getItemCost,
-		getShopItems,
-		getShopRerollCost,
-		rerollShopItems
-	} from '$lib/stores/gameStore.svelte';
+	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
+
+	const gs = getGameStore();
+	const socket = getSocketStore();
 
 	interface Props {
 		player: Player;
@@ -26,13 +25,12 @@
 	};
 
 	// Get current shop items (4 random items from all categories)
-	let shopItems = $derived(getShopItems());
-	let rerollCost = $derived(getShopRerollCost());
+	let shopItems = $derived(gs.getShopItems());
+	let rerollCost = $derived(gs.getShopRerollCost());
 	let canAffordReroll = $derived(player.gold >= rerollCost);
-	let hoveredItem = $state<string | null>(null);
 
 	function handleReroll() {
-		rerollShopItems();
+		socket.shopReroll();
 	}
 
 	// Stats that items can modify
@@ -179,7 +177,7 @@
 			<div class="grid grid-cols-2 gap-4">
 				{#each shopItems as [itemName, item, category] (itemName)}
 					{@const owned = player.inventoryCount(item.name)}
-					{@const cost = getItemCost(itemName as AllItems)}
+					{@const cost = gs.getItemCost(itemName as AllItems)}
 					{@const canAfford = player.canBuyItem(itemName as AllItems)}
 					{@const stats = parseStats(item.description)}
 					{@const catConfig = categoryConfig[category]}
@@ -189,8 +187,6 @@
 							{canAfford
 							? `border-surface-600/50 hover:border-${catConfig?.color}-500/50 hover:shadow-lg`
 							: 'border-surface-700/30 opacity-50'}"
-						onmouseenter={() => (hoveredItem = itemName)}
-						onmouseleave={() => (hoveredItem = null)}
 					>
 						<!-- Background gradient on hover -->
 						<div
@@ -277,7 +273,7 @@
 
 								<button
 									disabled={!canAfford}
-									onclick={() => player.buyItem(itemName as AllItems)}
+									onclick={() => socket.shopBuy(itemName as AllItems)}
 									class="relative flex items-center gap-2 overflow-hidden px-5 py-2 text-xs font-bold tracking-wider uppercase transition-all
 										{canAfford
 										? 'border-warning-500/50 from-warning-600 to-warning-700 hover:from-warning-500 hover:to-warning-600 border bg-gradient-to-r text-white hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]'

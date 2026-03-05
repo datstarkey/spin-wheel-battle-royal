@@ -1,4 +1,4 @@
-import { addAuditTrail, addCustomWheel } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource } from '../player/playerResources';
 import type { WheelBase } from '../wheels/wheels';
@@ -13,7 +13,7 @@ export const POOP_PILE_RESOURCE = 'PoopPile';
 // Helper to increment poop pile
 function addToPoopPile(player: Player, amount: number = 1) {
 	const total = addResource(player, POOP_PILE_RESOURCE, amount);
-	addAuditTrail(`${player.name}'s Poop Pile grows to ${total}! (+${amount * 2} ATK)`);
+	player.game?.addAuditTrail(`${player.name}'s Poop Pile grows to ${total}! (+${amount * 2} ATK)`);
 }
 
 export const Poopmaster: ClassBase = {
@@ -65,7 +65,7 @@ function buildItemDestructionWheel(
 			wheelItems.push({
 				label: itemName,
 				onWin() {
-					addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${itemName}!`);
+					pooper.game?.addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${itemName}!`);
 					target.gear.deleteItem(deleteSlots[i]);
 					addToPoopPile(pooper);
 				}
@@ -78,25 +78,27 @@ function buildItemDestructionWheel(
 			target.gear.consumables.map((x, index) => ({
 				label: x,
 				onWin() {
-					addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${x}!`);
+					pooper.game?.addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${x}!`);
 					target.gear.deleteItem('consumables', index);
 					addToPoopPile(pooper);
 				}
 			}))
 		);
 
-		addCustomWheel(`${pooper.name}'s ${wheelName}`, wheel);
+		getServerGameContext().addCustomWheel(`${pooper.name}'s ${wheelName}`, wheel);
 	} else {
 		const stolenGold = Math.min(5, target.gold);
 		if (stolenGold > 0) {
 			target.gold -= stolenGold;
 			pooper.gold += stolenGold;
-			addAuditTrail(
+			pooper.game?.addAuditTrail(
 				`${target.name} has no items to shit on! ${pooper.name} steals ${stolenGold} gold.`
 			);
 		} else {
 			addToPoopPile(pooper);
-			addAuditTrail(`${target.name} is completely destitute! ${pooper.name} gains pity poop.`);
+			pooper.game?.addAuditTrail(
+				`${target.name} is completely destitute! ${pooper.name} gains pity poop.`
+			);
 		}
 	}
 }

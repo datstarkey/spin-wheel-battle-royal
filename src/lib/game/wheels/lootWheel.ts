@@ -1,16 +1,10 @@
-import { addCustomWheel, getPlayerByName } from '$lib/stores/gameStore.svelte';
 import { randomFromArray } from '$lib/utils/random';
-import toast from '$lib/stores/toaster.svelte';
+import { requirePlayer, type GameContext } from '../gameContext';
 import items, { type AllItems } from '../items/itemTypes';
 
-export function generateLootWheel(playerName: string, index: number = 1) {
-	const player = getPlayerByName(playerName);
-	if (!player) {
-		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
-		return;
-	}
-
-	if (player.dead) return;
+export function generateLootWheel(playerName: string, ctx: GameContext, index: number = 1) {
+	const player = requirePlayer(ctx, playerName, 'loot wheel');
+	if (!player || player.dead) return;
 
 	const wheel = [
 		{
@@ -97,5 +91,5 @@ export function generateLootWheel(playerName: string, index: number = 1) {
 		}
 	];
 
-	addCustomWheel(`Loot Wheel for ${player.name} - ${index}`, wheel, 'loot');
+	ctx.addCustomWheel(`Loot Wheel for ${player.name} - ${index}`, wheel, 'loot');
 }

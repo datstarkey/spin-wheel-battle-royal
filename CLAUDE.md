@@ -133,6 +133,30 @@ The game uses a **dark, tactical battle arena** visual language inspired by comp
   - **Dead**: `border-surface-600 opacity-40` with striped overlay
   - **Shadow Realm**: `border-tertiary-500 shadow-[...]` purple glow
 
+### Store Pattern (Context Only — NO `_instance`)
+
+Stores use Svelte 5 `createContext`. **No module-level `_instance` or helper functions.**
+
+- `getXxxStore()` — use in components (requires Svelte context)
+- `setXxxStore()` — called once in `+layout.svelte` during init
+- Constructor injection for cross-store dependencies (e.g., `setSocketStore(gameStore, mpStore)`)
+- Stores: `gameStore`, `multiplayerStore`, `socketStore`, `movementStore`, `attackWindowStore`, `battleMusicStore`
+
+**Init order** (`+layout.svelte`):
+
+```typescript
+const gs = setGameStore();
+const mp = setMultiplayerStore();
+const socket = setSocketStore(gs, mp);
+const movementStore = setMovementStore(gs);
+movementStore.setSocketStore(socket);
+```
+
+**Game logic access** (classes, items, statuses, wheels, tileActions — server-side only):
+
+- `getServerGameContext()` from `$lib/server/serverContext` for GameContext operations (addCustomWheel, getPlayerByName, etc.)
+- `player.game?.addAuditTrail()` via Player's `_game: Game` reference for simple audit trail calls
+
 ### Key Architectural Patterns
 
 1. **State Management**: Uses Svelte 5's rune-based reactivity system
@@ -162,7 +186,7 @@ The game uses a **dark, tactical battle arena** visual language inspired by comp
    - `SerializedGame`, `SerializedPlayer`, `SerializedPlayerGear`, `SerializedPlayerStatuses` interfaces
    - `validateGame()`, `validatePlayer()` functions validate JSON data before deserialization
    - Prevents corrupted saves from breaking game state
-   - Local storage integration via `localStorageStore.svelte.ts`
+   - `localStorageStore.svelte.ts` only used for UI preferences (e.g., `quickMode`), not game state
 
 5. **Event System**: Players and items respond to game events:
    - `onTurnStart/End`, `onAttackWin/Lose`, `onDefendWin/Lose`
@@ -331,6 +355,10 @@ Spinning wheels determine combat outcomes and rewards.
 | **Gambler**      | Gambler class wins | Class-specific rewards                                |
 | **Button**       | Center tile        | Special outcomes                                      |
 
+### Wheel Generator Pattern
+
+All wheel generators must use `requirePlayer(ctx, playerName, 'wheel name')` from `gameContext.ts` for player lookup. Do NOT inline `ctx.getPlayerByName()` + toast error — use the shared helper.
+
 ### Wheel Data Structure
 
 ```typescript
@@ -422,3 +450,123 @@ src/lib/game/
 3. **Class System**: [classType.ts](src/lib/game/classes/classType.ts) - Class interface and registry
 4. **Combat Rewards**: [winWheel.ts](src/lib/game/wheels/winWheel.ts) - Victory outcomes
 5. **Board Movement**: [board.svelte.ts](src/lib/game/board/board.svelte.ts) - Pathfinding, positions
+
+---
+
+## Multiplayer Architecture
+
+The game is **multiplayer-only** — all state lives on the server. No single-player mode.
+
+### Action Flow
+
+```
+Client Component → getSocketStore().move(pos) → socket.io → server
+Server: actionHandler.ts → setServerGameContext(ctx) → executes on Game instance → broadcasts state
+```
+
+### Key Files
+
+- `src/lib/multiplayer/socketStore.svelte.ts` — Socket.io client + game action dispatch (absorbs old socketClient + gameActions)
+- `src/lib/multiplayer/multiplayerStore.svelte.ts` — Reactive MP state (connection, combat, pending wheels)
+- `src/lib/multiplayer/types.ts` — Shared types (GameAction, CombatState, socket events)
+- `src/lib/server/serverContext.ts` — `getServerGameContext()`/`setServerGameContext()` (server sets before processing actions)
+- `src/lib/server/actionHandler.ts` — Server-side action validation and execution (~20 action types)
+- `src/lib/server/gameRooms.ts` — Room management (GameRoom class, registry, cleanup). `getRoomState()` returns room metadata only — game state is sent separately to avoid double serialization.
+- `src/lib/server/serverGameContext.ts` — Server GameContext (stores wheel closures in room.pendingWheels)
+- `src/lib/server/socketServer.ts` — Socket.io server setup, event handlers
+- `src/lib/server/rateLimiter.ts` — Per-socket action rate limiter
+- `src/lib/game/gameContext.ts` — GameContext interface + `playerNameSpinItemsFromContext()` helper
+- `vite-plugin-socket.ts` — Attaches socket.io in dev; production uses hooks.server.ts
+
+### Delta Updates & State Sync
+
+- Server generates deltas by diffing `game.serialize()` before/after each action in `actionHandler.ts`
+- Deltas sent alongside full state in `room:state_update`; client applies delta when version is sequential, falls back to full deserialize on gaps
+- `Game.applyDelta(delta)` handles in-place updates (avoids `as any` by being inside the class with private field access)
+- `GameRoom.stateVersion` tracks monotonically increasing version for delta ordering
+- Combat state is included in `room:state_update` payload (no separate `room:combat_started`/`room:combat_ended` events)
+
+### Security & Rate Limiting
+
+- **Wheel permissions**: `WHEEL_SPIN_RESULT` validates `pendingWheel.forPlayerName === playerName` (GM bypass allowed)
+- **Action dedup**: Client sends `actionId` (UUID) per action; `GameRoom.isDuplicateAction()` rejects via ring buffer of last 20 IDs per player
+- **Teleport validation**: `TELEPORT` action validates destination is a teleporter tile (`isOuterTeleporter` or `isInnerTeleporter`)
+- **Rate limiting**: `PerSocketRateLimiter` in `src/lib/server/rateLimiter.ts` — 100ms minimum between actions per socket
+
+### Game Class Private Fields
+
+- `_shadowRealm` has a public getter but **private setter** — write access only from inside the `Game` class
+- Any logic that mutates private Game fields should be a method on `Game` (e.g., `applyDelta()`, `deserialize()`) rather than external code using `as any`
+
+### Server/Client Boundary
+
+- **Server-side code changes** (actionHandler, socketServer, gameRooms, etc.) require a dev server restart — Vite HMR only hot-reloads client-side Svelte components
+- `Game` class runs server-side in multiplayer — any browser-only API (e.g., `toast`) must be guarded with `typeof window !== 'undefined'`
+- **`currentPlayer` getter has no side effects** — returns `undefined` silently for invalid states (not started, empty playerOrder, no alive players). Never toast from a getter — it's called reactively and will spam.
+- BFS functions in `board.svelte.ts` use plain `Set` (not `SvelteSet`) intentionally — no reactive subscribers on server. Ignore Svelte autofixer warnings for these.
+- `PendingWheel` items are deleted inside `handleAction` — capture any metadata (e.g., `type`) before calling `handleAction` in `socketServer.ts`
+
+### Room Onboarding Flow
+
+Game setup uses server-driven wheel chains in `actionHandler.ts`:
+
+1. `GM_START_GAME` → `room.phase = 'turn_order'` → chained turn-order wheels (GM spins)
+2. All positions filled → `room.phase = 'class_selection'` → chained class wheels (each player spins)
+3. All classes assigned → `startGameAfterSetup()` → spawns, `game.started = true`, `room.phase = 'playing'`
+
+**IMPORTANT**: `startGameAfterSetup()` must copy `room.turnOrder` into `game.playerOrder` before calling `game.startTurn()`. These are separate data structures — `room.turnOrder` is the server-side array, `game.playerOrder` is the `Record<number, string>` the Game class uses for `currentPlayer`.
+
+Room phases: `'waiting' | 'turn_order' | 'class_selection' | 'playing'`
+Players auto-added as game players on `room:join` (no GM_ADD_PLAYER action)
+
+### Wheel System in Multiplayer
+
+- Wheel generators accept `ctx: GameContext` — server uses `serverGameContext`, which stores closures in `room.pendingWheels`
+- Clients receive visual-only wheel data (labels + weights), spin locally, send selected index back
+- Server executes the `onWin` closure for the selected item
+- Combat has dedicated state (`CombatState`) with its own battle UI overlay, separate from generic pending wheels
+
+### Common Player API Gotchas
+
+- `player.classType` is **read-only** (getter) — use `player.assignClass(classType)` to change class
+- `useConsumable()` lives on `player.gear.useConsumable()`, not on Player directly
+- `useConsumable()` takes `Consumables` type, not `AllItems`
+- `player.buyItem()` returns **void** — use `player.canBuyItem()` for validation first
+
+### Known Pre-existing Issues
+
+- `BoardTile.svelte` has a `$lib` import inside a `<style>` block that fails during `pnpm run check` — unrelated to multiplayer
+
+### Known Technical Debt
+
+- **Global `getServerGameContext()` singleton** (`serverContext.ts`): Ambient mutable global. Should pass `ctx: GameContext` explicitly (already done for wheels, not for `player.svelte.ts`, `tileActions.ts`, classes)
+- **Duplicate `wheel:spin_result` socket event**: Separate from `player:action` but wraps the same handler. Should be unified
+- **`AttackWindowStore`**: Likely dead code after multiplayer conversion — verify and remove
+- **Double serialization in `actionHandler.ts`**: `generateDelta` diffs two JSON blobs via `JSON.stringify` comparison. Should use structural diffing or dirty flags
+- **Delta field lists** in `generateDelta` are hardcoded separately from `Game.serialize()` — must be kept in sync manually
+- **Turn order display parses audit trail via regex** — should use structured `RoomState` data instead
+- **New wheel detection in `handleAction`**: Uses `wheelKeysBefore = new Set(room.pendingWheels.keys())` to detect new wheels added during an action. Do NOT use count-based tracking — when a wheel is deleted and a new one added in the same action (e.g., turn order → class selection), the count doesn't change and the new wheel gets silently dropped.
+
+### Single-Page Routing
+
+The entire app lives on `/` — no separate routes. The root page is a state machine:
+- **Not connected** → Create/Join lobby menu
+- **Connected, game not started** → Room lobby (waiting, turn_order, class_selection phases)
+- **Game started** → Game UI
+
+State transitions are reactive (driven by `mp.isConnected`, `gs.game?.started`, `mp.roomPhase`), not `goto()` redirects.
+
+- `?lobby=CODE` query param pre-populates join code for shareable invite links
+- Player name persisted in `localStorage` key `'playerName'`
+- **Auto-reconnect**: Layout calls `socket.autoReconnect()` in `onMount`. The root page uses `$derived` with `loadSession()` and `mp.connectionStatus` to gate UI rendering until reconnection resolves (prevents lobby flash on refresh).
+
+### ESLint Notes
+
+- `svelte/valid-compile` rest-props warning suppressed in `eslint.config.js` via `ignoreWarnings: true` (we don't build custom elements)
+- Unused callback params in class event handlers (e.g., `_defendingPlayer`) need `eslint-disable-next-line` comments
+- Use `type` intersections over `interface extends` for component Props when possible
+
+### Vite Plugin Notes
+
+- `import('./src/lib/...')` does **not** resolve `$lib` aliases — use `server.ssrLoadModule()` instead (see `vite-plugin-socket.ts`)
+- `{@const}` in Svelte must be inside `{#if}`, `{#each}`, etc. — not inside plain `<div>`. Use `$derived` in script block instead.

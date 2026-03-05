@@ -1,12 +1,7 @@
-import {
-	addAuditTrail,
-	addCustomWheel,
-	currentGame,
-	getPlayerByName
-} from '$lib/stores/gameStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
 import { getRandomSpawnPoint } from '../board/board.svelte';
 import type { Position } from '../board/types';
+import { requirePlayer, type GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { generateLootWheel } from './lootWheel';
 import type { WheelBase } from './wheels';
@@ -14,28 +9,23 @@ import type { WheelBase } from './wheels';
 /**
  * Teleports a player to a random spawn point after pressing the button.
  */
-function teleportToRandomSpawn(player: Player) {
+function teleportToRandomSpawn(player: Player, ctx: GameContext) {
 	const spawnPoint = getRandomSpawnPoint();
 	player.position = { ...spawnPoint };
-	addAuditTrail(`${player.name} was teleported to spawn (${spawnPoint.x}, ${spawnPoint.y})!`);
+	ctx.addAuditTrail(`${player.name} was teleported to spawn (${spawnPoint.x}, ${spawnPoint.y})!`);
 }
 
-/**
- * Rotates all players around the board center.
- * Each player moves to the next player's position (and shadow realm status) in angular order.
- * @param clockwise - true for clockwise, false for counter-clockwise
- */
 /**
  * Generates a combat wheel between attacker and defender.
  * The wheel outcome determines who wins, then triggers appropriate event handlers.
  */
-function generateCombatWheel(attacker: Player, defender: Player) {
+function generateCombatWheel(attacker: Player, defender: Player, ctx: GameContext) {
 	const wheel: WheelBase = [
 		{
 			label: attacker.name,
 			weight: attacker.attack,
 			onWin: () => {
-				addAuditTrail(
+				ctx.addAuditTrail(
 					`${attacker.name} (ATK ${attacker.attack}) beat ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
 				attacker.onAttackWin(defender);
@@ -46,7 +36,7 @@ function generateCombatWheel(attacker: Player, defender: Player) {
 			label: defender.name,
 			weight: defender.defense,
 			onWin: () => {
-				addAuditTrail(
+				ctx.addAuditTrail(
 					`${attacker.name} (ATK ${attacker.attack}) lost to ${defender.name} (DEF ${defender.defense}) [Button Attack]`
 				);
 				attacker.onAttackLose(defender);
@@ -55,17 +45,15 @@ function generateCombatWheel(attacker: Player, defender: Player) {
 		}
 	];
 
-	addCustomWheel(`${attacker.name} attacks ${defender.name}!`, wheel);
+	ctx.addCustomWheel(`${attacker.name} attacks ${defender.name}!`, wheel);
 }
 
 /**
  * Generates a wheel to select a random target for attack, then initiates combat.
  */
-function generateAttackTargetWheel(attacker: Player) {
-	if (!currentGame.value) return;
-
+function generateAttackTargetWheel(attacker: Player, ctx: GameContext) {
 	// Get valid attack targets (alive, not self, respecting shadow realm rules)
-	const targets = currentGame.value.alivePlayers.filter((p) => {
+	const targets = ctx.getAlivePlayers().filter((p) => {
 		if (p.name === attacker.name) return false;
 		// Shadeweaver can attack anyone in shadow realm
 		if (attacker.classType === 'shadeweaver' && p.inShadowRealm) return true;
@@ -83,24 +71,27 @@ function generateAttackTargetWheel(attacker: Player) {
 	const wheel: WheelBase = targets.map((target) => ({
 		label: target.name,
 		onWin: () => {
-			addAuditTrail(`${attacker.name} must attack ${target.name}!`);
+			ctx.addAuditTrail(`${attacker.name} must attack ${target.name}!`);
 			// Trigger combat wheel between attacker and target
-			generateCombatWheel(attacker, target);
+			generateCombatWheel(attacker, target, ctx);
 		}
 	}));
 
-	addCustomWheel(`${attacker.name} Attacks Who?`, wheel);
+	ctx.addCustomWheel(`${attacker.name} Attacks Who?`, wheel);
 }
 
-function rotatePlayersAroundCenter(clockwise: boolean) {
-	if (!currentGame.value) return;
-
+/**
+ * Rotates all players around the board center.
+ * Each player moves to the next player's position (and shadow realm status) in angular order.
+ * @param clockwise - true for clockwise, false for counter-clockwise
+ */
+function rotatePlayersAroundCenter(clockwise: boolean, ctx: GameContext) {
 	const BOARD_CENTER: Position = { x: 12, y: 12 };
 
 	// Get all alive players with positions
-	const playersWithPositions = currentGame.value.alivePlayers.filter(
-		(p): p is Player & { position: Position } => p.position !== null
-	);
+	const playersWithPositions = ctx
+		.getAlivePlayers()
+		.filter((p): p is Player & { position: Position } => p.position !== null);
 
 	if (playersWithPositions.length < 2) {
 		toast.error('Need at least 2 players to rotate!');
@@ -136,73 +127,67 @@ function rotatePlayersAroundCenter(clockwise: boolean) {
 	}
 
 	const direction = clockwise ? 'clockwise' : 'counter-clockwise';
-	addAuditTrail(`All players rotated ${direction}!`);
+	ctx.addAuditTrail(`All players rotated ${direction}!`);
 }
 
-export function generateButtonWheel(playerName: string) {
-	const player = getPlayerByName(playerName);
-
-	if (!player) {
-		toast.error(`Could not generate win wheel, Player ${playerName} not found!`);
-		return;
-	}
-
-	if (player.dead) return;
+export function generateButtonWheel(playerName: string, ctx: GameContext) {
+	const player = requirePlayer(ctx, playerName, 'button wheel');
+	if (!player || player.dead) return;
 
 	const wheel: WheelBase = [
 		{
 			label: 'Rotate Players Clockwise',
 			onWin: () => {
-				teleportToRandomSpawn(player);
-				rotatePlayersAroundCenter(true);
+				teleportToRandomSpawn(player, ctx);
+				rotatePlayersAroundCenter(true, ctx);
 			}
 		},
 		{
 			label: 'Rotate Players Counter-Clockwise',
 			onWin: () => {
-				teleportToRandomSpawn(player);
-				rotatePlayersAroundCenter(false);
+				teleportToRandomSpawn(player, ctx);
+				rotatePlayersAroundCenter(false, ctx);
 			}
 		},
 		{
 			label: 'Attack Someone',
 			onWin: () => {
-				teleportToRandomSpawn(player);
-				generateAttackTargetWheel(player);
+				teleportToRandomSpawn(player, ctx);
+				generateAttackTargetWheel(player, ctx);
 			}
 		},
 		{
 			label: 'Spin Loot Wheel',
 			onWin: () => {
-				generateLootWheel(playerName);
-				teleportToRandomSpawn(player);
+				generateLootWheel(playerName, ctx);
+				teleportToRandomSpawn(player, ctx);
 			}
 		},
 		{
 			label: 'Spin 2 Loot Wheels',
 			onWin: () => {
-				generateLootWheel(playerName);
-				generateLootWheel(playerName, 2);
-				teleportToRandomSpawn(player);
+				generateLootWheel(playerName, ctx);
+				generateLootWheel(playerName, ctx, 2);
+				teleportToRandomSpawn(player, ctx);
 			}
 		},
 		{
 			label: 'Spin 3 Loot Wheels',
 			onWin: () => {
-				generateLootWheel(playerName);
-				generateLootWheel(playerName, 2);
-				generateLootWheel(playerName, 3);
-				teleportToRandomSpawn(player);
+				generateLootWheel(playerName, ctx);
+				generateLootWheel(playerName, ctx, 2);
+				generateLootWheel(playerName, ctx, 3);
+				teleportToRandomSpawn(player, ctx);
 			}
 		},
 		{
 			label: 'Spin 4 Loot Wheels',
 			onWin: () => {
-				generateLootWheel(playerName);
-				generateLootWheel(playerName, 2);
-				generateLootWheel(playerName, 3);
-				generateLootWheel(playerName, 4);
-				teleportToRandomSpawn(player);
+				generateLootWheel(playerName, ctx);
+				generateLootWheel(playerName, ctx, 2);
+				generateLootWheel(playerName, ctx, 3);
+				generateLootWheel(playerName, ctx, 4);
+				teleportToRandomSpawn(player, ctx);
 			}
 		},
 		{
@@ -212,17 +197,17 @@ export function generateButtonWheel(playerName: string) {
 				player.baseDefense += 5;
 				player.hp += 5;
 				player.gold += 5;
-				teleportToRandomSpawn(player);
+				teleportToRandomSpawn(player, ctx);
 			}
 		},
 		{
 			label: 'Gain 10 gold',
 			onWin: () => {
 				player.gold += 10;
-				teleportToRandomSpawn(player);
+				teleportToRandomSpawn(player, ctx);
 			}
 		}
 	];
 
-	addCustomWheel(`${player.name} Button Wheel`, wheel, 'button');
+	ctx.addCustomWheel(`${player.name} Button Wheel`, wheel, 'button');
 }

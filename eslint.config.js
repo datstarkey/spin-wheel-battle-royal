@@ -29,6 +29,10 @@ export default ts.config(
 			parserOptions: {
 				parser: ts.parser
 			}
+		},
+		rules: {
+			// We don't build custom elements — rest props pattern is intentional
+			'svelte/valid-compile': ['error', { ignoreWarnings: true }]
 		}
 	}
 );

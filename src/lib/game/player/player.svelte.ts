@@ -1,21 +1,11 @@
 import {
-	addAuditTrail,
-	currentGame,
-	getGlobalHpReduction,
-	getGlobalMovementBonus,
-	getHasShoppedThisTurn,
-	getItemCost,
-	increaseGlobalHpReduction,
-	increaseShopConsumableCostModifier,
-	increaseShopCostModifier,
-	setHasShoppedThisTurn
-} from '$lib/stores/gameStore.svelte';
-import {
 	teleportFromShadowRealm,
 	teleportToRandomSpawn,
 	teleportToShadowRealm
 } from '$lib/stores/teleportStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
+import type { Game } from '../game.svelte';
 import type { Position } from '../board/types';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
@@ -33,6 +23,19 @@ export class Player {
 		this.gear = new PlayerGear(this);
 		this.statuses = new PlayerStatuses(this);
 	}
+
+	/** Reference to parent Game instance. Set by Game when player is added/deserialized. */
+	private _game: Game | null = null;
+
+	/** Public accessor for sub-objects (PlayerGear, classes, etc.) */
+	get game(): Game | null {
+		return this._game;
+	}
+
+	setGame(game: Game | null) {
+		this._game = game;
+	}
+
 	private _name = $state<string>('');
 	public get name(): string {
 		return this._name;
@@ -70,7 +73,9 @@ export class Player {
 	// Add or update a stat modifier
 	addStatModifier(source: string, stat: StatType, value: number) {
 		this._statModifiers[stat][source] = value;
-		addAuditTrail(`${this.name} gains ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
+		this._game?.addAuditTrail(
+			`${this.name} gains ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`
+		);
 	}
 
 	// Remove a stat modifier
@@ -78,7 +83,9 @@ export class Player {
 		const value = this._statModifiers[stat][source];
 		if (value !== undefined) {
 			delete this._statModifiers[stat][source];
-			addAuditTrail(`${this.name} loses ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`);
+			this._game?.addAuditTrail(
+				`${this.name} loses ${value > 0 ? '+' : ''}${value} ${stat} from ${source}`
+			);
 		}
 	}
 
@@ -155,21 +162,21 @@ export class Player {
 
 		if (this._hp === 0) {
 			if (delta < 0) {
-				addAuditTrail(`${this.name} took ${Math.abs(delta)} damage and is dead!`);
+				this._game?.addAuditTrail(`${this.name} took ${Math.abs(delta)} damage and is dead!`);
 			} else {
-				addAuditTrail(`${this.name} is dead!`);
+				this._game?.addAuditTrail(`${this.name} is dead!`);
 			}
-			increaseGlobalHpReduction();
+			this._game?.increaseGlobalHpReduction();
 			this.dead = true;
 
-			if (currentGame.value?.currentPlayer == this) {
-				currentGame.value?.finishTurn();
+			if (this._game?.currentPlayer === this) {
+				this._game?.finishTurn();
 			}
 		} else if (delta !== 0) {
 			if (delta > 0) {
-				addAuditTrail(`${this.name} healed ${delta} HP (${this._hp}/${this._maxHp})`);
+				this._game?.addAuditTrail(`${this.name} healed ${delta} HP (${this._hp}/${this._maxHp})`);
 			} else {
-				addAuditTrail(
+				this._game?.addAuditTrail(
 					`${this.name} took ${Math.abs(delta)} damage (${this._hp}/${this._maxHp} HP)`
 				);
 			}
@@ -208,7 +215,10 @@ export class Player {
 	private _bonusMovement = $state(0);
 	public get movement(): number {
 		// Include global movement bonus (increases every 5 global turns, max +4)
-		return Math.max(1, this._baseMovement + this.bonusMovement + getGlobalMovementBonus());
+		return Math.max(
+			1,
+			this._baseMovement + this.bonusMovement + (this._game?.globalMovementBonus ?? 0)
+		);
 	}
 	public get baseMovement(): number {
 		return this._baseMovement;
@@ -221,11 +231,11 @@ export class Player {
 	public set baseMovement(value: number) {
 		if (value < 1) value = 1;
 		this._baseMovement = value;
-		addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
+		this._game?.addAuditTrail(`${this.name} base movement is now ${this.movement}!`);
 	}
 	public set bonusMovement(value: number) {
 		this._bonusMovement = value;
-		addAuditTrail(`${this.name} movement is now ${this.movement}!`);
+		this._game?.addAuditTrail(`${this.name} movement is now ${this.movement}!`);
 	}
 
 	/**
@@ -242,14 +252,14 @@ export class Player {
 	public set baseAttackRange(value: number) {
 		if (value < 1) value = 1;
 		this._baseAttackRange = value;
-		addAuditTrail(`${this.name} base attack range is now ${this.attackRange}!`);
+		this._game?.addAuditTrail(`${this.name} base attack range is now ${this.attackRange}!`);
 	}
 	public get bonusAttackRange(): number {
 		return this._bonusAttackRange + this.getTotalStatModifier('attackRange');
 	}
 	public set bonusAttackRange(value: number) {
 		this._bonusAttackRange = value;
-		addAuditTrail(`${this.name} attack range is now ${this.attackRange}!`);
+		this._game?.addAuditTrail(`${this.name} attack range is now ${this.attackRange}!`);
 	}
 	public get attackRange(): number {
 		return this._baseAttackRange + this.bonusAttackRange;
@@ -284,7 +294,7 @@ export class Player {
 	}
 	public set bonusAttack(value: number) {
 		this._bonusAttack = value;
-		addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
+		this._game?.addAuditTrail(`${this.name} bonus attack is now ${this.bonusAttack}!`);
 	}
 	public get rawBonusAttack(): number {
 		return this._bonusAttack;
@@ -297,7 +307,7 @@ export class Player {
 	public set baseAttack(value: number) {
 		if (value < 1) value = 1;
 		this._baseAttack = value;
-		addAuditTrail(`${this.name} base attack is now ${this.baseAttack}!`);
+		this._game?.addAuditTrail(`${this.name} base attack is now ${this.baseAttack}!`);
 	}
 
 	public get attackMultiplier(): number {
@@ -328,7 +338,7 @@ export class Player {
 	public set baseDefense(value: number) {
 		if (value < 1) value = 1;
 		this._baseDefense = value;
-		addAuditTrail(`${this.name} base defense is now ${this.baseDefense}!`);
+		this._game?.addAuditTrail(`${this.name} base defense is now ${this.baseDefense}!`);
 	}
 
 	//Bonus
@@ -342,7 +352,7 @@ export class Player {
 	}
 	public set bonusDefense(value: number) {
 		this._bonusDefense = value;
-		addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
+		this._game?.addAuditTrail(`${this.name} bonus defense is now ${this.bonusDefense}!`);
 	}
 	public get rawBonusDefense(): number {
 		return this._bonusDefense;
@@ -373,7 +383,7 @@ export class Player {
 		if (this.classType == 'gambler') {
 			this._hp = this._gold;
 		}
-		addAuditTrail(`${this.name} now has ${this.gold} gold!`);
+		this._game?.addAuditTrail(`${this.name} now has ${this.gold} gold!`);
 	}
 
 	/**
@@ -405,7 +415,7 @@ export class Player {
 
 	canBuyItem(item: AllItems): boolean {
 		// Can only buy one item per turn
-		if (getHasShoppedThisTurn()) {
+		if (this._game?.hasShopped) {
 			return false;
 		}
 
@@ -414,7 +424,7 @@ export class Player {
 			return false;
 		}
 
-		const cost = getItemCost(item);
+		const cost = this._game?.getItemCost(item) ?? Infinity;
 		if (this.gold < cost) {
 			return false;
 		}
@@ -440,7 +450,7 @@ export class Player {
 			return;
 		}
 
-		addAuditTrail(`${this.name} was given ${item}!`);
+		this._game?.addAuditTrail(`${this.name} was given ${item}!`);
 		this.gear.addItem(item);
 	}
 	buyItem(item: AllItems) {
@@ -454,19 +464,19 @@ export class Player {
 			return;
 		}
 
-		const cost = getItemCost(item);
+		const cost = this._game?.getItemCost(item) ?? 0;
 
-		addAuditTrail(`${this.name} buys ${item}!`);
+		this._game?.addAuditTrail(`${this.name} buys ${item}!`);
 		this.gear.addItem(item);
 		this.gold -= cost;
 
 		// Mark that the player has shopped this turn
-		setHasShoppedThisTurn(true);
+		if (this._game) this._game.hasShopped = true;
 
 		if (actualItem.type == 'consumables') {
-			increaseShopConsumableCostModifier(1);
+			if (this._game) this._game.shopConsumableCostModifier += 1;
 		} else {
-			increaseShopCostModifier(1);
+			if (this._game) this._game.shopCostModifier += 1;
 		}
 	}
 
@@ -480,18 +490,20 @@ export class Player {
 		this.statuses.onAttackWin(defendingPlayer);
 		this.gear.onAttackWin(defendingPlayer);
 		this.class.onAttackWin(this, defendingPlayer);
-		if (this.name) generateWinWheel(this.name);
-		if (defendingPlayer.name) generateDamageTakenWheel(defendingPlayer.name);
+		const ctx = getServerGameContext();
+		if (this.name) generateWinWheel(this.name, ctx);
+		if (defendingPlayer.name) generateDamageTakenWheel(defendingPlayer.name, ctx);
 	}
 
 	onAttackLose(defendingPlayer: Player) {
 		defendingPlayer.gold += 1;
-		this.hp -= getGlobalHpReduction();
+		this.hp -= this._game?.globalHpReduction ?? 0;
 		this.statuses.onAttackLose(defendingPlayer);
 		this.gear.onAttackLose(defendingPlayer);
 		this.class.onAttackLose?.(this, defendingPlayer);
-		if (this.name) generateLoseWheel(this.name);
-		if (this.name) generateDamageTakenWheel(this.name);
+		const ctx = getServerGameContext();
+		if (this.name) generateLoseWheel(this.name, ctx);
+		if (this.name) generateDamageTakenWheel(this.name, ctx);
 		// Teleport to random spawn on loss (unless in shadow realm)
 		if (!this.inShadowRealm) {
 			teleportToRandomSpawn(this);
@@ -531,8 +543,8 @@ export class Player {
 		this.gear.onTurnStart();
 		this.statuses.onTurnStart();
 		if (this.inShadowRealm) {
-			addAuditTrail(`${this.name} is in the Shadow Realm!`);
-			if (this.name) generateShadowRealmWheel(this.name);
+			this._game?.addAuditTrail(`${this.name} is in the Shadow Realm!`);
+			if (this.name) generateShadowRealmWheel(this.name, getServerGameContext());
 		}
 	}
 

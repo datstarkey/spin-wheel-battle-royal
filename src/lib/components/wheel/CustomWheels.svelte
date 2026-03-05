@@ -1,41 +1,68 @@
 <script lang="ts">
+	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+
+	const socket = getSocketStore();
+	import { getAttackWindowStore } from '$lib/stores/attackWindowStore.svelte';
 	import type { CustomWheelConfig } from '$lib/game/wheels/wheels';
-	import { currentGame, removeCustomWheel } from '$lib/stores/gameStore.svelte';
-	import { getCurrentAttackWindow } from '$lib/stores/attackWindowStore.svelte';
 	import CustomWheel from './CustomWheel.svelte';
 
-	let showWheel = $derived((currentGame.value?.customWheels.size ?? 0) > 0);
+	const mp = getMultiplayerStore();
+	const attackStore = getAttackWindowStore();
 
-	let currentWheel = $state(
-		currentGame.value?.customWheels.entries().next().value as
-			| [string, CustomWheelConfig]
-			| undefined
-	);
+	let myName = $derived(mp.myPlayerName);
+	let isGM = $derived(mp.iAmGM);
+	let mpWheels = $derived(mp.pendingWheels);
+	let showWheel = $derived(mpWheels.length > 0);
+	let amountOfWheels = $derived(mpWheels.length);
+	let activeWheelData = $derived(mpWheels.length > 0 ? mpWheels[0] : undefined);
 
-	let amountOfWheels = $derived(currentGame.value?.customWheels.size ?? 0);
-
-	function getWheel() {
-		currentWheel ??= currentGame.value?.customWheels.entries().next().value as [
-			string,
-			CustomWheelConfig
+	// Derive the current wheel from pending wheels
+	let activeWheel = $derived.by((): [string, CustomWheelConfig] | undefined => {
+		if (!activeWheelData) return undefined;
+		return [
+			activeWheelData.key,
+			{
+				items: activeWheelData.items.map((i) => ({ label: i.label, weight: i.weight })),
+				theme: activeWheelData.theme
+			}
 		];
+	});
+
+	// Can the current user spin this wheel?
+	let canSpin = $derived(
+		activeWheelData ? activeWheelData.forPlayerName === myName || isGM : false
+	);
+	let forPlayerName = $derived(activeWheelData?.forPlayerName ?? '');
+	let shuffledOrder = $derived(activeWheelData?.shuffledOrder);
+	let spinState = $derived(activeWheelData?.spinState);
+	let spinParams = $derived(activeWheelData?.spinParams);
+
+	/** Request server to pick winner and broadcast spin params to all clients */
+	function requestSpin(key: string) {
+		socket.requestWheelSpin(key);
 	}
 
-	function dismissWheel(key?: [string, CustomWheelConfig]) {
-		if (!key) return;
-		currentWheel = undefined;
-		removeCustomWheel(key?.[0]);
-		getWheel();
-		const attackWindow = getCurrentAttackWindow();
-		if (!currentWheel && amountOfWheels === 0 && attackWindow) {
+	/** After wheel lands, notify store so other clients see "Waiting for X to continue..." */
+	function handleSpinComplete(key: string) {
+		mp.setWheelLanded(key);
+	}
+
+	/** Confirm wheel result — map shuffled index back to original and send to server */
+	function confirmResult(key: string, selectedIndex?: number) {
+		if (selectedIndex !== undefined) {
+			// Map shuffled display index back to original item index
+			const order = activeWheelData?.shuffledOrder;
+			const originalIndex = order ? order[selectedIndex] : selectedIndex;
+			socket.sendWheelSpinResult(key, originalIndex);
+		}
+		// Don't locally remove — wait for server's room:wheel_dismiss
+
+		const attackWindow = attackStore.current;
+		if (amountOfWheels <= 1 && attackWindow) {
 			attackWindow.close();
 		}
 	}
-
-	$effect(() => {
-		if (!currentGame.value) return;
-		getWheel();
-	});
 </script>
 
 <!-- Epic Backdrop with animated effects -->
@@ -62,8 +89,8 @@
 		? 'scale-100 opacity-100'
 		: 'pointer-events-none scale-95 opacity-0'}"
 >
-	{#key currentWheel}
-		{#if currentWheel}
+	{#key activeWheel}
+		{#if activeWheel}
 			<div
 				class="border-primary-500/30 from-surface-950 via-surface-900 to-surface-950 relative max-h-[100dvh] w-full max-w-4xl overflow-hidden rounded-xl border-2 bg-gradient-to-br shadow-[0_0_80px_rgba(220,38,38,0.15),inset_0_1px_0_rgba(255,255,255,0.05)]"
 			>
@@ -101,11 +128,19 @@
 				<!-- Scrollable content area -->
 				<div class="max-h-[95dvh] overflow-y-auto">
 					<CustomWheel
-						key={currentWheel[0]}
-						wheel={currentWheel[1].items}
-						theme={currentWheel[1].theme}
-						onComplete={() => dismissWheel(currentWheel)}
-						onCancel={() => dismissWheel(currentWheel)}
+						key={activeWheel[0]}
+						wheel={activeWheel[1].items}
+						theme={activeWheel[1].theme}
+						skipOnWin={true}
+						{canSpin}
+						{forPlayerName}
+						{shuffledOrder}
+						{spinState}
+						{spinParams}
+						onRequestSpin={() => requestSpin(activeWheel[0])}
+						onSpinComplete={() => handleSpinComplete(activeWheel[0])}
+						onComplete={(selectedIndex) => confirmResult(activeWheel[0], selectedIndex)}
+						onCancel={canSpin ? () => confirmResult(activeWheel[0]) : undefined}
 					/>
 				</div>
 

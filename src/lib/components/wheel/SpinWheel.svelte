@@ -6,9 +6,10 @@
 
 <script lang="ts">
 	import { Wheel } from 'spin-wheel';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, type Snippet } from 'svelte';
 	import Icon from '../Icon.svelte';
 	import type { SpinWheelItem } from './types';
+	import type { WheelSpinParams } from '$lib/multiplayer/types';
 
 	import { shuffle } from './utils';
 
@@ -20,12 +21,23 @@
 		minSpeed?: number;
 		rotationResistance?: number;
 		removeOnWinner?: boolean;
-		onWinner?: (item: SpinWheelItem) => void;
+		onWinner?: (item: SpinWheelItem, index: number) => void;
+		/** If true, skip calling item.onWin() — used in multiplayer where closures don't exist on client */
+		skipOnWin?: boolean;
 		onSpin?: () => void;
 		showSpin?: boolean;
+		canSpin?: boolean;
 		buttonText?: string;
 		layout?: 'stacked' | 'side-by-side';
-		children?: import('svelte').Snippet<[any]>;
+		children?: Snippet<[{ spin: (speed?: number) => void }]>;
+		/** Server-provided spin parameters for synchronized spins */
+		syncSpinParams?: WheelSpinParams;
+		/** Called instead of local spin when in sync mode — requests server to initiate spin */
+		onRequestSpin?: () => void;
+		/** Called after the wheel comes to rest in sync mode */
+		onSpinComplete?: () => void;
+		/** Server-provided item ordering (array of original indices) */
+		shuffledOrder?: number[];
 	}
 
 	let {
@@ -36,15 +48,28 @@
 		removeOnWinner = false,
 		onSpin = () => {},
 		onWinner = () => {},
+		skipOnWin = false,
 		showSpin = true,
+		canSpin = true,
 		buttonText = 'Spin',
 		layout = 'stacked',
-		children
+		children,
+		syncSpinParams = undefined,
+		onRequestSpin = undefined,
+		onSpinComplete = undefined,
+		shuffledOrder = undefined
 	}: Props = $props();
 
 	let rotationResistance = $derived(rotationResistanceProp ?? (maxSpeed / minSpeed) * 50 * -1);
 
-	items = shuffle(items);
+	// One-time random shuffle for local mode (no server-provided order)
+	if (!shuffledOrder) {
+		items = shuffle(items);
+	}
+
+	// Display items: derived from server shuffle order, or use items as-is (already shuffled above).
+	// shuff() mutates items, so displayItems reactively updates in both modes.
+	let displayItems = $derived(shuffledOrder ? shuffledOrder.map((i: number) => items[i]) : items);
 
 	let wheel = $state<Wheel>();
 	let hasSpun = $state(false);
@@ -69,7 +94,7 @@
 	function shuff() {
 		items = shuffle(items);
 		if (wheel) {
-			wheel.items = items;
+			wheel.items = displayItems;
 		}
 	}
 
@@ -77,21 +102,46 @@
 		if (quickMode.value) maxSpeed = 100;
 		if (speed == 0) speed = random(minSpeed, maxSpeed);
 		if (wheel) {
-			wheel.items = items;
+			wheel.items = displayItems;
 			hasSpun = true;
 			onSpin?.();
 			wheel.spin(speed);
 		}
 	}
 
-	function win(item: SpinWheelItem) {
-		if (item.onWin) item.onWin();
-		onWinner(item);
+	function handleSpinClick() {
+		if (onRequestSpin) {
+			// Sync mode: ask server to initiate the spin
+			onRequestSpin();
+		} else {
+			// Local mode: spin directly
+			spin();
+		}
+	}
+
+	// Watch for server-provided spin params and execute deterministic spin
+	$effect(() => {
+		if (syncSpinParams && wheel) {
+			hasSpun = true;
+			onSpin?.();
+			wheel.spinToItem(
+				syncSpinParams.selectedIndex,
+				syncSpinParams.duration,
+				true,
+				syncSpinParams.numberOfRevolutions,
+				syncSpinParams.direction
+			);
+		}
+	});
+
+	function win(item: SpinWheelItem, index: number) {
+		if (!skipOnWin && item.onWin) item.onWin();
+		onWinner(item, index);
 	}
 
 	onMount(() => {
 		wheel = new Wheel(wheelEl, {
-			items: items,
+			items: displayItems,
 			isInteractive: false,
 			itemBackgroundColors: wheelColors,
 			itemLabelColors: ['#f1f5f9'], // surface-100 for readability
@@ -119,15 +169,16 @@
 
 		wheel.onRest = (event) => {
 			spinning = false;
-			selected = items[event.currentIndex];
-			if (selected) win(selected);
+			selected = displayItems[event.currentIndex];
+			if (selected) win(selected, event.currentIndex);
 			if (removeOnWinner) {
 				items = items.filter((item) => item != selected);
 			}
+			onSpinComplete?.();
 		};
 
 		wheel.onCurrentIndexChange = (event) => {
-			selected = items[event.currentIndex];
+			selected = displayItems[event.currentIndex];
 		};
 	});
 
@@ -212,7 +263,7 @@
 		{/if}
 
 		<!-- Action Buttons -->
-		{#if showSpin && wheel && items.length > 0}
+		{#if showSpin && canSpin && wheel && displayItems.length > 0}
 			<div
 				class={layout === 'side-by-side'
 					? 'flex flex-col items-stretch gap-3'
@@ -221,19 +272,21 @@
 				{#if children}{@render children({ spin })}{/if}
 
 				<div class={layout === 'side-by-side' ? 'flex flex-col gap-3' : 'flex gap-3'}>
-					<button
-						onclick={() => shuff()}
-						disabled={spinning}
-						class="group border-warning-500/50 from-warning-600 to-warning-700 hover:border-warning-400 hover:from-warning-500 hover:to-warning-600 relative overflow-hidden rounded border bg-gradient-to-br px-5 py-2.5 font-semibold tracking-wider text-white uppercase shadow-lg transition-all hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						<span class="relative z-10 flex items-center justify-center gap-2">
-							<Icon icon="mdi:shuffle-variant" class="text-lg" />
-							Shuffle
-						</span>
-					</button>
+					{#if !shuffledOrder}
+						<button
+							onclick={() => shuff()}
+							disabled={spinning}
+							class="group border-warning-500/50 from-warning-600 to-warning-700 hover:border-warning-400 hover:from-warning-500 hover:to-warning-600 relative overflow-hidden rounded border bg-gradient-to-br px-5 py-2.5 font-semibold tracking-wider text-white uppercase shadow-lg transition-all hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							<span class="relative z-10 flex items-center justify-center gap-2">
+								<Icon icon="mdi:shuffle-variant" class="text-lg" />
+								Shuffle
+							</span>
+						</button>
+					{/if}
 
 					<button
-						onclick={() => spin()}
+						onclick={() => handleSpinClick()}
 						disabled={spinning}
 						class="group border-primary-500/50 from-primary-600 to-primary-700 hover:border-primary-400 hover:from-primary-500 hover:to-primary-600 relative overflow-hidden rounded border bg-gradient-to-br px-6 py-2.5 font-bold tracking-wider text-white uppercase shadow-lg transition-all hover:shadow-[0_0_20px_rgba(220,38,38,0.4)] disabled:cursor-not-allowed disabled:opacity-50
 						{spinning ? 'animate-pulse' : ''}"

@@ -1,28 +1,24 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import {
-		generateMinorSpellWheel,
-		generateMajorSpellWheel,
-		generateUltimateSpellWheel,
-		canCastSpell,
-		MAX_MANA
-	} from '$lib/game/wheels/spellWheels';
+	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import { canCastSpell, MAX_MANA } from '$lib/game/wheels/spellWheels';
 	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
-	import { currentGame } from '$lib/stores/gameStore.svelte';
-	import {
-		enterMovementMode,
-		exitMovementMode,
-		getHasMovedThisTurn,
-		getIsMovementMode
-	} from '$lib/stores/movementStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import { getMovementStore } from '$lib/stores/movementStore.svelte';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
 	import WheelDropdown from './WheelDropdown.svelte';
 
+	const gs = getGameStore();
+	const mp = getMultiplayerStore();
+	const socket = getSocketStore();
+	const movement = getMovementStore();
+
 	// Derive movement state
-	let isMovementMode = $derived(getIsMovementMode());
-	let hasMovedThisTurn = $derived(getHasMovedThisTurn());
+	let isMovementMode = $derived(movement.isMovementMode);
+	let hasMovedThisTurn = $derived(movement.hasMovedThisTurn);
 
 	interface Props {
 		player: Player;
@@ -31,10 +27,10 @@
 
 	let { player, currentTurnPlayer }: Props = $props();
 
-	let isAttackWindowOpen = $state(false);
-
 	let isActiveTurn = $derived(player.hp > 0 && player.name === currentTurnPlayer?.name);
 	let isDead = $derived(player.hp <= 0);
+	let mpCanAct = $derived(mp.canAct);
+	let mpIsGM = $derived(mp.iAmGM);
 	let hpPercent = $derived(
 		Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100))
 	);
@@ -118,8 +114,10 @@
 		</div>
 
 		<div class="flex items-center gap-1">
-			<WheelDropdown {player} />
-			<EditPlayer {player} />
+			{#if mpIsGM}
+				<WheelDropdown {player} />
+				<EditPlayer {player} />
+			{/if}
 		</div>
 	</header>
 
@@ -423,7 +421,7 @@
 				{#if isMovementMode}
 					<button
 						class="from-warning-600 to-warning-700 hover:from-warning-500 hover:to-warning-600 flex w-full items-center justify-center gap-2 rounded-sm border-none bg-gradient-to-br px-3 py-2 text-xs font-bold tracking-widest text-white uppercase transition-all"
-						onclick={() => exitMovementMode()}
+						onclick={() => movement.exitMovementMode()}
 					>
 						<Icon icon="mdi:close" />
 						Cancel Move
@@ -431,8 +429,8 @@
 				{:else}
 					<button
 						class="from-success-600 to-success-700 hover:from-success-500 hover:to-success-600 flex w-full items-center justify-center gap-2 rounded-sm border-none bg-gradient-to-br px-3 py-2 text-xs font-bold tracking-widest text-white uppercase transition-all disabled:cursor-not-allowed disabled:opacity-30"
-						disabled={hasMovedThisTurn}
-						onclick={() => enterMovementMode()}
+						disabled={hasMovedThisTurn || !mpCanAct}
+						onclick={() => movement.enterMovementMode()}
 					>
 						<Icon icon="ion:footsteps" />
 						{hasMovedThisTurn ? 'Already Moved' : `Move (${player.movement} tiles)`}
@@ -442,7 +440,7 @@
 
 			<!-- Magic Man Spell Buttons -->
 			{#if player.classType === 'magicman'}
-				{@const hasFought = currentGame.value?.hasFought === true}
+				{@const hasFought = gs.game?.hasFought === true}
 				<div class="mb-3">
 					<div
 						class="text-surface-400 mb-2 flex items-center gap-1.5 text-[0.6rem] font-semibold tracking-[0.15em] uppercase"
@@ -457,10 +455,10 @@
 						<!-- Minor Spell (25 mana) -->
 						<button
 							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-500/20 to-violet-700/10 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-							disabled={!canCastSpell(player, 25) || hasFought}
+							disabled={!canCastSpell(player, 25) || hasFought || !mpCanAct}
 							onclick={() => {
-								generateMinorSpellWheel(player.name);
-								if (currentGame.value) currentGame.value.hasFought = true;
+								socket.castSpell('minor');
+								if (gs.game) gs.game.hasFought = true;
 							}}
 							title="Minor Spell - 25 Mana"
 						>
@@ -472,10 +470,10 @@
 						<!-- Major Spell (50 mana) -->
 						<button
 							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-500/20 to-violet-700/10 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/30 disabled:cursor-not-allowed disabled:opacity-40"
-							disabled={!canCastSpell(player, 50) || hasFought}
+							disabled={!canCastSpell(player, 50) || hasFought || !mpCanAct}
 							onclick={() => {
-								generateMajorSpellWheel(player.name);
-								if (currentGame.value) currentGame.value.hasFought = true;
+								socket.castSpell('major');
+								if (gs.game) gs.game.hasFought = true;
 							}}
 							title="Major Spell - 50 Mana"
 						>
@@ -487,10 +485,10 @@
 						<!-- Ultimate Spell (100 mana) -->
 						<button
 							class="flex flex-col items-center gap-1 rounded-sm border border-violet-500/30 bg-gradient-to-br from-violet-600/30 to-violet-800/20 px-2 py-2 text-center transition-all hover:border-violet-400/50 hover:from-violet-500/40 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] disabled:cursor-not-allowed disabled:opacity-40"
-							disabled={!canCastSpell(player, 100) || hasFought}
+							disabled={!canCastSpell(player, 100) || hasFought || !mpCanAct}
 							onclick={() => {
-								generateUltimateSpellWheel(player.name);
-								if (currentGame.value) currentGame.value.hasFought = true;
+								socket.castSpell('ultimate');
+								if (gs.game) gs.game.hasFought = true;
 							}}
 							title="Ultimate Spell - 100 Mana"
 						>
@@ -502,7 +500,7 @@
 				</div>
 			{/if}
 
-			<AttackPlayer bind:showWheel={isAttackWindowOpen} {player} />
+			<AttackPlayer {player} />
 		</div>
 	{/if}
 </div>

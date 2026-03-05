@@ -1,4 +1,3 @@
-import { addAuditTrail } from '$lib/stores/gameStore.svelte';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource, setResource } from '../player/playerResources';
 import type { ClassBase } from './classType';
@@ -28,7 +27,7 @@ export function updateLuckyStreakMultipliers(player: Player) {
 export function incrementLuckyStreak(player: Player, amount: number = 1) {
 	const streak = addResource(player, LUCKY_STREAK_RESOURCE, amount);
 	updateLuckyStreakMultipliers(player);
-	addAuditTrail(
+	player.game?.addAuditTrail(
 		`${player.name}'s Lucky Streak grows to ${streak}! (${streak * 10}% ATK/DEF multiplier)`
 	);
 }
@@ -39,7 +38,7 @@ export function resetLuckyStreak(player: Player) {
 	if (oldStreak > 0) {
 		setResource(player, LUCKY_STREAK_RESOURCE, 0);
 		updateLuckyStreakMultipliers(player);
-		addAuditTrail(`${player.name}'s Lucky Streak of ${oldStreak} was broken!`);
+		player.game?.addAuditTrail(`${player.name}'s Lucky Streak of ${oldStreak} was broken!`);
 	}
 }
 
@@ -60,16 +59,19 @@ export const Gambler: ClassBase = {
 	attackRange: 1,
 	startingGold: 100,
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackWin(player, _defendingPlayer) {
 		// Winning an attack is a positive outcome - streak grows
 		incrementLuckyStreak(player);
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onAttackLose(player, _defendingPlayer) {
 		// Losing an attack breaks the streak
 		resetLuckyStreak(player);
 	},
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	onDefendLose(player, _attackingPlayer) {
 		// Getting hit breaks the streak
 		resetLuckyStreak(player);

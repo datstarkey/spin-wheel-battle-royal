@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
-	import { classMap, type ClassBase } from '$lib/game/classes/classType';
+	import { classMap } from '$lib/game/classes/classType';
 	import Icon from '../Icon.svelte';
 
 	// Get all classes except 'none'

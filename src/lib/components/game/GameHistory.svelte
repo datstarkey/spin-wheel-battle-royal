@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { currentGame } from '$lib/stores/gameStore.svelte';
+	import { getGameStore } from '$lib/stores/gameStore.svelte';
+
+	const gs = getGameStore();
 	import { slide, fly } from 'svelte/transition';
 
 	let isExpanded = $state(false);
@@ -310,9 +312,9 @@
 		}));
 	}
 
-	let processedEntries = $derived(processEntries(currentGame.value?.auditTrail.toReversed() ?? []));
+	let processedEntries = $derived(processEntries(gs.game?.auditTrail.toReversed() ?? []));
 
-	let entryCount = $derived(currentGame.value?.auditTrail.length ?? 0);
+	let entryCount = $derived(gs.game?.auditTrail.length ?? 0);
 </script>
 
 <!-- Floating Battle Log Terminal -->
@@ -455,7 +457,7 @@
 								<div
 									class="text-surface-600 shrink-0 self-center text-[9px] tabular-nums opacity-0 transition-opacity group-hover/entry:opacity-100"
 								>
-									#{currentGame.value?.auditTrail.length ?? 0 - entry.index}
+									#{gs.game?.auditTrail.length ?? 0 - entry.index}
 								</div>
 							</div>
 						{/each}

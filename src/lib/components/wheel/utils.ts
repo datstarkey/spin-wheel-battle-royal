@@ -1,11 +1,11 @@
 import { classMap } from '$lib/game/classes/classType';
-import { currentGame } from '$lib/stores/gameStore.svelte';
+import type { Game } from '$lib/game/game.svelte';
 import type { SpinWheelItem } from './types';
 
-export function playerNameSpinItems(): SpinWheelItem[] {
+export function playerNameSpinItems(game: Game | null): SpinWheelItem[] {
 	return (
-		currentGame.value?.players
-			.filter((player) => !currentGame.value?.started || !player.dead)
+		game?.players
+			.filter((player) => !game?.started || !player.dead)
 			.map((player) => ({ label: player.name })) ?? []
 	);
 }

@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { HTMLSelectAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLSelectAttributes {
+	type Props = HTMLSelectAttributes & {
 		label: string;
-		value: any;
-	}
+	};
 	let { value = $bindable(), label, ...props }: Props = $props();
 </script>
 

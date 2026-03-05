@@ -1,4 +1,4 @@
-import { addAuditTrail, getPlayerByName } from '$lib/stores/gameStore.svelte';
+import { getServerGameContext } from '$lib/game/serverContext';
 import toast from '$lib/stores/toaster.svelte';
 import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
@@ -26,7 +26,7 @@ export class PlayerStatuses {
 		if (this._player) {
 			return this._player;
 		}
-		const player = getPlayerByName(this._playerName);
+		const player = getServerGameContext().getPlayerByName(this._playerName);
 		if (!player) {
 			throw new Error(`Player ${this._playerName} not found`);
 		}
@@ -52,7 +52,7 @@ export class PlayerStatuses {
 			return;
 		}
 
-		addAuditTrail(`${this.player.name} now has ${statusEffect.status.name}!`);
+		this.player.game?.addAuditTrail(`${this.player.name} now has ${statusEffect.status.name}!`);
 		this._statuses.push(statusEffect);
 		statusEffect.status.onApply?.(this.player);
 	}
@@ -76,7 +76,9 @@ export class PlayerStatuses {
 	removeStatus(status: StatusType) {
 		const statusEffect = this._statuses.find((s) => s.statusName === status);
 		if (!statusEffect) return;
-		addAuditTrail(`${this.player.name} no longer has ${statusEffect.status.name}!`);
+		this.player.game?.addAuditTrail(
+			`${this.player.name} no longer has ${statusEffect.status.name}!`
+		);
 		statusEffect.status.onRemove?.(this.player);
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
 	}
@@ -100,7 +102,7 @@ export class PlayerStatuses {
 		});
 
 		statusesToRemove.forEach((s) => {
-			addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
+			this.player.game?.addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
 			s.status.onRemove?.(this.player);
 			this._statuses = this._statuses.filter((x) => x !== s);
 		});
