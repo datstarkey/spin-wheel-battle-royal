@@ -5,6 +5,11 @@
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
 	import WheelDropdown from './WheelDropdown.svelte';
+	import PlayerStats from './shared/PlayerStats.svelte';
+	import PlayerEquipment from './shared/PlayerEquipment.svelte';
+	import PlayerStatuses from './shared/PlayerStatuses.svelte';
+	import PlayerConsumables from './shared/PlayerConsumables.svelte';
+	import { getHpColorClass } from './shared/playerDisplayConstants';
 
 	const mp = getMultiplayerStore();
 
@@ -23,20 +28,9 @@
 	let hpPercent = $derived(
 		Math.max(0, Math.min(100, (player.hp / Math.max(1, player.maxHp)) * 100))
 	);
-
-	// Get first letter for avatar
 	let avatarLetter = $derived(player.name.charAt(0).toUpperCase());
+	let hpColorClass = $derived(getHpColorClass(player.hp));
 
-	// HP color based on percentage
-	let hpColorClass = $derived(
-		player.hp <= 5
-			? 'from-error-600 to-error-500'
-			: player.hp <= 10
-				? 'from-warning-600 to-warning-500'
-				: 'from-success-600 to-success-500'
-	);
-
-	// Border glow based on state
 	let borderStateClass = $derived(
 		isActiveTurn
 			? 'border-primary-500/70 shadow-[0_0_20px_rgba(220,38,38,0.3),inset_0_0_20px_rgba(220,38,38,0.05)]'
@@ -96,7 +90,6 @@
 				{avatarLetter}
 			{/if}
 
-			<!-- Active turn pulse ring -->
 			{#if isActiveTurn}
 				<div
 					class="border-primary-500 absolute inset-0 animate-ping rounded-full border-2 opacity-40"
@@ -195,213 +188,11 @@
 				{/if}
 			</div>
 
-			<!-- Stats Grid -->
-			<div class="mb-4 grid grid-cols-4 gap-2">
-				<div
-					class="flex flex-col items-center rounded border border-white/5 bg-black/30 p-2 transition-all hover:border-white/10"
-				>
-					<Icon icon="mdi:sword" class="text-primary-400 mb-1 text-base" />
-					<div class="flex items-baseline gap-1">
-						<span class="text-surface-100 text-base font-bold">{player.attack.toFixed(0)}</span>
-						{#if player.bonusAttack > 0 || player.attackMultiplier > 1}
-							<span class="text-surface-500 text-[0.55rem]">({player.baseAttack})</span>
-						{/if}
-					</div>
-					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">ATK</span>
-				</div>
-
-				<div
-					class="flex flex-col items-center rounded border border-white/5 bg-black/30 p-2 transition-all hover:border-white/10"
-				>
-					<Icon icon="mdi:shield" class="text-secondary-400 mb-1 text-base" />
-					<div class="flex items-baseline gap-1">
-						<span class="text-surface-100 text-base font-bold">{player.defense.toFixed(0)}</span>
-						{#if player.bonusDefense > 0 || player.defenseMultiplier > 1}
-							<span class="text-surface-500 text-[0.55rem]">({player.baseDefense})</span>
-						{/if}
-					</div>
-					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">DEF</span>
-				</div>
-
-				<div
-					class="flex flex-col items-center rounded border border-white/5 bg-black/30 p-2 transition-all hover:border-white/10"
-				>
-					<Icon icon="mdi:coin" class="text-warning-400 mb-1 text-base" />
-					<span class="text-surface-100 text-base font-bold">{player.gold}</span>
-					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">GOLD</span>
-				</div>
-
-				<div
-					class="flex flex-col items-center rounded border border-white/5 bg-black/30 p-2 transition-all hover:border-white/10"
-				>
-					<Icon icon="ion:footsteps" class="text-success-400 mb-1 text-base" />
-					<div class="flex items-baseline gap-1">
-						<span class="text-surface-100 text-base font-bold">{player.movement}</span>
-						{#if player.bonusMovement > 0}
-							<span class="text-surface-500 text-[0.55rem]">({player.baseMovement})</span>
-						{/if}
-					</div>
-					<span class="text-surface-500 text-[0.5rem] tracking-widest uppercase">MOV</span>
-				</div>
-			</div>
-
-			<!-- Range -->
-			<div class="mb-4 flex items-center gap-2 rounded bg-black/20 px-2 py-1.5 text-xs">
-				<Icon icon="material-symbols:social-distance" class="text-warning-500" />
-				<span class="text-surface-400">Range:</span>
-				<span class="text-surface-100 font-bold">{player.attackRange}</span>
-				{#if player.bonusAttackRange > 0}
-					<span class="text-success-400 text-[0.65rem]">(+{player.bonusAttackRange})</span>
-				{/if}
-			</div>
-
-			<!-- Resources -->
-			{#if Object.keys(player.resources).length > 0}
-				<div class="mb-4">
-					{#each Object.entries(player.resources) as [resource, amount] (resource)}
-						{#if resource === 'Swenergy'}
-							<div class="flex items-center gap-2 rounded bg-black/20 px-2 py-1.5">
-								<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
-									<Icon icon="mdi:cube-outline" class="text-xs text-teal-400" />
-									{resource}
-								</span>
-								<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
-									<div
-										class="h-full bg-gradient-to-r from-teal-500 to-teal-400 transition-all duration-300"
-										style:width="{(amount / 10) * 100}%"
-									></div>
-								</div>
-								<span class="text-surface-300 min-w-[30px] text-right text-[0.65rem] font-semibold"
-									>{amount}/10</span
-								>
-							</div>
-						{:else}
-							<div class="mt-1 flex items-center gap-1.5 rounded bg-black/20 px-2 py-1 text-xs">
-								<Icon icon="mdi:cube-outline" class="text-teal-400" />
-								<span>{resource}</span>
-								<span class="text-surface-100 ml-auto font-semibold">{amount}</span>
-							</div>
-						{/if}
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Equipment -->
-			<div class="mb-4">
-				<div
-					class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
-				>
-					<Icon icon="mdi:treasure-chest" class="text-xs opacity-70" />
-					<span>Equipment</span>
-				</div>
-				<div class="grid grid-cols-2 gap-1">
-					<div
-						class="flex items-center gap-1.5 rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
-					>
-						<Icon icon="mdi:sword" class="text-primary-400 text-xs opacity-60" />
-						<span
-							class="truncate text-[0.65rem] {player.gear.mainHand
-								? 'text-surface-300'
-								: 'text-surface-500 italic'}"
-						>
-							{player.gear.mainHand ?? 'Empty'}
-						</span>
-					</div>
-					<div
-						class="flex items-center gap-1.5 rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
-					>
-						<Icon icon="mdi:shield-half-full" class="text-secondary-400 text-xs opacity-60" />
-						<span
-							class="truncate text-[0.65rem] {player.gear.offHand
-								? 'text-surface-300'
-								: 'text-surface-500 italic'}"
-						>
-							{player.gear.offHand ?? 'Empty'}
-						</span>
-					</div>
-					<div
-						class="flex items-center gap-1.5 rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
-					>
-						<Icon icon="game-icons:crested-helmet" class="text-tertiary-400 text-xs opacity-60" />
-						<span
-							class="truncate text-[0.65rem] {player.gear.helm
-								? 'text-surface-300'
-								: 'text-surface-500 italic'}"
-						>
-							{player.gear.helm ?? 'Empty'}
-						</span>
-					</div>
-					<div
-						class="flex items-center gap-1.5 rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
-					>
-						<Icon icon="mdi:tshirt-crew" class="text-warning-400 text-xs opacity-60" />
-						<span
-							class="truncate text-[0.65rem] {player.gear.chest
-								? 'text-surface-300'
-								: 'text-surface-500 italic'}"
-						>
-							{player.gear.chest ?? 'Empty'}
-						</span>
-					</div>
-				</div>
-			</div>
-
-			<!-- Status Effects -->
-			{#if player.statuses.statuses.length > 0}
-				<div class="mb-4">
-					<div
-						class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
-					>
-						<Icon icon="mdi:star-four-points" class="text-xs opacity-70" />
-						<span>Status Effects</span>
-					</div>
-					<div class="flex flex-wrap gap-1">
-						{#each player.statuses.statuses as status (status.status.name)}
-							<div
-								class="border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded border px-1.5 py-0.5"
-							>
-								<span class="text-warning-400 text-[0.6rem]">{status.status.name}</span>
-								{#if status.duration && status.duration > 0}
-									<span
-										class="text-warning-500 rounded-sm bg-black/30 px-1 py-0.5 text-[0.55rem] font-bold"
-										>{status.duration}T</span
-									>
-								{:else}
-									<span class="text-tertiary-400 text-[0.6rem]">∞</span>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Consumables -->
-			{#if player.gear.consumables.length > 0}
-				<div class="mb-4">
-					<div
-						class="text-surface-500 mb-2 flex items-center gap-1.5 text-[0.55rem] font-semibold tracking-[0.15em] uppercase"
-					>
-						<Icon icon="iconoir:consumable" class="text-xs opacity-70" />
-						<span>Items</span>
-					</div>
-					<div class="flex flex-col gap-1">
-						{#each player.gear.consumables as item (item)}
-							<div
-								class="flex items-center justify-between rounded border border-white/[0.03] bg-black/25 px-1.5 py-1"
-							>
-								<span class="text-surface-300 text-[0.65rem]">{item}</span>
-								<button
-									class="from-primary-600 to-primary-700 hover:from-primary-500 hover:to-primary-600 rounded-sm border-none bg-gradient-to-br px-1.5 py-0.5 text-[0.55rem] font-bold tracking-widest text-white uppercase transition-all hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-30"
-									disabled={isDead || player.name !== currentTurnPlayer?.name}
-									onclick={() => player.gear.useConsumable(item)}
-								>
-									USE
-								</button>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
+			<!-- Shared stats, equipment, statuses, consumables -->
+			<PlayerStats {player} compact {isDead} />
+			<PlayerEquipment {player} compact {isDead} />
+			<PlayerStatuses {player} compact {isDead} />
+			<PlayerConsumables {player} compact {isDead} {currentTurnPlayer} />
 
 			<!-- Attack Button (for active player) -->
 			{#if isActiveTurn}

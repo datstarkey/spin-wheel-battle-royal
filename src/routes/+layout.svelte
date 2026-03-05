@@ -31,17 +31,11 @@
 
 	let { children }: Props = $props();
 
-	// Auto-reconnect to saved multiplayer session on page load
+	// Auto-reconnect + force dark theme (run once on mount, not reactively)
 	onMount(() => {
 		socket.autoReconnect();
-	});
-
-	// Force dark mode only
-	$effect(() => {
-		if (typeof document !== 'undefined') {
-			document.documentElement.dataset.theme = 'battle-arena';
-			document.documentElement.dataset.mode = 'dark';
-		}
+		document.documentElement.dataset.theme = 'battle-arena';
+		document.documentElement.dataset.mode = 'dark';
 	});
 </script>
 

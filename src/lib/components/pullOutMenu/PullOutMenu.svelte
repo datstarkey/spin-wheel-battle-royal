@@ -23,8 +23,6 @@
 		trigger
 	}: Props = $props();
 
-	// Static store to track which menu is currently open
-
 	// Calculate transform based on position
 	let transformStyle = $derived.by(() => {
 		const transforms = {
@@ -50,6 +48,12 @@
 	function onTrigger() {
 		isOpen = true;
 	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && isOpen) {
+			isOpen = false;
+		}
+	}
 </script>
 
 {@render trigger?.(onTrigger)}
@@ -58,6 +62,10 @@
 	<div
 		class="bg-surface-50 dark:bg-surface-900 fixed z-1000 overflow-hidden transition-transform duration-300 ease-in-out"
 		style="{positionStyle} transform: {isOpen ? 'translate(0)' : transformStyle}"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onkeydown={handleKeydown}
 	>
 		{#if !hideCloseButton}
 			<div class="absolute top-0 right-0 m-8">

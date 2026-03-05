@@ -15,13 +15,58 @@
 	}
 	let { player, open = $bindable(false) }: Props = $props();
 
-	// Category configuration for styling
-	const categoryConfig: Record<string, { label: string; icon: string; color: string }> = {
-		mainhand: { label: 'Weapon', icon: 'mdi:sword', color: 'primary' },
-		offHand: { label: 'Off-Hand', icon: 'mdi:shield-half-full', color: 'secondary' },
-		helm: { label: 'Headgear', icon: 'game-icons:crested-helmet', color: 'tertiary' },
-		chest: { label: 'Armor', icon: 'mdi:tshirt-crew', color: 'warning' },
-		consumables: { label: 'Consumable', icon: 'mdi:flask', color: 'success' }
+	// Category configuration with full Tailwind class strings (no interpolation)
+	const categoryConfig: Record<
+		string,
+		{
+			label: string;
+			icon: string;
+			hoverBorder: string;
+			bgGradient: string;
+			cornerBorder: string;
+			labelClass: string;
+		}
+	> = {
+		mainhand: {
+			label: 'Weapon',
+			icon: 'mdi:sword',
+			hoverBorder: 'hover:border-primary-500/50',
+			bgGradient: 'from-primary-500/5',
+			cornerBorder: 'border-primary-500',
+			labelClass: 'text-primary-400'
+		},
+		offHand: {
+			label: 'Off-Hand',
+			icon: 'mdi:shield-half-full',
+			hoverBorder: 'hover:border-secondary-500/50',
+			bgGradient: 'from-secondary-500/5',
+			cornerBorder: 'border-secondary-500',
+			labelClass: 'text-secondary-400'
+		},
+		helm: {
+			label: 'Headgear',
+			icon: 'game-icons:crested-helmet',
+			hoverBorder: 'hover:border-tertiary-500/50',
+			bgGradient: 'from-tertiary-500/5',
+			cornerBorder: 'border-tertiary-500',
+			labelClass: 'text-tertiary-400'
+		},
+		chest: {
+			label: 'Armor',
+			icon: 'mdi:tshirt-crew',
+			hoverBorder: 'hover:border-warning-500/50',
+			bgGradient: 'from-warning-500/5',
+			cornerBorder: 'border-warning-500',
+			labelClass: 'text-warning-400'
+		},
+		consumables: {
+			label: 'Consumable',
+			icon: 'mdi:flask',
+			hoverBorder: 'hover:border-success-500/50',
+			bgGradient: 'from-success-500/5',
+			cornerBorder: 'border-success-500',
+			labelClass: 'text-success-400'
+		}
 	};
 
 	// Get current shop items (4 random items from all categories)
@@ -33,13 +78,58 @@
 		socket.shopReroll();
 	}
 
-	// Stats that items can modify
-	const statIcons: Record<string, { icon: string; color: string; label: string }> = {
-		attack: { icon: 'mdi:sword', color: 'primary', label: 'ATK' },
-		defense: { icon: 'mdi:shield', color: 'secondary', label: 'DEF' },
-		hp: { icon: 'mdi:heart', color: 'error', label: 'HP' },
-		movement: { icon: 'mdi:run-fast', color: 'success', label: 'MOV' },
-		gold: { icon: 'mdi:coin', color: 'warning', label: 'GOLD' }
+	// Stats with full Tailwind class strings (no interpolation)
+	const statIcons: Record<
+		string,
+		{
+			icon: string;
+			label: string;
+			iconClass: string;
+			borderClass: string;
+			bgClass: string;
+			textClass: string;
+		}
+	> = {
+		attack: {
+			icon: 'mdi:sword',
+			label: 'ATK',
+			iconClass: 'text-primary-400',
+			borderClass: 'border-primary-500/20',
+			bgClass: 'bg-primary-500/10',
+			textClass: 'text-primary-300'
+		},
+		defense: {
+			icon: 'mdi:shield',
+			label: 'DEF',
+			iconClass: 'text-secondary-400',
+			borderClass: 'border-secondary-500/20',
+			bgClass: 'bg-secondary-500/10',
+			textClass: 'text-secondary-300'
+		},
+		hp: {
+			icon: 'mdi:heart',
+			label: 'HP',
+			iconClass: 'text-error-400',
+			borderClass: 'border-error-500/20',
+			bgClass: 'bg-error-500/10',
+			textClass: 'text-error-300'
+		},
+		movement: {
+			icon: 'mdi:run-fast',
+			label: 'MOV',
+			iconClass: 'text-success-400',
+			borderClass: 'border-success-500/20',
+			bgClass: 'bg-success-500/10',
+			textClass: 'text-success-300'
+		},
+		gold: {
+			icon: 'mdi:coin',
+			label: 'GOLD',
+			iconClass: 'text-warning-400',
+			borderClass: 'border-warning-500/20',
+			bgClass: 'bg-warning-500/10',
+			textClass: 'text-warning-300'
+		}
 	};
 
 	// Parse description for stat bonuses (simple heuristic)
@@ -185,12 +275,13 @@
 					<article
 						class="group relative flex overflow-hidden border transition-all duration-200
 							{canAfford
-							? `border-surface-600/50 hover:border-${catConfig?.color}-500/50 hover:shadow-lg`
+							? `border-surface-600/50 ${catConfig?.hoverBorder ?? ''} hover:shadow-lg`
 							: 'border-surface-700/30 opacity-50'}"
 					>
 						<!-- Background gradient on hover -->
 						<div
-							class="absolute inset-0 bg-gradient-to-r from-{catConfig?.color}-500/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+							class="absolute inset-0 bg-gradient-to-r {catConfig?.bgGradient ??
+								''} to-transparent opacity-0 transition-opacity group-hover:opacity-100"
 						></div>
 
 						<!-- Item Image Section -->
@@ -228,7 +319,8 @@
 											{item.name}
 										</h3>
 										<span
-											class="text-[0.6rem] tracking-widest text-{catConfig?.color ?? 'surface'}-400"
+											class="text-[0.6rem] tracking-widest {catConfig?.labelClass ??
+												'text-surface-400'}"
 											>{catConfig?.label?.toUpperCase() ?? category.toUpperCase()}</span
 										>
 									</div>
@@ -246,12 +338,10 @@
 											{@const statInfo = statIcons[stat]}
 											{#if statInfo}
 												<div
-													class="flex items-center gap-1 border border-{statInfo.color}-500/20 bg-{statInfo.color}-500/10 px-2 py-1"
+													class="flex items-center gap-1 border {statInfo.borderClass} {statInfo.bgClass} px-2 py-1"
 												>
-													<Icon icon={statInfo.icon} class="text-xs text-{statInfo.color}-400" />
-													<span class="text-[0.65rem] font-bold text-{statInfo.color}-300"
-														>{value}</span
-													>
+													<Icon icon={statInfo.icon} class="text-xs {statInfo.iconClass}" />
+													<span class="text-[0.65rem] font-bold {statInfo.textClass}">{value}</span>
 												</div>
 											{/if}
 										{/each}
@@ -291,22 +381,12 @@
 						</div>
 
 						<!-- Corner accents -->
-						<div
-							class="pointer-events-none absolute top-0 left-0 h-3 w-3 border-t-2 border-l-2 opacity-30 transition-opacity group-hover:opacity-70
-								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
-						></div>
-						<div
-							class="pointer-events-none absolute top-0 right-0 h-3 w-3 border-t-2 border-r-2 opacity-30 transition-opacity group-hover:opacity-70
-								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
-						></div>
-						<div
-							class="pointer-events-none absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 opacity-30 transition-opacity group-hover:opacity-70
-								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
-						></div>
-						<div
-							class="pointer-events-none absolute right-0 bottom-0 h-3 w-3 border-r-2 border-b-2 opacity-30 transition-opacity group-hover:opacity-70
-								{canAfford ? `border-${catConfig?.color}-500` : 'border-surface-600'}"
-						></div>
+						{#each ['top-0 left-0 border-t-2 border-l-2', 'top-0 right-0 border-t-2 border-r-2', 'bottom-0 left-0 border-b-2 border-l-2', 'right-0 bottom-0 border-r-2 border-b-2'] as pos}
+							<div
+								class="pointer-events-none absolute h-3 w-3 opacity-30 transition-opacity group-hover:opacity-70 {pos}
+									{canAfford ? (catConfig?.cornerBorder ?? '') : 'border-surface-600'}"
+							></div>
+						{/each}
 					</article>
 				{/each}
 			</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { BOARD_WIDTH, BOARD_HEIGHT, TILES, TREASURE_CHESTS } from '$lib/game/board/boardData';
 	import { gameBoard } from '$lib/game/board/board.svelte';
 	import type { Position, Tile } from '$lib/game/board/types';
@@ -7,6 +8,7 @@
 	import { getMovementStore } from '$lib/stores/movementStore.svelte';
 	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
 
+	import Icon from '$lib/components/Icon.svelte';
 	import PlayerToken from './PlayerToken.svelte';
 
 	const gs = getGameStore();
@@ -186,12 +188,10 @@
 		lastTouchDist = 0;
 	}
 
-	// Center board initially
-	$effect(() => {
-		if (typeof window !== 'undefined') {
-			panX = (window.innerWidth - boardWidth * scale) / 2;
-			panY = (window.innerHeight - 60 - boardHeight * scale) / 2;
-		}
+	// Center board initially (run once on mount, not reactively)
+	onMount(() => {
+		panX = (window.innerWidth - boardWidth * scale) / 2;
+		panY = (window.innerHeight - 60 - boardHeight * scale) / 2;
 	});
 
 	// Add wheel listener with passive: false to allow preventDefault
@@ -349,7 +349,7 @@
 			}}
 			aria-label="Reset view"
 		>
-			<iconify-icon icon="mdi:fit-to-screen" width="20"></iconify-icon>
+			<Icon icon="mdi:fit-to-screen" class="text-xl" />
 		</button>
 	</div>
 
