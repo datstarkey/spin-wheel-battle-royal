@@ -273,6 +273,10 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			const context = resolveActionContext(callback);
 			if (!context) return;
 
+			const resolvedWheelType =
+				data.action.type === 'WHEEL_SPIN_RESULT'
+					? context.room.pendingWheels.get(data.action.wheelKey)?.type
+					: undefined;
 			const result = processAction(context, data.action);
 
 			if (!result.success) {
@@ -281,14 +285,18 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			}
 
 			// Track combat state on the room for join/rejoin
-			if (result.combat) {
+			if (resolvedWheelType === 'combat') {
+				context.room.combatState = null;
+			} else if (result.combat) {
 				context.room.combatState = result.combat;
 			}
 
 			broadcastActionResult({
 				context,
 				result,
-				combatState: result.combat ?? undefined
+				dismissedWheelKey:
+					data.action.type === 'WHEEL_SPIN_RESULT' ? data.action.wheelKey : undefined,
+				combatState: resolvedWheelType === 'combat' ? null : (result.combat ?? undefined)
 			});
 
 			callback?.({ success: true });
@@ -351,43 +359,6 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				duration: 5000,
 				numberOfRevolutions: 4,
 				direction: 1 as const
-			});
-
-			callback?.({ success: true });
-		});
-
-		// ================================================================
-		// Wheel: Spin Result
-		// ================================================================
-		socket.on('wheel:spin_result', (data, callback) => {
-			const context = resolveActionContext(callback);
-			if (!context) return;
-
-			// Capture wheel type before handleAction deletes it
-			const wheelType = context.room.pendingWheels.get(data.wheelKey)?.type;
-
-			const result = processAction(context, {
-				type: 'WHEEL_SPIN_RESULT',
-				wheelKey: data.wheelKey,
-				selectedIndex: data.selectedIndex
-			});
-
-			if (!result.success) {
-				callback?.({ success: false, error: result.error });
-				return;
-			}
-
-			// Broadcast updated state (include combatState: null if this was a combat wheel)
-			const combatEnded = wheelType === 'combat';
-			if (combatEnded) {
-				context.room.combatState = null;
-			}
-
-			broadcastActionResult({
-				context,
-				result,
-				dismissedWheelKey: data.wheelKey,
-				combatState: combatEnded ? null : undefined
 			});
 
 			callback?.({ success: true });

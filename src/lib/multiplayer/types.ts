@@ -181,11 +181,6 @@ export interface ClientToServerEvents {
 		callback?: (response: { success: boolean; error?: string }) => void
 	) => void;
 
-	'wheel:spin_result': (
-		data: { wheelKey: string; selectedIndex: number },
-		callback?: (response: { success: boolean; error?: string }) => void
-	) => void;
-
 	'wheel:request_spin': (
 		data: { wheelKey: string },
 		callback?: (response: { success: boolean; error?: string }) => void

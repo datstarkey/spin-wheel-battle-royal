@@ -336,11 +336,7 @@ class SocketStore {
 		selectedIndex: number,
 		callback?: (response: { success: boolean; error?: string }) => void
 	) {
-		if (!this.socket?.connected) {
-			callback?.({ success: false, error: 'Not connected' });
-			return;
-		}
-		this.socket.emit('wheel:spin_result', { wheelKey, selectedIndex }, callback);
+		this.sendAction({ type: 'WHEEL_SPIN_RESULT', wheelKey, selectedIndex }, callback);
 	}
 
 	private dispatch(action: GameAction) {
