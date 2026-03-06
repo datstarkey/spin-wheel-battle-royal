@@ -16,6 +16,16 @@
 		max: number;
 	}
 
+	interface PrimaryStatCard {
+		key: string;
+		label: string;
+		icon: string;
+		iconClass: string;
+		value: string | number;
+		baseValue?: string | number;
+		showBase?: boolean;
+	}
+
 	interface Props {
 		player: Player;
 		compact?: boolean;
@@ -68,6 +78,42 @@
 	let genericResourceEntries = $derived(
 		Object.entries(player.resources).filter(([resource]) => !hiddenResources.has(resource))
 	);
+	let primaryStatCards = $derived<PrimaryStatCard[]>([
+		{
+			key: 'attack',
+			label: 'ATK',
+			icon: 'mdi:sword',
+			iconClass: 'text-primary-400',
+			value: player.attack.toFixed(0),
+			baseValue: player.baseAttack,
+			showBase: player.bonusAttack > 0 || player.attackMultiplier > 1
+		},
+		{
+			key: 'defense',
+			label: 'DEF',
+			icon: 'mdi:shield',
+			iconClass: 'text-secondary-400',
+			value: player.defense.toFixed(0),
+			baseValue: player.baseDefense,
+			showBase: player.bonusDefense > 0 || player.defenseMultiplier > 1
+		},
+		{
+			key: 'gold',
+			label: 'GOLD',
+			icon: 'mdi:coin',
+			iconClass: 'text-warning-400',
+			value: player.gold
+		},
+		{
+			key: 'movement',
+			label: 'MOV',
+			icon: 'ion:footsteps',
+			iconClass: 'text-success-400',
+			value: player.movement,
+			baseValue: player.baseMovement,
+			showBase: player.bonusMovement > 0
+		}
+	]);
 </script>
 
 <!-- HP Bar -->
@@ -89,55 +135,25 @@
 </div>
 
 <!-- Primary Stats Grid -->
+{#snippet primaryStatCard(card: PrimaryStatCard)}
+	<div
+		class="flex flex-col items-center rounded-sm border border-white/5 bg-black/30 {padding} transition-all hover:border-white/10 hover:bg-black/40"
+	>
+		<Icon icon={card.icon} class="{card.iconClass} mb-0.5 {iconSize}" />
+		<div class="flex items-baseline gap-0.5">
+			<span class="text-surface-100 {valueSize} font-bold">{card.value}</span>
+			{#if card.showBase}
+				<span class="text-surface-400 {baseSize}">({card.baseValue})</span>
+			{/if}
+		</div>
+		<span class="text-surface-400 mt-0.5 {labelSize} tracking-widest">{card.label}</span>
+	</div>
+{/snippet}
+
 <div class="mb-2 grid grid-cols-4 gap-2 {isDead ? 'opacity-40' : ''}">
-	<div
-		class="flex flex-col items-center rounded-sm border border-white/5 bg-black/30 {padding} transition-all hover:border-white/10 hover:bg-black/40"
-	>
-		<Icon icon="mdi:sword" class="text-primary-400 mb-0.5 {iconSize}" />
-		<div class="flex items-baseline gap-0.5">
-			<span class="text-surface-100 {valueSize} font-bold">{player.attack.toFixed(0)}</span>
-			{#if player.bonusAttack > 0 || player.attackMultiplier > 1}
-				<span class="text-surface-400 {baseSize}">({player.baseAttack})</span>
-			{/if}
-		</div>
-		<span class="text-surface-400 mt-0.5 {labelSize} tracking-widest">ATK</span>
-	</div>
-
-	<div
-		class="flex flex-col items-center rounded-sm border border-white/5 bg-black/30 {padding} transition-all hover:border-white/10 hover:bg-black/40"
-	>
-		<Icon icon="mdi:shield" class="text-secondary-400 mb-0.5 {iconSize}" />
-		<div class="flex items-baseline gap-0.5">
-			<span class="text-surface-100 {valueSize} font-bold">{player.defense.toFixed(0)}</span>
-			{#if player.bonusDefense > 0 || player.defenseMultiplier > 1}
-				<span class="text-surface-400 {baseSize}">({player.baseDefense})</span>
-			{/if}
-		</div>
-		<span class="text-surface-400 mt-0.5 {labelSize} tracking-widest">DEF</span>
-	</div>
-
-	<div
-		class="flex flex-col items-center rounded-sm border border-white/5 bg-black/30 {padding} transition-all hover:border-white/10 hover:bg-black/40"
-	>
-		<Icon icon="mdi:coin" class="text-warning-400 mb-0.5 {iconSize}" />
-		<div class="flex items-baseline gap-0.5">
-			<span class="text-surface-100 {valueSize} font-bold">{player.gold}</span>
-		</div>
-		<span class="text-surface-400 mt-0.5 {labelSize} tracking-widest">GOLD</span>
-	</div>
-
-	<div
-		class="flex flex-col items-center rounded-sm border border-white/5 bg-black/30 {padding} transition-all hover:border-white/10 hover:bg-black/40"
-	>
-		<Icon icon="ion:footsteps" class="text-success-400 mb-0.5 {iconSize}" />
-		<div class="flex items-baseline gap-0.5">
-			<span class="text-surface-100 {valueSize} font-bold">{player.movement}</span>
-			{#if player.bonusMovement > 0}
-				<span class="text-surface-400 {baseSize}">({player.baseMovement})</span>
-			{/if}
-		</div>
-		<span class="text-surface-400 mt-0.5 {labelSize} tracking-widest">MOV</span>
-	</div>
+	{#each primaryStatCards as card (card.key)}
+		{@render primaryStatCard(card)}
+	{/each}
 </div>
 
 <!-- Range Stat -->
