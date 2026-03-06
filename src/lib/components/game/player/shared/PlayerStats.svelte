@@ -1,9 +1,20 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
-	import { MAX_MANA } from '$lib/game/wheels/spellWheels';
+	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
 	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
 	import { getHpColorClass, getHpGlowClass, SWENERGY_MAX } from './playerDisplayConstants';
+
+	interface ResourceBarConfig {
+		resource: string;
+		label: string;
+		icon: string;
+		iconClass: string;
+		labelMinWidthClass: string;
+		fillClass: string;
+		valueClass: string;
+		max: number;
+	}
 
 	interface Props {
 		player: Player;
@@ -24,6 +35,39 @@
 	let baseSize = $derived(compact ? 'text-[0.5rem]' : 'text-[0.6rem]');
 	let labelSize = $derived(compact ? 'text-[0.5rem]' : 'text-[0.55rem]');
 	let padding = $derived(compact ? 'p-2' : 'p-1.5');
+
+	const resourceBarConfigs: Record<string, ResourceBarConfig | undefined> = {
+		magicman: {
+			resource: MANA_RESOURCE,
+			label: 'Mana',
+			icon: 'mdi:wizard-hat',
+			iconClass: 'text-xs text-violet-400',
+			labelMinWidthClass: 'min-w-[50px]',
+			fillClass:
+				'bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.5)]',
+			valueClass: 'min-w-[45px] text-violet-300',
+			max: MAX_MANA
+		},
+		swe: {
+			resource: SWENERGY_RESOURCE,
+			label: 'SWEnergy',
+			icon: 'mdi:code-braces',
+			iconClass: 'text-secondary-400 text-xs',
+			labelMinWidthClass: 'min-w-[70px]',
+			fillClass: 'from-secondary-500 to-secondary-400 bg-gradient-to-r',
+			valueClass: 'min-w-[30px] text-secondary-300',
+			max: SWENERGY_MAX
+		}
+	};
+
+	const hiddenResources = new Set([MANA_RESOURCE, SWENERGY_RESOURCE, 'RuneOfPowerTurns']);
+
+	let specialResourceBar = $derived(
+		player.classType === 'none' ? undefined : resourceBarConfigs[player.classType]
+	);
+	let genericResourceEntries = $derived(
+		Object.entries(player.resources).filter(([resource]) => !hiddenResources.has(resource))
+	);
 </script>
 
 <!-- HP Bar -->
@@ -111,57 +155,39 @@
 </div>
 
 <!-- Resources -->
-{#if player.classType === 'magicman' || player.classType === 'swe' || Object.keys(player.resources).length > 0}
+{#snippet resourceBar(config: ResourceBarConfig, amount: number)}
+	<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
+		<span
+			class="text-surface-300 {config.labelMinWidthClass} flex items-center gap-1 text-[0.65rem]"
+		>
+			<Icon icon={config.icon} class={config.iconClass} />
+			{config.label}
+		</span>
+		<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
+			<div
+				class="h-full transition-all duration-300 {config.fillClass}"
+				style:width="{(amount / config.max) * 100}%"
+			></div>
+		</div>
+		<span class="{config.valueClass} text-right text-[0.65rem] font-semibold"
+			>{amount}/{config.max}</span
+		>
+	</div>
+{/snippet}
+
+{#if specialResourceBar || genericResourceEntries.length > 0}
 	<div class="mb-3 {isDead ? 'opacity-40' : ''}">
-		<!-- Mana bar for Magic Man -->
-		{#if player.classType === 'magicman'}
-			{@const manaAmount = player.resources['Mana'] ?? 0}
-			<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
-				<span class="text-surface-300 flex min-w-[50px] items-center gap-1 text-[0.65rem]">
-					<Icon icon="mdi:wizard-hat" class="text-xs text-violet-400" />
-					Mana
-				</span>
-				<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
-					<div
-						class="h-full bg-gradient-to-r from-violet-600 to-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.5)] transition-all duration-300"
-						style:width="{(manaAmount / MAX_MANA) * 100}%"
-					></div>
-				</div>
-				<span class="min-w-[45px] text-right text-[0.65rem] font-semibold text-violet-300"
-					>{manaAmount}/{MAX_MANA}</span
-				>
-			</div>
+		{#if specialResourceBar}
+			{@const amount = player.resources[specialResourceBar.resource] ?? 0}
+			{@render resourceBar(specialResourceBar, amount)}
 		{/if}
 
-		<!-- SWEnergy bar for SWE -->
-		{#if player.classType === 'swe'}
-			{@const swenergyAmount = player.resources[SWENERGY_RESOURCE] ?? 0}
-			<div class="flex items-center gap-2 rounded-sm bg-black/20 px-2 py-1.5">
-				<span class="text-surface-300 flex min-w-[70px] items-center gap-1 text-[0.65rem]">
-					<Icon icon="mdi:code-braces" class="text-secondary-400 text-xs" />
-					SWEnergy
-				</span>
-				<div class="h-1.5 flex-1 overflow-hidden rounded-sm bg-black/40">
-					<div
-						class="from-secondary-500 to-secondary-400 h-full bg-gradient-to-r transition-all duration-300"
-						style:width="{(swenergyAmount / SWENERGY_MAX) * 100}%"
-					></div>
-				</div>
-				<span class="text-secondary-300 min-w-[30px] text-right text-[0.65rem] font-semibold"
-					>{swenergyAmount}/{SWENERGY_MAX}</span
-				>
+		{#each genericResourceEntries as [resource, amount] (resource)}
+			<div class="mt-1 flex items-center gap-1.5 rounded-sm bg-black/20 px-2 py-1 text-xs">
+				<Icon icon="mdi:cube-outline" class="text-teal-400" />
+				<span>{resource}</span>
+				<span class="text-surface-100 ml-auto font-semibold">{amount}</span>
 			</div>
-		{/if}
-
-		<!-- Other resources -->
-		{#each Object.entries(player.resources) as [resource, amount] (resource)}
-			{#if resource !== 'Mana' && resource !== SWENERGY_RESOURCE && resource !== 'RuneOfPowerTurns'}
-				<div class="mt-1 flex items-center gap-1.5 rounded-sm bg-black/20 px-2 py-1 text-xs">
-					<Icon icon="mdi:cube-outline" class="text-teal-400" />
-					<span>{resource}</span>
-					<span class="text-surface-100 ml-auto font-semibold">{amount}</span>
-				</div>
-			{/if}
 		{/each}
 	</div>
 {/if}
