@@ -329,6 +329,47 @@ function queueSetupWheelStep<T>(params: {
 	});
 }
 
+function collectNewPendingWheels(
+	room: GameRoom,
+	existingWheelKeys: Set<string>
+): PendingWheelPayload[] {
+	const newPendingWheels: PendingWheelPayload[] = [];
+	for (const [key, wheel] of room.pendingWheels) {
+		if (existingWheelKeys.has(key)) continue;
+
+		if (!wheel.shuffledOrder) {
+			wheel.shuffledOrder = generateShuffleOrder(wheel.items.length);
+		}
+
+		newPendingWheels.push(toPendingWheelPayload(key, wheel));
+	}
+
+	return newPendingWheels;
+}
+
+function buildActionSuccessResult(params: {
+	room: GameRoom;
+	game: Game;
+	beforeState: string;
+	existingWheelKeys: Set<string>;
+}): ActionResult {
+	const { room, game, beforeState, existingWheelKeys } = params;
+	const pendingWheels = collectNewPendingWheels(room, existingWheelKeys);
+
+	room.touch();
+
+	const gameState = game.serialize();
+	room.stateVersion++;
+	const delta = Game.generateDelta(beforeState, gameState, room.stateVersion);
+
+	return {
+		success: true,
+		gameState,
+		delta: delta ?? undefined,
+		pendingWheels: pendingWheels.length > 0 ? pendingWheels : undefined
+	};
+}
+
 /**
  * Process a game action from a client.
  * Validates permissions and executes the action on the room's game.
@@ -621,32 +662,12 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 		return { success: false, error: message };
 	}
 
-	// Collect new pending wheels (ones that didn't exist before the action)
-	const newPendingWheels: PendingWheelPayload[] = [];
-	for (const [key, wheel] of room.pendingWheels) {
-		if (!wheelKeysBefore.has(key)) {
-			// Generate shuffled order if not already set
-			if (!wheel.shuffledOrder) {
-				wheel.shuffledOrder = generateShuffleOrder(wheel.items.length);
-			}
-
-			newPendingWheels.push(toPendingWheelPayload(key, wheel));
-		}
-	}
-
-	room.touch();
-
-	// Generate delta by comparing before/after state
-	const afterState = game.serialize();
-	room.stateVersion++;
-	const delta = Game.generateDelta(beforeState, afterState, room.stateVersion);
-
-	return {
-		success: true,
-		gameState: afterState,
-		delta: delta ?? undefined,
-		pendingWheels: newPendingWheels.length > 0 ? newPendingWheels : undefined
-	};
+	return buildActionSuccessResult({
+		room,
+		game,
+		beforeState,
+		existingWheelKeys: wheelKeysBefore
+	});
 }
 
 // ============================================================================
