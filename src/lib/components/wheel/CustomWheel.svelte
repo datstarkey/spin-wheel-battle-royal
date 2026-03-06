@@ -4,6 +4,9 @@
 	import type { WheelBase } from '$lib/game/wheels/wheels';
 	import { tick, untrack } from 'svelte';
 	import SpinWheel from './SpinWheel.svelte';
+	import SlotReel from './SlotReel.svelte';
+
+	const SLOT_REEL_THRESHOLD = 4;
 
 	interface Props {
 		key: string;
@@ -286,22 +289,41 @@
 
 	<!-- Wheel Section -->
 	<div class="relative flex-1 px-4">
-		<SpinWheel
-			items={wheel}
-			buttonText="SPIN"
-			showSpin={!hasWon}
-			{canSpin}
-			{skipOnWin}
-			syncSpinParams={spinParams}
-			{onRequestSpin}
-			{onSpinComplete}
-			{shuffledOrder}
-			onWinner={(item, index) => {
-				hasWon = true;
-				winningLabel = item.label;
-				winningIndex = index;
-			}}
-		></SpinWheel>
+		{#if wheel.length >= SLOT_REEL_THRESHOLD}
+			<SlotReel
+				items={wheel}
+				buttonText="SPIN"
+				showSpin={!hasWon}
+				{canSpin}
+				{skipOnWin}
+				syncSpinParams={spinParams}
+				{onRequestSpin}
+				{onSpinComplete}
+				{shuffledOrder}
+				onWinner={(item, index) => {
+					hasWon = true;
+					winningLabel = item.label;
+					winningIndex = index;
+				}}
+			></SlotReel>
+		{:else}
+			<SpinWheel
+				items={wheel}
+				buttonText="SPIN"
+				showSpin={!hasWon}
+				{canSpin}
+				{skipOnWin}
+				syncSpinParams={spinParams}
+				{onRequestSpin}
+				{onSpinComplete}
+				{shuffledOrder}
+				onWinner={(item, index) => {
+					hasWon = true;
+					winningLabel = item.label;
+					winningIndex = index;
+				}}
+			></SpinWheel>
+		{/if}
 		{#if !canSpin && !hasWon}
 			<div class="mt-4 flex items-center justify-center gap-2">
 				{#if spinState === 'spinning'}

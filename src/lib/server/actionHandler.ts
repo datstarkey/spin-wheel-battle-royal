@@ -75,6 +75,7 @@ type GMNumericAction = Extract<
 	GameAction,
 	{ type: 'GM_SET_HP' | 'GM_SET_GOLD' | 'GM_SET_ATTACK' | 'GM_SET_DEFENSE' }
 >;
+type SpellCastAction = Extract<GameAction, { type: 'SPELL_CAST' }>;
 
 interface SetupWheelOption<T> {
 	value: T;
@@ -92,6 +93,21 @@ const gmWheelGenerators: Record<
 	casino: generateCasinoWheel,
 	shadow: generateShadowRealmWheel,
 	gambler: generateGamblerWheel
+};
+
+const spellManaCosts: Record<SpellCastAction['spellLevel'], number> = {
+	minor: 25,
+	major: 50,
+	ultimate: 100
+};
+
+const spellWheelGenerators: Record<
+	SpellCastAction['spellLevel'],
+	(playerName: string, ctx: ReturnType<typeof createServerGameContext>, target?: Player) => void
+> = {
+	minor: generateMinorSpellWheel,
+	major: generateMajorSpellWheel,
+	ultimate: generateUltimateSpellWheel
 };
 
 function getPlayerNotFoundResult(): ActionResult {
@@ -169,6 +185,20 @@ function removeItemFromPlayer(player: Player, item: AllItems): ActionResult | un
 	}
 
 	player.gear.unequipItem(itemDef.type);
+}
+
+function assignClassToPlayer(
+	game: Game,
+	playerName: string,
+	classType: ClassType,
+	auditMessage?: string
+): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		player.assignClass(classType);
+		if (auditMessage) {
+			game.addAuditTrail(auditMessage);
+		}
+	});
 }
 
 function queueSetupWheelStep<T>(params: {
@@ -371,24 +401,13 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 					if (caster.classType !== 'magicman')
 						return { success: false, error: 'Only Magic Man can cast spells' };
 
-					const manaCosts = { minor: 25, major: 50, ultimate: 100 } as const;
-					const cost = manaCosts[action.spellLevel];
+					const cost = spellManaCosts[action.spellLevel];
 					const mana = caster.resources['Mana'] ?? 0;
 					if (mana < cost)
 						return { success: false, error: `Not enough mana (need ${cost}, have ${mana})` };
 
 					const target = action.targetName ? game.getPlayerByName(action.targetName) : undefined;
-					switch (action.spellLevel) {
-						case 'minor':
-							generateMinorSpellWheel(playerName, ctx, target);
-							break;
-						case 'major':
-							generateMajorSpellWheel(playerName, ctx, target);
-							break;
-						case 'ultimate':
-							generateUltimateSpellWheel(playerName, ctx, target);
-							break;
-					}
+					spellWheelGenerators[action.spellLevel](playerName, ctx, target);
 					game.hasFought = true;
 				});
 				if (result) return result;
@@ -474,9 +493,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_CLASS': {
-				const result = withPlayer(game, action.playerName, (player) => {
-					player.assignClass(action.classType);
-				});
+				const result = assignClassToPlayer(game, action.playerName, action.classType);
 				if (result) return result;
 				break;
 			}
@@ -647,20 +664,22 @@ function createClassWheel(room: GameRoom, playerIndex: number) {
 		forPlayerName: currentPlayerName,
 		options: availableClasses,
 		onSelect: (cls) => {
-			const player = game.getPlayerByName(currentPlayerName);
-			if (!player) return;
-
-			player.assignClass(cls.key);
 			room.assignedClasses.set(currentPlayerName, cls.key);
-			game.addAuditTrail(`${currentPlayerName} chose class: ${cls.name}`);
+			assignClassToPlayer(
+				game,
+				currentPlayerName,
+				cls.key,
+				`${currentPlayerName} chose class: ${cls.name}`
+			);
 		},
 		onAutoSelect: (cls) => {
-			const player = game.getPlayerByName(currentPlayerName);
-			if (!player) return;
-
-			player.assignClass(cls.key);
 			room.assignedClasses.set(currentPlayerName, cls.key);
-			game.addAuditTrail(`${currentPlayerName} assigned class: ${cls.name}`);
+			assignClassToPlayer(
+				game,
+				currentPlayerName,
+				cls.key,
+				`${currentPlayerName} assigned class: ${cls.name}`
+			);
 		},
 		onAdvance: () => {
 			createClassWheel(room, playerIndex + 1);
