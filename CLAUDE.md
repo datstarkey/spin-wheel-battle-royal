@@ -541,7 +541,6 @@ Players auto-added as game players on `room:join` (no GM_ADD_PLAYER action)
 
 - **Global `getServerGameContext()` singleton** (`serverContext.ts`): Ambient mutable global. Should pass `ctx: GameContext` explicitly (already done for wheels, not for `player.svelte.ts`, `tileActions.ts`, classes)
 - **Duplicate `wheel:spin_result` socket event**: Separate from `player:action` but wraps the same handler. Should be unified
-- **`AttackWindowStore`**: Likely dead code after multiplayer conversion — verify and remove
 - **Double serialization in `actionHandler.ts`**: `generateDelta` diffs two JSON blobs via `JSON.stringify` comparison. Should use structural diffing or dirty flags
 - **Delta field lists** in `generateDelta` are hardcoded separately from `Game.serialize()` — must be kept in sync manually
 - **Turn order display parses audit trail via regex** — should use structured `RoomState` data instead

@@ -74,6 +74,11 @@ function isAllItems(value: unknown): value is AllItems {
 
 export type StatType = 'attack' | 'defense' | 'movement' | 'attackRange' | 'hp';
 
+export interface StatModifier {
+	stat: StatType;
+	value: number;
+}
+
 export interface SerializedStatModifiers {
 	attack: Record<string, number>;
 	defense: Record<string, number>;

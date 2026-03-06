@@ -1,12 +1,7 @@
 import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
-import type { StatType } from '../serialization';
+import type { StatModifier } from '../serialization';
 import type { StatusEffect } from './statusTypes';
-
-interface StatModifier {
-	stat: StatType;
-	value: number;
-}
 
 export function createStatModifierStatus(
 	config: Omit<StatusEffect, 'onApply' | 'onRemove'>,

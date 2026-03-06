@@ -1,16 +1,11 @@
-import type { StatusEffect } from './statusTypes';
+import { createStatModifierStatus } from './statusFactory';
 
-export const iceStorm: StatusEffect = {
-	name: 'Ice Storm',
-	description: 'Slowed by a magical ice storm (-1 movement)',
-	image: '',
-	turnDuration: 3,
-
-	onApply(player) {
-		player.addStatModifier('Ice Storm', 'movement', -1);
+export const iceStorm = createStatModifierStatus(
+	{
+		name: 'Ice Storm',
+		description: 'Slowed by a magical ice storm (-1 movement)',
+		image: '',
+		turnDuration: 3
 	},
-
-	onRemove(player) {
-		player.removeStatModifier('Ice Storm', 'movement');
-	}
-};
+	[{ stat: 'movement', value: -1 }]
+);

@@ -19,49 +19,6 @@ class GameStore {
 	}
 
 	// -----------------------------------------------------------
-	// Turn Action Flags
-	// -----------------------------------------------------------
-
-	getHasShoppedThisTurn() {
-		return this._game?.hasShopped ?? false;
-	}
-
-	setHasShoppedThisTurn(value: boolean) {
-		if (!this._game) return;
-		this._game.hasShopped = value;
-	}
-
-	getHasUsedCasinoThisTurn() {
-		return this._game?.hasUsedCasino ?? false;
-	}
-
-	setHasUsedCasinoThisTurn(value: boolean) {
-		if (!this._game) return;
-		this._game.hasUsedCasino = value;
-	}
-
-	// -----------------------------------------------------------
-	// Global Stats
-	// -----------------------------------------------------------
-
-	getGlobalHpReduction() {
-		return this._game?.globalHpReduction ?? 0;
-	}
-
-	getGlobalMovementBonus() {
-		return this._game?.globalMovementBonus ?? 0;
-	}
-
-	getGlobalTurnCount() {
-		return this._game?.globalTurnCount ?? 0;
-	}
-
-	increaseGlobalHpReduction(amount: number = 0) {
-		if (!this._game) return;
-		this._game.increaseGlobalHpReduction(amount);
-	}
-
-	// -----------------------------------------------------------
 	// Player Management
 	// -----------------------------------------------------------
 
@@ -89,33 +46,6 @@ class GameStore {
 	// Shop System
 	// -----------------------------------------------------------
 
-	increaseItemCostModifier(item: AllItems, amount: number = 1) {
-		if (!this._game) return;
-		this._game.increaseItemCostModifier(item, amount);
-	}
-
-	increaseShopCostModifier(amount: number = 1) {
-		if (!this._game) return;
-		this._game.shopCostModifier += amount;
-	}
-
-	increaseShopConsumableCostModifier(amount: number = 1) {
-		if (!this._game) return;
-		this._game.shopConsumableCostModifier += amount;
-	}
-
-	getShopCostModifier(): number {
-		return this._game?.shopCostModifier ?? 0;
-	}
-
-	getItemCostModifier(item: AllItems): number {
-		return this._game?.getItemCostModifier(item) ?? 1;
-	}
-
-	getConsumableItemCostModifier() {
-		return this._game?.shopConsumableCostModifier ?? 0;
-	}
-
 	getItemCost(item: AllItems): number {
 		return this._game?.getItemCost(item) ?? 0;
 	}
@@ -126,11 +56,6 @@ class GameStore {
 
 	getShopRerollCost(): number {
 		return this._game?.shopRerollCost ?? 2;
-	}
-
-	rerollShopItems(): boolean {
-		if (!this._game) return false;
-		return this._game.rerollShopItems();
 	}
 
 	// -----------------------------------------------------------

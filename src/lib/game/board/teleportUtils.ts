@@ -9,7 +9,7 @@ import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import type { Position } from './types';
 import { getManhattanDistance } from './types';
-import { gameBoard, getRandomSpawnPoint } from './board.svelte';
+import { getRandomSpawnPoint } from './board.svelte';
 import { SHADOW_REALM_TILES } from './boardData';
 
 /**
@@ -18,7 +18,6 @@ import { SHADOW_REALM_TILES } from './boardData';
 export function teleportToRandomSpawn(player: Player, ctx: GameContext): void {
 	const spawn = getRandomSpawnPoint();
 	player.position = { ...spawn };
-	gameBoard.setPlayerPosition(player.name, spawn);
 	ctx.addAuditTrail(`${player.name} was defeated and respawned at (${spawn.x}, ${spawn.y})`);
 }
 

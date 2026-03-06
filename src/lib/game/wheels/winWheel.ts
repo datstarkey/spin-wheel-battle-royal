@@ -1,7 +1,7 @@
 import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
-import { generateRandomPlayerWheel } from './randomPlayerWheel';
+import { createBanishToShadowRealmItem } from './wheelHelpers';
 
 export function generateWinWheel(playerName: string, ctx: GameContext) {
 	const player = requirePlayer(ctx, playerName, 'win wheel');
@@ -44,22 +44,7 @@ export function generateWinWheel(playerName: string, ctx: GameContext) {
 			label: 'Spin Loot Wheel',
 			onWin: () => generateLootWheel(player.name, ctx)
 		},
-		{
-			label: 'Send Someone to the Shadow Realm',
-			onWin: () => {
-				ctx.addAuditTrail(`${playerName} must spin again`);
-				generateRandomPlayerWheel(
-					`${playerName} Sends to Shadow Realm`,
-					(winner) => {
-						ctx.banishToShadowRealm(
-							winner,
-							`${player.name} banished ${winner.name} to the Shadow Realm!`
-						);
-					},
-					ctx
-				);
-			}
-		}
+		createBanishToShadowRealmItem(player, ctx)
 	];
 
 	if (player.classType == 'gambler') generateGamblerWheel(player.name, ctx);

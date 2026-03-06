@@ -1,16 +1,11 @@
-import type { StatusEffect } from './statusTypes';
+import { createStatModifierStatus } from './statusFactory';
 
-export const frostShield: StatusEffect = {
-	name: 'Frost Shield',
-	description: '+10 defense from a magical frost barrier',
-	image: '',
-	turnDuration: 2,
-
-	onApply(player) {
-		player.addStatModifier('Frost Shield', 'defense', 10);
+export const frostShield = createStatModifierStatus(
+	{
+		name: 'Frost Shield',
+		description: '+10 defense from a magical frost barrier',
+		image: '',
+		turnDuration: 2
 	},
-
-	onRemove(player) {
-		player.removeStatModifier('Frost Shield', 'defense');
-	}
-};
+	[{ stat: 'defense', value: 10 }]
+);

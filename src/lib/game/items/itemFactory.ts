@@ -1,12 +1,7 @@
 import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
-import type { StatType } from '../serialization';
+import type { StatModifier } from '../serialization';
 import type { Item, ItemType } from './itemTypes';
-
-interface StatModifier {
-	stat: StatType;
-	value: number;
-}
 
 export function createStatModifierItem(
 	config: Omit<Item, 'onEquip' | 'onUnequip'>,

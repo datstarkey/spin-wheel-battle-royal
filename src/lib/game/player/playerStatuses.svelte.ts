@@ -7,27 +7,16 @@ import type { GameHookName } from '../types';
 import type { Player } from './player.svelte';
 
 export class PlayerStatuses {
-	private _player: Player | null = null;
+	private _player: Player;
 	private _playerName: string;
 
-	constructor(playerNameOrPlayer: string | Player) {
-		if (typeof playerNameOrPlayer === 'string') {
-			this._playerName = playerNameOrPlayer;
-		} else {
-			this._player = playerNameOrPlayer;
-			this._playerName = playerNameOrPlayer.name;
-		}
-	}
-
-	setPlayer(player: Player) {
+	constructor(player: Player) {
 		this._player = player;
+		this._playerName = player.name;
 	}
 
 	private get player(): Player {
-		if (this._player) {
-			return this._player;
-		}
-		throw new Error(`Player ${this._playerName} not resolved — call setPlayer() first`);
+		return this._player;
 	}
 
 	private _statuses: PlayerStatusEffect[] = $state([]);

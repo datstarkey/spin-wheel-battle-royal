@@ -2,6 +2,7 @@ import { requirePlayer, type GameContext } from '../gameContext';
 import { generateGamblerWheel } from './gamblerWheel';
 import { generateLootWheel } from './lootWheel';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
+import { createBanishToShadowRealmItem } from './wheelHelpers';
 
 export function generateLoseWheel(playerName: string, ctx: GameContext) {
 	const player = requirePlayer(ctx, playerName, 'lose wheel');
@@ -56,22 +57,7 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 				);
 			}
 		},
-		{
-			label: 'Send Someone to the Shadow Realm',
-			onWin: () => {
-				ctx.addAuditTrail(`${playerName} must spin again`);
-				generateRandomPlayerWheel(
-					`${playerName} Sends to Shadow Realm`,
-					(winner) => {
-						ctx.banishToShadowRealm(
-							winner,
-							`${player.name} banished ${winner.name} to the Shadow Realm!`
-						);
-					},
-					ctx
-				);
-			}
-		},
+		createBanishToShadowRealmItem(player, ctx),
 		{
 			label: 'Emotional damage',
 			onWin: () => {
