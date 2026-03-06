@@ -9,10 +9,9 @@ import {
 	isInnerTeleporter
 } from '$lib/game/board/board.svelte';
 import { getManhattanDistance } from '$lib/game/board/types';
-import { SPAWN_ZONES } from '$lib/game/board/boardData';
 import { executeTileAction } from '$lib/game/board/tileActions';
 import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
-import { classMap, type ClassType } from '$lib/game/classes/classType';
+import { type ClassType } from '$lib/game/classes/classType';
 import items, { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import type {
 	ActionOf,
@@ -37,28 +36,8 @@ import { createCombatWheel } from '$lib/game/combat';
 import { createServerGameContext } from './serverGameContext';
 import type { GameRoom } from './gameRooms';
 import { toPendingWheelPayload } from './pendingWheelPayload';
-
-/** Pick a random index weighted by item weights (default weight = 1) */
-export function weightedRandomIndex(items: { weight?: number }[]): number {
-	const weights = items.map((item) => item.weight ?? 1);
-	const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-	let random = Math.random() * totalWeight;
-	for (let i = 0; i < weights.length; i++) {
-		random -= weights[i];
-		if (random <= 0) return i;
-	}
-	return weights.length - 1;
-}
-
-/** Generate a Fisher-Yates shuffled array of indices [0..length-1] */
-export function generateShuffleOrder(length: number): number[] {
-	const order = Array.from({ length }, (_, i) => i);
-	for (let i = order.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[order[i], order[j]] = [order[j], order[i]];
-	}
-	return order;
-}
+import { startTurnOrderSetup } from './setupFlow';
+import { generateShuffleOrder } from './wheelUtils';
 
 export interface ActionResult {
 	success: boolean;
@@ -94,11 +73,6 @@ type SpellCastAction = ActionOf<'SPELL_CAST'>;
 type UseConsumableAction = ActionOf<'USE_CONSUMABLE'>;
 type TeleportAction = ActionOf<'TELEPORT'>;
 type WheelSpinResultAction = ActionOf<'WHEEL_SPIN_RESULT'>;
-
-interface SetupWheelOption<T> {
-	value: T;
-	label: string;
-}
 
 interface ActionAccessResult {
 	ok: boolean;
@@ -312,43 +286,6 @@ function handleGMSimplePlayerAction(
 				removeItemFromPlayer(player, action.item)
 			);
 	}
-}
-
-function queueSetupWheelStep<T>(params: {
-	room: GameRoom;
-	keyPrefix: string;
-	index: number;
-	forPlayerName: string;
-	options: SetupWheelOption<T>[];
-	onSelect: (option: T) => void;
-	onAutoSelect?: (option: T) => void;
-	onAdvance: () => void;
-}) {
-	const { room, keyPrefix, index, forPlayerName, options, onSelect, onAutoSelect, onAdvance } =
-		params;
-
-	if (options.length <= 1) {
-		if (options.length === 1) {
-			(onAutoSelect ?? onSelect)(options[0].value);
-		}
-		onAdvance();
-		return;
-	}
-
-	const wheelKey = `${keyPrefix}-${index}`;
-	const wheelItems = options.map((option) => ({
-		label: option.label,
-		onWin: () => {
-			onSelect(option.value);
-			onAdvance();
-		}
-	}));
-
-	room.pendingWheels.set(wheelKey, {
-		items: wheelItems,
-		forPlayerName,
-		shuffledOrder: generateShuffleOrder(wheelItems.length)
-	});
 }
 
 function collectNewPendingWheels(
@@ -566,7 +503,7 @@ function handleGMStartGameAction(room: GameRoom, game: Game): ActionResult | und
 
 	room.phase = 'turn_order';
 	room.turnOrder = [];
-	createTurnOrderWheel(room, 0);
+	startTurnOrderSetup(room, assignClassToPlayer);
 }
 
 const actionRegistry = {
@@ -736,154 +673,4 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 		beforeState,
 		existingWheelKeys: wheelKeysBefore
 	});
-}
-
-// ============================================================================
-// Turn Order Wheel Chain
-// ============================================================================
-
-function createTurnOrderWheel(room: GameRoom, position: number) {
-	const game = room.game;
-	const remainingOptions = game.players
-		.map((player) => player.name)
-		.filter((name) => !room.turnOrder.includes(name))
-		.map((name) => ({ value: name, label: name }));
-
-	if (remainingOptions.length === 0) {
-		startClassSelection(room);
-		return;
-	}
-
-	queueSetupWheelStep({
-		room,
-		keyPrefix: 'setup-turn-order',
-		index: position,
-		forPlayerName: room.gmName,
-		options: remainingOptions,
-		onSelect: (name) => {
-			room.turnOrder.push(name);
-			game.addAuditTrail(`${name} gets position #${room.turnOrder.length} in turn order`);
-		},
-		onAutoSelect: (name) => {
-			room.turnOrder.push(name);
-		},
-		onAdvance: () => {
-			createTurnOrderWheel(room, position + 1);
-		}
-	});
-}
-
-// ============================================================================
-// Class Selection Wheel Chain
-// ============================================================================
-
-function startClassSelection(room: GameRoom) {
-	room.phase = 'class_selection';
-	room.assignedClasses.clear();
-
-	// Reorder game players to match turn order
-	const orderedPlayers = room.turnOrder
-		.map((name) => room.game.players.find((p) => p.name === name))
-		.filter(Boolean) as import('$lib/game/player/player.svelte').Player[];
-	room.game.players.splice(0, room.game.players.length, ...orderedPlayers);
-
-	room.game.addAuditTrail(`Turn order: ${room.turnOrder.join(', ')}`);
-
-	// Create first class wheel
-	createClassWheel(room, 0);
-}
-
-function createClassWheel(room: GameRoom, playerIndex: number) {
-	if (playerIndex >= room.turnOrder.length) {
-		// All classes assigned — start the actual game
-		startGameAfterSetup(room);
-		return;
-	}
-
-	const currentPlayerName = room.turnOrder[playerIndex];
-	const game = room.game;
-
-	// Available classes (exclude 'none' and already-assigned)
-	const assignedSet = new Set(room.assignedClasses.values());
-	const availableClasses: SetupWheelOption<{ key: ClassType; name: string }>[] = Object.entries(
-		classMap
-	)
-		.filter(([key]) => key !== 'none' && !assignedSet.has(key))
-		.map(([key, cls]) => ({
-			value: {
-				key: key as ClassType,
-				name: cls.name
-			},
-			label: cls.name
-		}));
-
-	queueSetupWheelStep({
-		room,
-		keyPrefix: 'setup-class',
-		index: playerIndex,
-		forPlayerName: currentPlayerName,
-		options: availableClasses,
-		onSelect: (cls) => {
-			room.assignedClasses.set(currentPlayerName, cls.key);
-			assignClassToPlayer(
-				game,
-				currentPlayerName,
-				cls.key,
-				`${currentPlayerName} chose class: ${cls.name}`
-			);
-		},
-		onAutoSelect: (cls) => {
-			room.assignedClasses.set(currentPlayerName, cls.key);
-			assignClassToPlayer(
-				game,
-				currentPlayerName,
-				cls.key,
-				`${currentPlayerName} assigned class: ${cls.name}`
-			);
-		},
-		onAdvance: () => {
-			createClassWheel(room, playerIndex + 1);
-		}
-	});
-}
-
-// ============================================================================
-// Start Game After Setup
-// ============================================================================
-
-function startGameAfterSetup(room: GameRoom) {
-	const game = room.game;
-
-	// Assign spawn positions
-	const allSpawns = SPAWN_ZONES.flatMap((z) => z.spawnPoints);
-	const usedPositions = new Set<string>();
-	for (const p of game.players) {
-		if (p.position) usedPositions.add(`${p.position.x},${p.position.y}`);
-	}
-	for (const p of game.players) {
-		if (!p.position) {
-			const free = allSpawns.filter((sp) => !usedPositions.has(`${sp.x},${sp.y}`));
-			const spawn =
-				free.length > 0
-					? free[Math.floor(Math.random() * free.length)]
-					: allSpawns[Math.floor(Math.random() * allSpawns.length)];
-			if (spawn) {
-				p.position = { ...spawn };
-				usedPositions.add(`${spawn.x},${spawn.y}`);
-				game.addAuditTrail(`${p.name} spawned at (${spawn.x}, ${spawn.y})`);
-			}
-		}
-	}
-
-	// Copy turn order into game.playerOrder
-	const playerOrder: Record<number, string> = {};
-	for (let i = 0; i < room.turnOrder.length; i++) {
-		playerOrder[i] = room.turnOrder[i];
-	}
-	game.playerOrder = playerOrder;
-
-	game.started = true;
-	game.startTurn();
-	game.addAuditTrail('Game started!');
-	room.phase = 'playing';
 }

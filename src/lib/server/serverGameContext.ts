@@ -2,8 +2,8 @@ import type { WheelTheme } from '$lib/components/wheel/types';
 import type { GameContext } from '$lib/game/gameContext';
 import type { Player } from '$lib/game/player/player.svelte';
 import type { WheelBase } from '$lib/game/wheels/wheels';
-import { generateShuffleOrder } from './actionHandler';
 import type { GameRoom } from './gameRooms';
+import { generateShuffleOrder } from './wheelUtils';
 
 /**
  * Server-side GameContext implementation for a specific room.

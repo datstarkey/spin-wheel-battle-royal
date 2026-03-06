@@ -7,9 +7,10 @@ import type {
 	ServerToClientEvents
 } from '$lib/multiplayer/types';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
-import { handleAction, weightedRandomIndex, type ActionResult } from './actionHandler';
+import { handleAction, type ActionResult } from './actionHandler';
 import { toPendingWheelPayload } from './pendingWheelPayload';
 import { PerSocketRateLimiter } from './rateLimiter';
+import { weightedRandomIndex } from './wheelUtils';
 
 /** Max spectator hint payload size in bytes */
 const MAX_SPECTATOR_HINT_SIZE = 4096;
