@@ -17,6 +17,8 @@ export interface GameContext {
 	getGlobalHpReduction(): number;
 	getAlivePlayers(): Player[];
 	getAllPlayers(): Player[];
+	/** Banish a player to the Shadow Realm, syncing both player flag and Game array. */
+	banishToShadowRealm(player: Player, auditMessage?: string): void;
 }
 
 /**

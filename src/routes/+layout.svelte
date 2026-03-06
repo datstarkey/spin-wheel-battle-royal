@@ -7,7 +7,6 @@
 	import ConnectionStatus from '$lib/components/multiplayer/ConnectionStatus.svelte';
 	import { quickMode } from '$lib/components/wheel/constants';
 	import { setGameStore } from '$lib/stores/gameStore.svelte';
-	import { setAttackWindowStore } from '$lib/stores/attackWindowStore.svelte';
 	import { setBattleMusicStore } from '$lib/stores/battleMusic.svelte';
 	import { setMovementStore } from '$lib/stores/movementStore.svelte';
 	import { setMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
@@ -22,7 +21,6 @@
 	const socket = setSocketStore(gs, mp);
 	const movementStore = setMovementStore(gs);
 	movementStore.setSocketStore(socket);
-	setAttackWindowStore();
 	setBattleMusicStore();
 
 	interface Props {

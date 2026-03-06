@@ -91,8 +91,7 @@ export function generateGamblerWheel(playerName: string, ctx: GameContext) {
 				generateRandomPlayerWheel(
 					`${playerName} Sends to Shadow Realm`,
 					(winner) => {
-						winner.inShadowRealm = true;
-						ctx.addAuditTrail(`${winner.name} was sent to the Shadow Realm!`);
+						ctx.banishToShadowRealm(winner, `${winner.name} was sent to the Shadow Realm!`);
 					},
 					ctx
 				);

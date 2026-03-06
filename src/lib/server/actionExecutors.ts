@@ -438,6 +438,9 @@ export function handleWheelSpinResultAction(
 }
 
 export function handleGMStartGameAction(room: GameRoom, game: Game): ActionResult | undefined {
+	if (room.phase !== 'waiting') {
+		return { success: false, error: 'Game setup already in progress' };
+	}
 	if (game.players.length < 2) {
 		return { success: false, error: 'Need at least 2 players to start' };
 	}

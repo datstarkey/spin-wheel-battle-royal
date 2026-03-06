@@ -1,20 +1,10 @@
-import { gameBoard, getRandomSpawnPoint } from '../board/board.svelte';
 import type { Position } from '../board/types';
+import { teleportToRandomSpawn } from '../board/teleportUtils';
 import { createCombatWheel } from '../combat';
 import { requirePlayer, type GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { generateLootWheel } from './lootWheel';
 import type { WheelBase } from './wheels';
-
-/**
- * Teleports a player to a random spawn point after pressing the button.
- */
-function teleportToRandomSpawn(player: Player, ctx: GameContext) {
-	const spawnPoint = getRandomSpawnPoint();
-	player.position = { ...spawnPoint };
-	gameBoard.setPlayerPosition(player.name, spawnPoint);
-	ctx.addAuditTrail(`${player.name} was teleported to spawn (${spawnPoint.x}, ${spawnPoint.y})!`);
-}
 
 /**
  * Generates a combat wheel between attacker and defender.

@@ -108,8 +108,7 @@ function handleShadowRealmTile(player: Player, ctx: GameContext): TileActionResu
 	}
 
 	if (!player.inShadowRealm) {
-		player.inShadowRealm = true;
-		ctx.addAuditTrail(`${player.name} has entered the Shadow Realm!`);
+		ctx.banishToShadowRealm(player, `${player.name} has entered the Shadow Realm!`);
 		return {
 			handled: true,
 			message: `${player.name} has entered the Shadow Realm! They must spin the Shadow Realm wheel each turn.`
@@ -201,40 +200,4 @@ function handleTreasureTile(
 		handled: true,
 		message: `${player.name} found a treasure chest! Spin the Loot Wheel!`
 	};
-}
-
-/**
- * Check if player is leaving the shadow realm
- */
-export function checkLeavingShadowRealm(
-	player: Player,
-	newPosition: Position,
-	ctx: GameContext
-): void {
-	if (!player.inShadowRealm) return;
-
-	const newTile = getTileAt(newPosition);
-	if (newTile && newTile.type !== 'shadow_realm') {
-		player.inShadowRealm = false;
-		ctx.addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
-	}
-}
-
-/**
- * Teleport a player to a destination
- */
-export function teleportPlayer(
-	player: Player,
-	destination: Position,
-	setPosition: (playerId: string, pos: Position) => void,
-	ctx: GameContext
-): void {
-	setPosition(player.name, destination);
-	ctx.addAuditTrail(`${player.name} teleported to (${destination.x}, ${destination.y})!`);
-
-	// Execute tile action at destination (but not for teleporter to avoid loops)
-	const destTile = getTileAt(destination);
-	if (destTile && destTile.type !== 'teleporter_outer' && destTile.type !== 'teleporter_inner') {
-		executeTileAction(player, destination, ctx);
-	}
 }

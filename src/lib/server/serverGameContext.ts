@@ -74,6 +74,10 @@ export function createServerGameContext(room: GameRoom, forPlayerName: string): 
 
 		getAllPlayers(): Player[] {
 			return room.game.players;
+		},
+
+		banishToShadowRealm(player: Player, auditMessage?: string): void {
+			room.game.addPlayerToShadowRealm(player, auditMessage);
 		}
 	};
 }

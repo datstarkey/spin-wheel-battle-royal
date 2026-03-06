@@ -391,19 +391,16 @@ export class Game {
 		return this.shadowRealm.includes(player);
 	}
 
-	addPlayerToShadowRealm(player: Player) {
-		//Don't add duplicates
-		if (this.shadowRealm.includes(player)) {
-			toast.error(`${player.name} is already in the Shadow Realm!`);
-			return;
-		}
-		this.addAuditTrail(`${player.name} has been sent to the Shadow Realm!`);
+	addPlayerToShadowRealm(player: Player, auditMessage?: string) {
+		if (this.shadowRealm.includes(player)) return;
+		player.inShadowRealm = true;
 		this.shadowRealm.push(player);
+		this.addAuditTrail(auditMessage ?? `${player.name} has been sent to the Shadow Realm!`);
 	}
 
-	//Todo - Add Spawn location outside of shadow realm
 	removePlayerFromShadowRealm(player: Player) {
 		if (this._shadowRealm.includes(player)) {
+			player.inShadowRealm = false;
 			this._shadowRealm = this._shadowRealm.filter((p) => p !== player);
 			this.addAuditTrail(`${player.name} has been removed from the Shadow Realm!`);
 		}

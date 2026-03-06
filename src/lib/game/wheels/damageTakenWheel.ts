@@ -64,8 +64,7 @@ export function generateDamageTakenWheel(playerName: string, ctx: GameContext) {
 			label: `Take ${globalHpValue * 20} damage and go to shadow realm`,
 			onWin: () => {
 				player.hp -= Math.floor(globalHpValue * 20 * reductionPercentageInversion);
-				player.inShadowRealm = true;
-				ctx.addAuditTrail(`${player.name} was banished to the Shadow Realm!`);
+				ctx.banishToShadowRealm(player, `${player.name} was banished to the Shadow Realm!`);
 			}
 		}
 	];

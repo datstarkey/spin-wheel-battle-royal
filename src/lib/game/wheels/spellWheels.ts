@@ -361,8 +361,10 @@ export function generateUltimateSpellWheel(
 						targetPlayer,
 						`${player.name}'s Dimensional Rift Target`,
 						(target) => {
-							target.inShadowRealm = true;
-							ctx.addAuditTrail(`${player.name} banishes ${target.name} to the SHADOW REALM!`);
+							ctx.banishToShadowRealm(
+								target,
+								`${player.name} banishes ${target.name} to the SHADOW REALM!`
+							);
 						},
 						ctx
 					);

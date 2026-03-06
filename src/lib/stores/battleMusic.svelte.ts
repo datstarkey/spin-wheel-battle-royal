@@ -187,17 +187,7 @@ class BattleMusicStore {
 	}
 
 	toggleMute(): void {
-		this._isMuted = !this._isMuted;
-		if (typeof window !== 'undefined') {
-			localStorage.setItem(STORAGE_KEY_MUTED, String(this._isMuted));
-		}
-		if (this._isMuted) {
-			this.stopAllAudio();
-		} else if (this._currentState !== 'idle') {
-			const state = this._currentState;
-			this._currentState = 'idle';
-			this.transitionTo(state);
-		}
+		this.setMuted(!this._isMuted);
 	}
 
 	setMuted(muted: boolean): void {

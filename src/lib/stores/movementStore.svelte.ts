@@ -1,9 +1,9 @@
 import { createContext } from 'svelte';
 import { gameBoard, getValidMoves } from '$lib/game/board/board.svelte';
 import type { Position } from '$lib/game/board/types';
-import { positionsEqual } from '$lib/game/board/types';
+import { getManhattanDistance, positionsEqual } from '$lib/game/board/types';
 import toast from '$lib/stores/toaster.svelte';
-import { canPlayerMove } from './teleportStore.svelte';
+import { canPlayerMove } from '$lib/game/board/teleportUtils';
 
 type GameStoreInstance = ReturnType<typeof import('./gameStore.svelte').setGameStore>;
 type SocketStoreInstance = ReturnType<
@@ -144,7 +144,7 @@ class MovementStore {
 
 		if (!pos1 || !pos2) return Infinity;
 
-		return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
+		return getManhattanDistance(pos1, pos2);
 	}
 
 	isPlayerInAttackRange(targetName: string): boolean {

@@ -12,7 +12,7 @@ import { stellaArtois } from './consumables/stellaArtois';
 import { vodkaRedbull } from './consumables/vodkaRedbull';
 import { ANiceHat } from './helm/aNiceHat';
 import { BeerGoggles } from './helm/beerGoggles';
-import { Box } from './helm/Box';
+import { Box } from './helm/box';
 import { Kaibrows } from './helm/kaibrows';
 import { BrassKnucklesMH } from './mainHand/brassKnucklesMH';
 import { BrassKnucklesOH } from './mainHand/brassKnucklesOH';

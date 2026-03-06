@@ -164,14 +164,6 @@ class SocketStore {
 			console.log(`[socket] ${data.playerName} left`);
 		});
 
-		this.socket.on('room:error', (data) => {
-			console.error('[socket] Server error:', data.message);
-		});
-
-		this.socket.on('room:started', () => {
-			console.log('[socket] Game started!');
-		});
-
 		this.socket.on('room:spectator_hint', (data) => {
 			const hint = data.hint;
 			switch (hint.kind) {

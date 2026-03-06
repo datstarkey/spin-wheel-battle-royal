@@ -206,7 +206,5 @@ export interface ServerToClientEvents {
 	'room:wheel_spin': (data: WheelSpinBroadcast) => void;
 	'room:player_joined': (data: { playerName: string; role: Role }) => void;
 	'room:player_left': (data: { playerName: string }) => void;
-	'room:error': (data: { message: string }) => void;
-	'room:started': () => void;
 	'room:spectator_hint': (data: { hint: SpectatorHint }) => void;
 }

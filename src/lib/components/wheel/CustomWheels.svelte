@@ -3,12 +3,10 @@
 	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
 
 	const socket = getSocketStore();
-	import { getAttackWindowStore } from '$lib/stores/attackWindowStore.svelte';
 	import type { CustomWheelConfig } from '$lib/game/wheels/wheels';
 	import CustomWheel from './CustomWheel.svelte';
 
 	const mp = getMultiplayerStore();
-	const attackStore = getAttackWindowStore();
 
 	let myName = $derived(mp.myPlayerName);
 	let isGM = $derived(mp.iAmGM);
@@ -57,11 +55,6 @@
 			socket.sendWheelSpinResult(key, originalIndex);
 		}
 		// Don't locally remove — wait for server's room:wheel_dismiss
-
-		const attackWindow = attackStore.current;
-		if (amountOfWheels <= 1 && attackWindow) {
-			attackWindow.close();
-		}
 	}
 </script>
 

@@ -7,7 +7,7 @@ import { emotionalDamage } from './emotionalDamage';
 import { frostShield } from './frostShield';
 import { iceStorm } from './iceStorm';
 import { jaegerShots } from './jagerShots';
-import { movementPot } from './movmentPot';
+import { movementPot } from './movementPot';
 import { overthinking } from './overthinking';
 import { runeOfPower } from './runeOfPower';
 import { stellaArtois } from './stellaArtois';

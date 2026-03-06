@@ -153,7 +153,8 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			// Send initial state to the GM (includes themselves as a game player)
 			socket.emit('room:state_update', {
 				gameState: room.game.serialize(),
-				roomState: room.getRoomState()
+				roomState: room.getRoomState(),
+				combatState: room.combatState ?? undefined
 			});
 
 			callback({ success: true, roomCode: room.code, rejoinToken });
@@ -372,7 +373,8 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				// Only room state changed (connected players list), game state is unchanged
 				io?.to(currentRoomCode).emit('room:state_update', {
 					gameState: room.game.serialize(),
-					roomState: room.getRoomState()
+					roomState: room.getRoomState(),
+					combatState: room.combatState ?? undefined
 				});
 			}
 

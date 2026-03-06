@@ -1,5 +1,5 @@
-import { teleportToRandomSpawn } from '$lib/stores/teleportStore.svelte';
 import toast from '$lib/stores/toaster.svelte';
+import { teleportToRandomSpawn } from '../board/teleportUtils';
 import type { GameContext } from '../gameContext';
 import type { Game } from '../game.svelte';
 import type { Position } from '../board/types';
@@ -494,9 +494,8 @@ export class Player {
 		this.dispatchStatusesGearClassHook('onAttackLose', defendingPlayer, ctx);
 		if (this.name) generateLoseWheel(this.name, ctx);
 		if (this.name) generateDamageTakenWheel(this.name, ctx);
-		// Teleport to random spawn on loss (unless in shadow realm)
 		if (!this.inShadowRealm) {
-			teleportToRandomSpawn(this);
+			teleportToRandomSpawn(this, ctx);
 		}
 	}
 
@@ -506,9 +505,8 @@ export class Player {
 
 	onDefendLose(playerAttackingYou: Player, ctx: GameContext) {
 		this.dispatchStatusesGearClassHook('onDefendLose', playerAttackingYou, ctx);
-		// Teleport to random spawn on loss (unless in shadow realm)
 		if (!this.inShadowRealm) {
-			teleportToRandomSpawn(this);
+			teleportToRandomSpawn(this, ctx);
 		}
 	}
 

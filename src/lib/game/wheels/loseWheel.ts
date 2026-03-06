@@ -26,8 +26,7 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 		{
 			label: 'Go to the shadow realm',
 			onWin: () => {
-				player.inShadowRealm = true;
-				ctx.addAuditTrail(`${player.name} was sent to the Shadow Realm!`);
+				ctx.banishToShadowRealm(player, `${player.name} was sent to the Shadow Realm!`);
 			}
 		},
 		{
@@ -64,8 +63,10 @@ export function generateLoseWheel(playerName: string, ctx: GameContext) {
 				generateRandomPlayerWheel(
 					`${playerName} Sends to Shadow Realm`,
 					(winner) => {
-						winner.inShadowRealm = true;
-						ctx.addAuditTrail(`${player.name} banished ${winner.name} to the Shadow Realm!`);
+						ctx.banishToShadowRealm(
+							winner,
+							`${player.name} banished ${winner.name} to the Shadow Realm!`
+						);
 					},
 					ctx
 				);
