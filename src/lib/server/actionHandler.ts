@@ -610,12 +610,6 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 				break;
 			}
 
-			case 'GM_SET_CLASS': {
-				const result = handleGMSimplePlayerAction(game, action);
-				if (result) return result;
-				break;
-			}
-
 			case 'GM_SET_HP':
 			case 'GM_SET_GOLD':
 			case 'GM_SET_ATTACK':
@@ -625,24 +619,10 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 				break;
 			}
 
-			case 'GM_GIVE_ITEM': {
-				const result = handleGMSimplePlayerAction(game, action);
-				if (result) return result;
-				break;
-			}
-
-			case 'GM_KILL_PLAYER': {
-				const result = handleGMSimplePlayerAction(game, action);
-				if (result) return result;
-				break;
-			}
-
-			case 'GM_REVIVE_PLAYER': {
-				const result = handleGMSimplePlayerAction(game, action);
-				if (result) return result;
-				break;
-			}
-
+			case 'GM_SET_CLASS':
+			case 'GM_GIVE_ITEM':
+			case 'GM_KILL_PLAYER':
+			case 'GM_REVIVE_PLAYER':
 			case 'GM_REMOVE_ITEM': {
 				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
