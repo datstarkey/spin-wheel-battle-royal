@@ -12,11 +12,7 @@ export interface CombatWheelConfig {
 	defenseWeight: number;
 }
 
-function cleanupCombatLifecycle(
-	attacker: Player,
-	defender: Player,
-	ctx: GameContext
-) {
+function cleanupCombatLifecycle(attacker: Player, defender: Player, ctx: GameContext) {
 	attacker.onAttackEnd(defender, ctx);
 	defender.onDefenseEnd(attacker, ctx);
 }

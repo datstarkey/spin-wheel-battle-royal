@@ -150,12 +150,8 @@
 <!-- Current Equipment -->
 <div class="grid grid-cols-2 gap-2">
 	{#each equipmentSlots as slot (slot.key)}
-		{@render equipmentSlot(
-			slot.icon,
-			slot.label,
-			slot.colorClass,
-			player.gear[slot.gearKey],
-			() => player.gear.unequipItem(slot.key)
+		{@render equipmentSlot(slot.icon, slot.label, slot.colorClass, player.gear[slot.gearKey], () =>
+			player.gear.unequipItem(slot.key)
 		)}
 	{/each}
 </div>

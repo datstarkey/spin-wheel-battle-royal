@@ -211,7 +211,8 @@ function queueSetupWheelStep<T>(params: {
 	onAutoSelect?: (option: T) => void;
 	onAdvance: () => void;
 }) {
-	const { room, keyPrefix, index, forPlayerName, options, onSelect, onAutoSelect, onAdvance } = params;
+	const { room, keyPrefix, index, forPlayerName, options, onSelect, onAutoSelect, onAdvance } =
+		params;
 
 	if (options.length <= 1) {
 		if (options.length === 1) {
@@ -333,41 +334,45 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 					return { success: false, error: 'Cannot attack as another player' };
 				if (game.hasFought) return { success: false, error: 'Already fought this turn' };
 
-				const result = withPlayers(game, [action.attackerName, action.defenderName], (attacker, defender) => {
-					if (attacker.dead) return { success: false, error: 'Attacker is dead' };
-					if (defender.dead) return { success: false, error: 'Defender is dead' };
+				const result = withPlayers(
+					game,
+					[action.attackerName, action.defenderName],
+					(attacker, defender) => {
+						if (attacker.dead) return { success: false, error: 'Attacker is dead' };
+						if (defender.dead) return { success: false, error: 'Defender is dead' };
 
-					if (attacker.position && defender.position) {
-						const distance = getManhattanDistance(attacker.position, defender.position);
-						if (distance > attacker.attackRange) {
-							return { success: false, error: 'Target out of range' };
+						if (attacker.position && defender.position) {
+							const distance = getManhattanDistance(attacker.position, defender.position);
+							if (distance > attacker.attackRange) {
+								return { success: false, error: 'Target out of range' };
+							}
 						}
+
+						const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
+						const combatWheel = createCombatWheel(attacker, defender, ctx);
+						room.pendingWheels.set(combatWheelKey, {
+							items: combatWheel.wheel,
+							forPlayerName: attacker.name,
+							type: 'combat',
+							shuffledOrder: generateShuffleOrder(combatWheel.wheel.length)
+						});
+						game.hasFought = true;
+
+						const combatPw = room.pendingWheels.get(combatWheelKey)!;
+						return {
+							success: true,
+							gameState: game.serialize(),
+							combat: {
+								attackerName: attacker.name,
+								defenderName: defender.name,
+								attackWeight: combatWheel.attackWeight,
+								defenseWeight: combatWheel.defenseWeight,
+								wheelKey: combatWheelKey
+							},
+							pendingWheels: [toPendingWheelPayload(combatWheelKey, combatPw)]
+						};
 					}
-
-					const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
-					const combatWheel = createCombatWheel(attacker, defender, ctx);
-					room.pendingWheels.set(combatWheelKey, {
-						items: combatWheel.wheel,
-						forPlayerName: attacker.name,
-						type: 'combat',
-						shuffledOrder: generateShuffleOrder(combatWheel.wheel.length)
-					});
-					game.hasFought = true;
-
-					const combatPw = room.pendingWheels.get(combatWheelKey)!;
-					return {
-						success: true,
-						gameState: game.serialize(),
-						combat: {
-							attackerName: attacker.name,
-							defenderName: defender.name,
-							attackWeight: combatWheel.attackWeight,
-							defenseWeight: combatWheel.defenseWeight,
-							wheelKey: combatWheelKey
-						},
-						pendingWheels: [toPendingWheelPayload(combatWheelKey, combatPw)]
-					};
-				});
+				);
 				if (result) return result;
 				break;
 			}
@@ -647,7 +652,9 @@ function createClassWheel(room: GameRoom, playerIndex: number) {
 
 	// Available classes (exclude 'none' and already-assigned)
 	const assignedSet = new Set(room.assignedClasses.values());
-	const availableClasses: SetupWheelOption<{ key: ClassType; name: string }>[] = Object.entries(classMap)
+	const availableClasses: SetupWheelOption<{ key: ClassType; name: string }>[] = Object.entries(
+		classMap
+	)
 		.filter(([key]) => key !== 'none' && !assignedSet.has(key))
 		.map(([key, cls]) => ({
 			value: {
