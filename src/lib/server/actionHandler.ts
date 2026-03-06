@@ -93,6 +93,12 @@ interface SetupWheelOption<T> {
 	label: string;
 }
 
+interface ActionAccessResult {
+	ok: boolean;
+	result?: ActionResult;
+	role?: ReturnType<GameRoom['getPlayerRole']>;
+}
+
 type ActionMutationResult = ActionResult | void;
 
 const gmWheelGenerators: Record<
@@ -123,6 +129,54 @@ const spellWheelGenerators: Record<
 
 function getPlayerNotFoundResult(): ActionResult {
 	return { success: false, error: 'Player not found' };
+}
+
+function isGMAction(action: GameAction): boolean {
+	return action.type.startsWith('GM_');
+}
+
+function requiresCurrentTurn(action: GameAction): boolean {
+	return !isGMAction(action) && action.type !== 'WHEEL_SPIN_RESULT';
+}
+
+function validateActionAccess(
+	room: GameRoom,
+	playerName: string,
+	action: GameAction
+): ActionAccessResult {
+	const role = room.getPlayerRole(playerName);
+	if (!role) {
+		return {
+			ok: false,
+			result: { success: false, error: 'Not in this room' }
+		};
+	}
+
+	if (isGMAction(action) && role !== 'gm') {
+		return {
+			ok: false,
+			result: { success: false, error: 'Only the GM can perform this action' }
+		};
+	}
+
+	if (role === 'spectator' && !isGMAction(action)) {
+		return {
+			ok: false,
+			result: { success: false, error: 'Spectators cannot perform actions' }
+		};
+	}
+
+	if (role === 'player' && requiresCurrentTurn(action)) {
+		const currentPlayer = room.game.currentPlayer;
+		if (!currentPlayer || currentPlayer.name !== playerName) {
+			return {
+				ok: false,
+				result: { success: false, error: 'Not your turn' }
+			};
+		}
+	}
+
+	return { ok: true, role };
 }
 
 function withPlayer(
@@ -280,33 +334,14 @@ function queueSetupWheelStep<T>(params: {
  * Validates permissions and executes the action on the room's game.
  */
 export function handleAction(room: GameRoom, playerName: string, action: GameAction): ActionResult {
-	const role = room.getPlayerRole(playerName);
-	if (!role) {
-		return { success: false, error: 'Not in this room' };
-	}
+	const access = validateActionAccess(room, playerName, action);
+	if (!access.ok) return access.result!;
+	const role = access.role!;
 
 	// Dedup check — reject duplicate action IDs
 	const actionId = action.actionId ?? crypto.randomUUID();
 	if (room.isDuplicateAction(playerName, actionId)) {
 		return { success: false, error: 'Duplicate action' };
-	}
-
-	// GM actions require GM role
-	if (action.type.startsWith('GM_') && role !== 'gm') {
-		return { success: false, error: 'Only the GM can perform this action' };
-	}
-
-	// Spectators cannot perform game actions
-	if (role === 'spectator' && !action.type.startsWith('GM_')) {
-		return { success: false, error: 'Spectators cannot perform actions' };
-	}
-
-	// Player actions require it to be their turn (except wheel spins and GM actions)
-	if (role === 'player' && !action.type.startsWith('GM_') && action.type !== 'WHEEL_SPIN_RESULT') {
-		const currentPlayer = room.game.currentPlayer;
-		if (!currentPlayer || currentPlayer.name !== playerName) {
-			return { success: false, error: 'Not your turn' };
-		}
 	}
 
 	const game = room.game;
