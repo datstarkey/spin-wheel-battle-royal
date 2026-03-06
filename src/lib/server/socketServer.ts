@@ -306,36 +306,17 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		// Wheel: Request Spin (server picks winner, broadcasts to all)
 		// ================================================================
 		socket.on('wheel:request_spin', (data, callback) => {
-			if (actionLimiter.isThrottled(socket.id)) {
-				callback?.({ success: false, error: 'Too many actions, slow down' });
-				return;
-			}
+			const context = resolveActionContext(callback);
+			if (!context) return;
 
-			if (!currentRoomCode) {
-				callback?.({ success: false, error: 'Not in a room' });
-				return;
-			}
-
-			const room = getRoom(currentRoomCode);
-			if (!room) {
-				callback?.({ success: false, error: 'Room not found' });
-				return;
-			}
-
-			const playerName = room.getPlayerNameBySocket(socket.id);
-			if (!playerName) {
-				callback?.({ success: false, error: 'Not in room' });
-				return;
-			}
-
-			const pw = room.pendingWheels.get(data.wheelKey);
+			const pw = context.room.pendingWheels.get(data.wheelKey);
 			if (!pw) {
 				callback?.({ success: false, error: 'Wheel not found' });
 				return;
 			}
 
-			const role = room.getPlayerRole(playerName);
-			if (pw.forPlayerName !== playerName && role !== 'gm') {
+			const role = context.room.getPlayerRole(context.playerName);
+			if (pw.forPlayerName !== context.playerName && role !== 'gm') {
 				callback?.({ success: false, error: 'Not your wheel' });
 				return;
 			}
@@ -353,7 +334,7 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			const shuffledClientIndex = pw.shuffledOrder.indexOf(chosenIndex);
 
 			// Broadcast spin params to ALL clients in room
-			io?.to(currentRoomCode).emit('room:wheel_spin', {
+			io?.to(context.roomCode).emit('room:wheel_spin', {
 				wheelKey: data.wheelKey,
 				selectedIndex: shuffledClientIndex,
 				duration: 5000,
