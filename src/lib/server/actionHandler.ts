@@ -15,6 +15,8 @@ import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
 import { classMap, type ClassType } from '$lib/game/classes/classType';
 import items, { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
 import type {
+	ActionOf,
+	ActionType,
 	CombatState,
 	GameAction,
 	GameStateDelta,
@@ -86,12 +88,12 @@ type GMSimplePlayerAction = Extract<
 			| 'GM_REMOVE_ITEM';
 	}
 >;
-type MoveAction = Extract<GameAction, { type: 'MOVE' }>;
-type AttackResolveAction = Extract<GameAction, { type: 'ATTACK_RESOLVE' }>;
-type SpellCastAction = Extract<GameAction, { type: 'SPELL_CAST' }>;
-type UseConsumableAction = Extract<GameAction, { type: 'USE_CONSUMABLE' }>;
-type TeleportAction = Extract<GameAction, { type: 'TELEPORT' }>;
-type WheelSpinResultAction = Extract<GameAction, { type: 'WHEEL_SPIN_RESULT' }>;
+type MoveAction = ActionOf<'MOVE'>;
+type AttackResolveAction = ActionOf<'ATTACK_RESOLVE'>;
+type SpellCastAction = ActionOf<'SPELL_CAST'>;
+type UseConsumableAction = ActionOf<'USE_CONSUMABLE'>;
+type TeleportAction = ActionOf<'TELEPORT'>;
+type WheelSpinResultAction = ActionOf<'WHEEL_SPIN_RESULT'>;
 
 interface SetupWheelOption<T> {
 	value: T;
@@ -104,8 +106,6 @@ interface ActionAccessResult {
 	role?: ReturnType<GameRoom['getPlayerRole']>;
 }
 
-type ActionType = GameAction['type'];
-type ActionOf<T extends ActionType> = Extract<GameAction, { type: T }>;
 type ActionMutationResult = ActionResult | void;
 type ServerGameContext = ReturnType<typeof createServerGameContext>;
 

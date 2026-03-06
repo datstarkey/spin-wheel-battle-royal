@@ -5,6 +5,9 @@ import type { Position } from '$lib/game/board/types';
 import type { ClassType } from '$lib/game/classes/classType';
 import type { AllItems } from '$lib/game/items/itemTypes';
 import type {
+	ActionOf,
+	ActionPayload,
+	ActionType,
 	ClientToServerEvents,
 	GameAction,
 	GMWheelType,
@@ -348,36 +351,40 @@ class SocketStore {
 		});
 	}
 
+	private dispatchAction<T extends ActionType>(type: T, payload?: ActionPayload<T>) {
+		this.dispatch({ type, ...(payload ?? {}) } as ActionOf<T>);
+	}
+
 	// =================================================================
 	// Game Actions
 	// =================================================================
 
 	move(position: Position) {
-		this.dispatch({ type: 'MOVE', position });
+		this.dispatchAction('MOVE', { position });
 	}
 	finishTurn() {
-		this.dispatch({ type: 'FINISH_TURN' });
+		this.dispatchAction('FINISH_TURN');
 	}
 	attackResolve(attackerName: string, defenderName: string) {
-		this.dispatch({ type: 'ATTACK_RESOLVE', attackerName, defenderName });
+		this.dispatchAction('ATTACK_RESOLVE', { attackerName, defenderName });
 	}
 	shopBuy(item: AllItems) {
-		this.dispatch({ type: 'SHOP_BUY', item });
+		this.dispatchAction('SHOP_BUY', { item });
 	}
 	shopReroll() {
-		this.dispatch({ type: 'SHOP_REROLL' });
+		this.dispatchAction('SHOP_REROLL');
 	}
 	casino() {
-		this.dispatch({ type: 'CASINO' });
+		this.dispatchAction('CASINO');
 	}
 	castSpell(spellLevel: 'minor' | 'major' | 'ultimate', targetName?: string) {
-		this.dispatch({ type: 'SPELL_CAST', spellLevel, targetName });
+		this.dispatchAction('SPELL_CAST', { spellLevel, targetName });
 	}
 	useConsumable(item: AllItems) {
-		this.dispatch({ type: 'USE_CONSUMABLE', item });
+		this.dispatchAction('USE_CONSUMABLE', { item });
 	}
 	teleport(destination: Position) {
-		this.dispatch({ type: 'TELEPORT', destination });
+		this.dispatchAction('TELEPORT', { destination });
 	}
 
 	// =================================================================
@@ -385,37 +392,37 @@ class SocketStore {
 	// =================================================================
 
 	gmStartGame() {
-		this.dispatch({ type: 'GM_START_GAME' });
+		this.dispatchAction('GM_START_GAME');
 	}
 	gmRemovePlayer(playerName: string) {
-		this.dispatch({ type: 'GM_REMOVE_PLAYER', playerName });
+		this.dispatchAction('GM_REMOVE_PLAYER', { playerName });
 	}
 	gmSetClass(playerName: string, classType: ClassType) {
-		this.dispatch({ type: 'GM_SET_CLASS', playerName, classType });
+		this.dispatchAction('GM_SET_CLASS', { playerName, classType });
 	}
 	gmSetHp(playerName: string, hp: number) {
-		this.dispatch({ type: 'GM_SET_HP', playerName, hp });
+		this.dispatchAction('GM_SET_HP', { playerName, hp });
 	}
 	gmSetGold(playerName: string, gold: number) {
-		this.dispatch({ type: 'GM_SET_GOLD', playerName, gold });
+		this.dispatchAction('GM_SET_GOLD', { playerName, gold });
 	}
 	gmSetAttack(playerName: string, attack: number) {
-		this.dispatch({ type: 'GM_SET_ATTACK', playerName, attack });
+		this.dispatchAction('GM_SET_ATTACK', { playerName, attack });
 	}
 	gmSetDefense(playerName: string, defense: number) {
-		this.dispatch({ type: 'GM_SET_DEFENSE', playerName, defense });
+		this.dispatchAction('GM_SET_DEFENSE', { playerName, defense });
 	}
 	gmGiveItem(playerName: string, item: AllItems) {
-		this.dispatch({ type: 'GM_GIVE_ITEM', playerName, item });
+		this.dispatchAction('GM_GIVE_ITEM', { playerName, item });
 	}
 	gmKillPlayer(playerName: string) {
-		this.dispatch({ type: 'GM_KILL_PLAYER', playerName });
+		this.dispatchAction('GM_KILL_PLAYER', { playerName });
 	}
 	gmRevivePlayer(playerName: string) {
-		this.dispatch({ type: 'GM_REVIVE_PLAYER', playerName });
+		this.dispatchAction('GM_REVIVE_PLAYER', { playerName });
 	}
 	gmAddWheel(playerName: string, wheelType: GMWheelType) {
-		this.dispatch({ type: 'GM_ADD_WHEEL', playerName, wheelType });
+		this.dispatchAction('GM_ADD_WHEEL', { playerName, wheelType });
 	}
 }
 

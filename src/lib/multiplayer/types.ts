@@ -102,6 +102,10 @@ export type GameAction = ActionBase &
 		| { type: 'GM_REVIVE_PLAYER'; playerName: string }
 	);
 
+export type ActionType = GameAction['type'];
+export type ActionOf<T extends ActionType> = Extract<GameAction, { type: T }>;
+export type ActionPayload<T extends ActionType> = Omit<ActionOf<T>, keyof ActionBase | 'type'>;
+
 // ============================================================================
 // Combat State (broadcasted to all clients during battle)
 // ============================================================================
