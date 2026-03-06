@@ -75,6 +75,17 @@ type GMNumericAction = Extract<
 	GameAction,
 	{ type: 'GM_SET_HP' | 'GM_SET_GOLD' | 'GM_SET_ATTACK' | 'GM_SET_DEFENSE' }
 >;
+type GMSimplePlayerAction = Extract<
+	GameAction,
+	{
+		type:
+			| 'GM_SET_CLASS'
+			| 'GM_GIVE_ITEM'
+			| 'GM_KILL_PLAYER'
+			| 'GM_REVIVE_PLAYER'
+			| 'GM_REMOVE_ITEM';
+	}
+>;
 type SpellCastAction = Extract<GameAction, { type: 'SPELL_CAST' }>;
 
 interface SetupWheelOption<T> {
@@ -199,6 +210,32 @@ function assignClassToPlayer(
 			game.addAuditTrail(auditMessage);
 		}
 	});
+}
+
+function handleGMSimplePlayerAction(
+	game: Game,
+	action: GMSimplePlayerAction
+): ActionMutationResult {
+	switch (action.type) {
+		case 'GM_SET_CLASS':
+			return assignClassToPlayer(game, action.playerName, action.classType);
+		case 'GM_GIVE_ITEM':
+			return withPlayer(game, action.playerName, (player) => {
+				player.assignItem(action.item);
+			});
+		case 'GM_KILL_PLAYER':
+			return withPlayer(game, action.playerName, (player) => {
+				player.hp = 0;
+			});
+		case 'GM_REVIVE_PLAYER':
+			return withPlayer(game, action.playerName, (player) => {
+				player.hp = player.maxHp;
+			});
+		case 'GM_REMOVE_ITEM':
+			return withPlayer(game, action.playerName, (player) =>
+				removeItemFromPlayer(player, action.item)
+			);
+	}
 }
 
 function queueSetupWheelStep<T>(params: {
@@ -498,7 +535,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_SET_CLASS': {
-				const result = assignClassToPlayer(game, action.playerName, action.classType);
+				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
 				break;
 			}
@@ -513,33 +550,25 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'GM_GIVE_ITEM': {
-				const result = withPlayer(game, action.playerName, (player) => {
-					player.assignItem(action.item);
-				});
+				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
 				break;
 			}
 
 			case 'GM_KILL_PLAYER': {
-				const result = withPlayer(game, action.playerName, (player) => {
-					player.hp = 0;
-				});
+				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
 				break;
 			}
 
 			case 'GM_REVIVE_PLAYER': {
-				const result = withPlayer(game, action.playerName, (player) => {
-					player.hp = player.maxHp;
-				});
+				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
 				break;
 			}
 
 			case 'GM_REMOVE_ITEM': {
-				const result = withPlayer(game, action.playerName, (player) =>
-					removeItemFromPlayer(player, action.item)
-				);
+				const result = handleGMSimplePlayerAction(game, action);
 				if (result) return result;
 				break;
 			}
