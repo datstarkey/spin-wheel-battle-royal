@@ -86,6 +86,8 @@ type GMSimplePlayerAction = Extract<
 			| 'GM_REMOVE_ITEM';
 	}
 >;
+type MoveAction = Extract<GameAction, { type: 'MOVE' }>;
+type AttackResolveAction = Extract<GameAction, { type: 'ATTACK_RESOLVE' }>;
 type SpellCastAction = Extract<GameAction, { type: 'SPELL_CAST' }>;
 
 interface SetupWheelOption<T> {
@@ -370,6 +372,114 @@ function buildActionSuccessResult(params: {
 	};
 }
 
+function handleMoveAction(
+	game: Game,
+	playerName: string,
+	action: MoveAction,
+	ctx: ReturnType<typeof createServerGameContext>
+): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		if (game.hasMoved) return { success: false, error: 'Already moved this turn' };
+		if (!player.position) return { success: false, error: 'Player has no position' };
+
+		const validMoves = getValidMoves(player.position, player.movement, !player.inShadowRealm);
+		const isValid = validMoves.some((position) => {
+			return position.x === action.position.x && position.y === action.position.y;
+		});
+		if (!isValid) return { success: false, error: 'Invalid move' };
+
+		const oldPos = player.position;
+		player.position = { ...action.position };
+		game.hasMoved = true;
+
+		game.addAuditTrail(
+			`${player.name} moved from (${oldPos.x}, ${oldPos.y}) to (${action.position.x}, ${action.position.y})`
+		);
+
+		if (player.classType === 'magicman') {
+			const tilesMovedThisTurn = getPathDistance(oldPos, action.position, player.movement);
+			const unusedMovement = player.movement - tilesMovedThisTurn;
+			if (unusedMovement > 0) {
+				grantUnusedMovementMana(player, unusedMovement);
+			}
+		}
+
+		executeTileAction(player, action.position, ctx);
+	});
+}
+
+function handleAttackResolveAction(
+	room: GameRoom,
+	game: Game,
+	playerName: string,
+	action: AttackResolveAction,
+	ctx: ReturnType<typeof createServerGameContext>
+): ActionResult {
+	if (action.attackerName !== playerName) {
+		return { success: false, error: 'Cannot attack as another player' };
+	}
+	if (game.hasFought) return { success: false, error: 'Already fought this turn' };
+
+	return (
+		withPlayers(game, [action.attackerName, action.defenderName], (attacker, defender) => {
+			if (attacker.dead) return { success: false, error: 'Attacker is dead' };
+			if (defender.dead) return { success: false, error: 'Defender is dead' };
+
+			if (attacker.position && defender.position) {
+				const distance = getManhattanDistance(attacker.position, defender.position);
+				if (distance > attacker.attackRange) {
+					return { success: false, error: 'Target out of range' };
+				}
+			}
+
+			const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
+			const combatWheel = createCombatWheel(attacker, defender, ctx);
+			room.pendingWheels.set(combatWheelKey, {
+				items: combatWheel.wheel,
+				forPlayerName: attacker.name,
+				type: 'combat',
+				shuffledOrder: generateShuffleOrder(combatWheel.wheel.length)
+			});
+			game.hasFought = true;
+
+			const combatPw = room.pendingWheels.get(combatWheelKey)!;
+			return {
+				success: true,
+				gameState: game.serialize(),
+				combat: {
+					attackerName: attacker.name,
+					defenderName: defender.name,
+					attackWeight: combatWheel.attackWeight,
+					defenseWeight: combatWheel.defenseWeight,
+					wheelKey: combatWheelKey
+				},
+				pendingWheels: [toPendingWheelPayload(combatWheelKey, combatPw)]
+			};
+		}) ?? getPlayerNotFoundResult()
+	);
+}
+
+function handleSpellCastAction(
+	game: Game,
+	playerName: string,
+	action: SpellCastAction,
+	ctx: ReturnType<typeof createServerGameContext>
+): ActionMutationResult {
+	return withPlayer(game, playerName, (caster) => {
+		if (caster.classType !== 'magicman')
+			return { success: false, error: 'Only Magic Man can cast spells' };
+
+		const cost = spellManaCosts[action.spellLevel];
+		const mana = caster.resources['Mana'] ?? 0;
+		if (mana < cost)
+			return { success: false, error: `Not enough mana (need ${cost}, have ${mana})` };
+
+		const target = action.targetName ? game.getPlayerByName(action.targetName) : undefined;
+		spellWheelGenerators[action.spellLevel](playerName, ctx, target);
+		game.hasFought = true;
+	});
+}
+
 /**
  * Process a game action from a client.
  * Validates permissions and executes the action on the room's game.
@@ -400,39 +510,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 	try {
 		switch (action.type) {
 			case 'MOVE': {
-				const result = withPlayer(game, playerName, (player) => {
-					if (game.hasMoved) return { success: false, error: 'Already moved this turn' };
-					if (!player.position) return { success: false, error: 'Player has no position' };
-
-					// Validate the move is reachable
-					const validMoves = getValidMoves(player.position, player.movement, !player.inShadowRealm);
-					const isValid = validMoves.some(
-						(p) => p.x === action.position.x && p.y === action.position.y
-					);
-					if (!isValid) return { success: false, error: 'Invalid move' };
-
-					const oldPos = player.position;
-					player.position = { ...action.position };
-					game.hasMoved = true;
-
-					if (oldPos) {
-						game.addAuditTrail(
-							`${player.name} moved from (${oldPos.x}, ${oldPos.y}) to (${action.position.x}, ${action.position.y})`
-						);
-					}
-
-					// Grant unused movement mana for Magic Man
-					if (player.classType === 'magicman' && oldPos) {
-						const tilesMovedThisTurn = getPathDistance(oldPos, action.position, player.movement);
-						const unusedMovement = player.movement - tilesMovedThisTurn;
-						if (unusedMovement > 0) {
-							grantUnusedMovementMana(player, unusedMovement);
-						}
-					}
-
-					// Execute tile action at new position
-					executeTileAction(player, action.position, ctx);
-				});
+				const result = handleMoveAction(game, playerName, action, ctx);
 				if (result) return result;
 				break;
 			}
@@ -443,49 +521,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'ATTACK_RESOLVE': {
-				if (action.attackerName !== playerName)
-					return { success: false, error: 'Cannot attack as another player' };
-				if (game.hasFought) return { success: false, error: 'Already fought this turn' };
-
-				const result = withPlayers(
-					game,
-					[action.attackerName, action.defenderName],
-					(attacker, defender) => {
-						if (attacker.dead) return { success: false, error: 'Attacker is dead' };
-						if (defender.dead) return { success: false, error: 'Defender is dead' };
-
-						if (attacker.position && defender.position) {
-							const distance = getManhattanDistance(attacker.position, defender.position);
-							if (distance > attacker.attackRange) {
-								return { success: false, error: 'Target out of range' };
-							}
-						}
-
-						const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
-						const combatWheel = createCombatWheel(attacker, defender, ctx);
-						room.pendingWheels.set(combatWheelKey, {
-							items: combatWheel.wheel,
-							forPlayerName: attacker.name,
-							type: 'combat',
-							shuffledOrder: generateShuffleOrder(combatWheel.wheel.length)
-						});
-						game.hasFought = true;
-
-						const combatPw = room.pendingWheels.get(combatWheelKey)!;
-						return {
-							success: true,
-							gameState: game.serialize(),
-							combat: {
-								attackerName: attacker.name,
-								defenderName: defender.name,
-								attackWeight: combatWheel.attackWeight,
-								defenseWeight: combatWheel.defenseWeight,
-								wheelKey: combatWheelKey
-							},
-							pendingWheels: [toPendingWheelPayload(combatWheelKey, combatPw)]
-						};
-					}
-				);
+				const result = handleAttackResolveAction(room, game, playerName, action, ctx);
 				if (result) return result;
 				break;
 			}
@@ -515,19 +551,7 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'SPELL_CAST': {
-				const result = withPlayer(game, playerName, (caster) => {
-					if (caster.classType !== 'magicman')
-						return { success: false, error: 'Only Magic Man can cast spells' };
-
-					const cost = spellManaCosts[action.spellLevel];
-					const mana = caster.resources['Mana'] ?? 0;
-					if (mana < cost)
-						return { success: false, error: `Not enough mana (need ${cost}, have ${mana})` };
-
-					const target = action.targetName ? game.getPlayerByName(action.targetName) : undefined;
-					spellWheelGenerators[action.spellLevel](playerName, ctx, target);
-					game.hasFought = true;
-				});
+				const result = handleSpellCastAction(game, playerName, action, ctx);
 				if (result) return result;
 				break;
 			}
