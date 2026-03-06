@@ -89,6 +89,9 @@ type GMSimplePlayerAction = Extract<
 type MoveAction = Extract<GameAction, { type: 'MOVE' }>;
 type AttackResolveAction = Extract<GameAction, { type: 'ATTACK_RESOLVE' }>;
 type SpellCastAction = Extract<GameAction, { type: 'SPELL_CAST' }>;
+type UseConsumableAction = Extract<GameAction, { type: 'USE_CONSUMABLE' }>;
+type TeleportAction = Extract<GameAction, { type: 'TELEPORT' }>;
+type WheelSpinResultAction = Extract<GameAction, { type: 'WHEEL_SPIN_RESULT' }>;
 
 interface SetupWheelOption<T> {
 	value: T;
@@ -480,6 +483,75 @@ function handleSpellCastAction(
 	});
 }
 
+function handleUseConsumableAction(
+	game: Game,
+	playerName: string,
+	action: UseConsumableAction
+): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		if (!(action.item in items.consumables))
+			return { success: false, error: 'Item is not a consumable' };
+
+		const consumableItem = action.item as import('$lib/game/items/itemTypes').Consumables;
+		if (!player.gear.consumables.includes(consumableItem))
+			return { success: false, error: 'Player does not own this consumable' };
+
+		player.gear.useConsumable(consumableItem);
+	});
+}
+
+function handleTeleportAction(
+	game: Game,
+	playerName: string,
+	action: TeleportAction,
+	ctx: ReturnType<typeof createServerGameContext>
+): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		const destTile = getTileAt(action.destination);
+		if (!destTile) return { success: false, error: 'Invalid teleport destination' };
+		if (!isOuterTeleporter(action.destination) && !isInnerTeleporter(action.destination)) {
+			return { success: false, error: 'Destination is not a teleporter' };
+		}
+
+		player.position = action.destination;
+		executeTileAction(player, action.destination, ctx);
+	});
+}
+
+function handleWheelSpinResultAction(
+	room: GameRoom,
+	playerName: string,
+	role: NonNullable<ActionAccessResult['role']>,
+	action: WheelSpinResultAction
+): ActionResult | undefined {
+	const pendingWheel = room.pendingWheels.get(action.wheelKey);
+	if (!pendingWheel) return { success: false, error: 'Wheel not found or already spun' };
+
+	if (pendingWheel.forPlayerName !== playerName && role !== 'gm') {
+		return { success: false, error: 'Not your wheel to spin' };
+	}
+
+	if (pendingWheel.chosenIndex !== undefined && action.selectedIndex !== pendingWheel.chosenIndex) {
+		return { success: false, error: 'Selected index does not match server-chosen result' };
+	}
+
+	const selectedItem = pendingWheel.items[action.selectedIndex];
+	if (!selectedItem) return { success: false, error: 'Invalid wheel index' };
+
+	selectedItem.onWin?.();
+	room.pendingWheels.delete(action.wheelKey);
+}
+
+function handleGMStartGameAction(room: GameRoom, game: Game): ActionResult | undefined {
+	if (game.players.length < 2) {
+		return { success: false, error: 'Need at least 2 players to start' };
+	}
+
+	room.phase = 'turn_order';
+	room.turnOrder = [];
+	createTurnOrderWheel(room, 0);
+}
+
 /**
  * Process a game action from a client.
  * Validates permissions and executes the action on the room's game.
@@ -557,75 +629,27 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			}
 
 			case 'USE_CONSUMABLE': {
-				const result = withPlayer(game, playerName, (player) => {
-					// Validate item is a consumable
-					if (!(action.item in items.consumables))
-						return { success: false, error: 'Item is not a consumable' };
-
-					const consumableItem = action.item as import('$lib/game/items/itemTypes').Consumables;
-
-					// Validate player owns the consumable
-					if (!player.gear.consumables.includes(consumableItem))
-						return { success: false, error: 'Player does not own this consumable' };
-
-					player.gear.useConsumable(consumableItem);
-				});
+				const result = handleUseConsumableAction(game, playerName, action);
 				if (result) return result;
 				break;
 			}
 
 			case 'TELEPORT': {
-				const result = withPlayer(game, playerName, (player) => {
-					// Validate destination is a valid teleporter tile
-					const destTile = getTileAt(action.destination);
-					if (!destTile) return { success: false, error: 'Invalid teleport destination' };
-					if (!isOuterTeleporter(action.destination) && !isInnerTeleporter(action.destination)) {
-						return { success: false, error: 'Destination is not a teleporter' };
-					}
-
-					player.position = action.destination;
-					executeTileAction(player, action.destination, ctx);
-				});
+				const result = handleTeleportAction(game, playerName, action, ctx);
 				if (result) return result;
 				break;
 			}
 
 			case 'WHEEL_SPIN_RESULT': {
-				const pendingWheel = room.pendingWheels.get(action.wheelKey);
-				if (!pendingWheel) return { success: false, error: 'Wheel not found or already spun' };
-
-				// Only the assigned player (or GM) can spin this wheel ('*' = anyone)
-				if (pendingWheel.forPlayerName !== playerName && role !== 'gm') {
-					return { success: false, error: 'Not your wheel to spin' };
-				}
-
-				// If the server already picked a winner (via request_spin), validate it matches
-				if (
-					pendingWheel.chosenIndex !== undefined &&
-					action.selectedIndex !== pendingWheel.chosenIndex
-				) {
-					return { success: false, error: 'Selected index does not match server-chosen result' };
-				}
-
-				const selectedItem = pendingWheel.items[action.selectedIndex];
-				if (!selectedItem) return { success: false, error: 'Invalid wheel index' };
-
-				// Execute the closure server-side
-				selectedItem.onWin?.();
-				room.pendingWheels.delete(action.wheelKey);
+				const result = handleWheelSpinResultAction(room, playerName, role, action);
+				if (result) return result;
 				break;
 			}
 
 			// GM Actions
 			case 'GM_START_GAME': {
-				if (game.players.length < 2) {
-					return { success: false, error: 'Need at least 2 players to start' };
-				}
-
-				// Begin turn order phase with first wheel
-				room.phase = 'turn_order';
-				room.turnOrder = [];
-				createTurnOrderWheel(room, 0);
+				const result = handleGMStartGameAction(room, game);
+				if (result) return result;
 				break;
 			}
 
