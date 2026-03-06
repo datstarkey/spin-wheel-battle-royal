@@ -23,3 +23,8 @@ export function getServerGameContext(): GameContext {
 		throw new Error('No server game context — setServerGameContext() must be called first');
 	return _ctx;
 }
+
+/** Resolve ctx — use provided value or fall back to server singleton */
+export function resolveCtx(ctx?: GameContext): GameContext {
+	return ctx ?? getServerGameContext();
+}

@@ -1,4 +1,4 @@
-import { getRandomSpawnPoint } from '../board/board.svelte';
+import { gameBoard, getRandomSpawnPoint } from '../board/board.svelte';
 import type { Position } from '../board/types';
 import { createCombatWheel } from '../combat';
 import { requirePlayer, type GameContext } from '../gameContext';
@@ -12,6 +12,7 @@ import type { WheelBase } from './wheels';
 function teleportToRandomSpawn(player: Player, ctx: GameContext) {
 	const spawnPoint = getRandomSpawnPoint();
 	player.position = { ...spawnPoint };
+	gameBoard.setPlayerPosition(player.name, spawnPoint);
 	ctx.addAuditTrail(`${player.name} was teleported to spawn (${spawnPoint.x}, ${spawnPoint.y})!`);
 }
 

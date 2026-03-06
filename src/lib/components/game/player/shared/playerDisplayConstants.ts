@@ -1,9 +1,19 @@
+import { MANA_RESOURCE, RUNE_OF_POWER_TURNS_KEY } from '$lib/game/wheels/spellWheels';
+import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
+
 /** HP thresholds for color transitions on HP bars */
 export const HP_CRITICAL = 5;
 export const HP_WARNING = 10;
 
 /** SWEnergy max value for progress bar */
 export const SWENERGY_MAX = 10;
+
+/** Resources hidden from the generic resource list (shown via dedicated UI instead) */
+export const HIDDEN_RESOURCES = new Set([
+	MANA_RESOURCE,
+	SWENERGY_RESOURCE,
+	RUNE_OF_POWER_TURNS_KEY
+]);
 
 /** Equipment slot display configuration */
 export const EQUIPMENT_SLOTS = [

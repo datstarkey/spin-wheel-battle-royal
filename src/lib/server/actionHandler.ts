@@ -26,7 +26,7 @@ import {
 } from './actionExecutors';
 import { createServerGameContext } from './serverGameContext';
 import type { GameRoom } from './gameRooms';
-import type { ServerGameContext } from './actionExecutors';
+import type { ServerGameContext } from './serverGameContext';
 
 export interface ActionResult {
 	success: boolean;

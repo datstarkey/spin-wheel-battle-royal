@@ -5,7 +5,7 @@ import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import type { GameContext } from './gameContext';
 import items, { getItemByType, type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
-import { getServerGameContext } from './serverContext';
+import { resolveCtx } from './serverContext';
 import type { SerializedGame } from './serialization';
 import { validateGame } from './serialization';
 import type { CustomWheelConfig } from './wheels/wheels';
@@ -275,11 +275,6 @@ export class Game {
 		return undefined;
 	}
 
-	/** Resolve ctx — use provided value or fall back to server singleton */
-	private resolveCtx(ctx?: GameContext): GameContext {
-		return ctx ?? getServerGameContext();
-	}
-
 	startTurn(ctx?: GameContext) {
 		if (this.hasTurnStarted) return;
 
@@ -319,7 +314,7 @@ export class Game {
 
 		// Actually start the turn
 		this.randomizeShopItems(true);
-		player.onTurnStart(this.resolveCtx(ctx));
+		player.onTurnStart(resolveCtx(ctx));
 		this.addAuditTrail(`${player.name} starts their turn!`);
 		this.hasTurnStarted = true;
 	}
@@ -333,7 +328,7 @@ export class Game {
 	finishTurn(ctx?: GameContext) {
 		this.addAuditTrail(`${this.currentPlayer?.name} finishes their turn!`);
 
-		const resolvedCtx = this.resolveCtx(ctx);
+		const resolvedCtx = resolveCtx(ctx);
 		this.currentPlayer?.onTurnEnd(resolvedCtx, {
 			hasMoved: this.hasMoved,
 			totalMovement: this.currentPlayer.movement

@@ -81,6 +81,7 @@
 			glowColor: string;
 			bgGradient: string;
 			accentColor: string;
+			sparkleColor: string;
 			pulseColor: string;
 		}
 	> = {
@@ -92,6 +93,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(234,179,8,0.3)]',
 			bgGradient: 'from-warning-500/10 via-transparent to-warning-500/5',
 			accentColor: 'text-warning-400',
+			sparkleColor: 'bg-warning-400',
 			pulseColor: 'rgba(234,179,8,0.15)'
 		},
 		lose: {
@@ -102,6 +104,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(220,38,38,0.3)]',
 			bgGradient: 'from-error-500/10 via-transparent to-error-500/5',
 			accentColor: 'text-error-400',
+			sparkleColor: 'bg-error-400',
 			pulseColor: 'rgba(220,38,38,0.15)'
 		},
 		loot: {
@@ -112,6 +115,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(234,179,8,0.25)]',
 			bgGradient: 'from-warning-600/10 via-transparent to-success-500/5',
 			accentColor: 'text-warning-400',
+			sparkleColor: 'bg-warning-400',
 			pulseColor: 'rgba(234,179,8,0.12)'
 		},
 		casino: {
@@ -122,6 +126,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(16,185,129,0.3)]',
 			bgGradient: 'from-success-500/10 via-warning-500/5 to-error-500/5',
 			accentColor: 'text-success-400',
+			sparkleColor: 'bg-success-400',
 			pulseColor: 'rgba(16,185,129,0.15)'
 		},
 		shadow: {
@@ -132,6 +137,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(168,85,247,0.4)]',
 			bgGradient: 'from-tertiary-500/15 via-tertiary-900/10 to-tertiary-500/10',
 			accentColor: 'text-tertiary-400',
+			sparkleColor: 'bg-tertiary-400',
 			pulseColor: 'rgba(168,85,247,0.2)'
 		},
 		gambler: {
@@ -142,6 +148,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(234,179,8,0.35)]',
 			bgGradient: 'from-warning-500/15 via-error-500/5 to-success-500/5',
 			accentColor: 'text-warning-400',
+			sparkleColor: 'bg-warning-400',
 			pulseColor: 'rgba(234,179,8,0.18)'
 		},
 		damage: {
@@ -152,6 +159,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(220,38,38,0.35)]',
 			bgGradient: 'from-primary-500/10 via-error-500/5 to-primary-500/5',
 			accentColor: 'text-primary-400',
+			sparkleColor: 'bg-primary-400',
 			pulseColor: 'rgba(220,38,38,0.15)'
 		},
 		button: {
@@ -162,6 +170,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(59,130,246,0.3)]',
 			bgGradient: 'from-secondary-500/10 via-transparent to-secondary-500/5',
 			accentColor: 'text-secondary-400',
+			sparkleColor: 'bg-secondary-400',
 			pulseColor: 'rgba(59,130,246,0.15)'
 		},
 		magic: {
@@ -172,6 +181,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(139,92,246,0.4)]',
 			bgGradient: 'from-tertiary-500/15 via-secondary-500/5 to-tertiary-500/10',
 			accentColor: 'text-tertiary-400',
+			sparkleColor: 'bg-tertiary-400',
 			pulseColor: 'rgba(139,92,246,0.2)'
 		},
 		default: {
@@ -182,6 +192,7 @@
 			glowColor: 'shadow-[0_0_60px_rgba(220,38,38,0.25)]',
 			bgGradient: 'from-primary-500/10 via-transparent to-primary-500/5',
 			accentColor: 'text-primary-400',
+			sparkleColor: 'bg-primary-400',
 			pulseColor: 'rgba(220,38,38,0.15)'
 		}
 	};
@@ -365,10 +376,7 @@
 						style="animation-delay: 0.3s;"
 					></div>
 					<div
-						class="absolute bottom-3 left-1/3 h-1.5 w-1.5 animate-ping rounded-full {currentTheme.accentColor.replace(
-							'text-',
-							'bg-'
-						)}/60"
+						class="absolute bottom-3 left-1/3 h-1.5 w-1.5 animate-ping rounded-full {currentTheme.sparkleColor}/60"
 						style="animation-delay: 0.6s;"
 					></div>
 				</div>

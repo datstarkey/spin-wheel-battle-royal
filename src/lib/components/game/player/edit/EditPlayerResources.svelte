@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import Stepper from '$lib/components/ui/Stepper.svelte';
+	import { HIDDEN_RESOURCES } from '$lib/components/game/player/shared/playerDisplayConstants';
 	import type { Player } from '$lib/game/player/player.svelte';
 	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
 	import { LUCKY_STREAK_RESOURCE, updateLuckyStreakMultipliers } from '$lib/game/classes/gambler';
@@ -49,13 +50,11 @@
 		}
 	};
 
-	const hiddenResources = new Set([MANA_RESOURCE, SWENERGY_RESOURCE, 'RuneOfPowerTurns']);
-
 	let specialResourceCard = $derived(
 		player.classType === 'none' ? undefined : specialResourceCards[player.classType]
 	);
 	let genericResourceEntries = $derived(
-		Object.entries(player.resources).filter(([resource]) => !hiddenResources.has(resource))
+		Object.entries(player.resources).filter(([resource]) => !HIDDEN_RESOURCES.has(resource))
 	);
 
 	function updateResource(resource: string, nextValue: number, max?: number) {

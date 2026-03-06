@@ -13,6 +13,8 @@ import { generateShuffleOrder } from './wheelUtils';
  * - The server will send visual-only wheel data to clients, then execute the closure
  *   when the client reports the spin result
  */
+export type ServerGameContext = ReturnType<typeof createServerGameContext>;
+
 export function createServerGameContext(room: GameRoom, forPlayerName: string): GameContext {
 	return {
 		getPlayerByName(name: string): Player | undefined {

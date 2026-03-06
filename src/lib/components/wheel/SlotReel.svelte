@@ -1,5 +1,5 @@
 <script module lang="ts">
-	import { quickMode } from './SpinWheel.svelte';
+	import { quickMode } from './constants';
 </script>
 
 <script lang="ts">
@@ -39,15 +39,7 @@
 		shuffledOrder = undefined
 	}: Props = $props();
 
-	// Battle arena theme colors for item backgrounds
-	const slotColors = [
-		'#b91c1c', // primary-700 crimson
-		'#1e293b', // surface-800 dark
-		'#3b82f6', // secondary-500 blue
-		'#a855f7', // tertiary-500 purple
-		'#f59e0b', // warning-500 gold
-		'#10b981' // success-500 emerald
-	];
+	import { WHEEL_COLORS } from './constants';
 
 	// Display items: server-shuffled or locally shuffled
 	const localShuffled = shuffle([...items]);
@@ -85,7 +77,7 @@
 	const centerSlotOffset = Math.floor(VISIBLE_COUNT / 2);
 
 	function getColorForIndex(idx: number): string {
-		return slotColors[idx % slotColors.length];
+		return WHEEL_COLORS[idx % WHEEL_COLORS.length];
 	}
 
 	function animateSpin(targetDisplayIndex: number, revolutions: number, durationMs: number) {

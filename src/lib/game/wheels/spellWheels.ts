@@ -78,7 +78,7 @@ export function generateMinorSpellWheel(
 					targetPlayer,
 					`${player.name}'s Arcane Bolt Target`,
 					(target) => {
-						target.hp -= 15;
+						target.takeDamage(15);
 						ctx.addAuditTrail(`${player.name}'s Arcane Bolt hits ${target.name} for 15 damage!`);
 					},
 					ctx
@@ -106,7 +106,7 @@ export function generateMinorSpellWheel(
 					targetPlayer,
 					`${player.name}'s Magic Missile Target`,
 					(target) => {
-						target.hp -= 8;
+						target.takeDamage(8);
 						player.gold += 3;
 						ctx.addAuditTrail(`${player.name}'s Magic Missiles hit ${target.name}!`);
 					},
@@ -168,7 +168,7 @@ export function generateMajorSpellWheel(
 					targetPlayer,
 					`${player.name}'s Fireball Target`,
 					(target) => {
-						target.hp -= 30;
+						target.takeDamage(30);
 						ctx.addAuditTrail(
 							`${player.name}'s Fireball incinerates ${target.name} for 30 damage!`
 						);
@@ -184,7 +184,7 @@ export function generateMajorSpellWheel(
 					targetPlayer,
 					`${player.name}'s Ice Storm Target`,
 					(target) => {
-						target.hp -= 15;
+						target.takeDamage(15);
 						target.statuses.addStatus('IceStorm');
 						ctx.addAuditTrail(
 							`${player.name}'s Ice Storm hits ${target.name}! 15 damage and slowed!`
@@ -200,14 +200,14 @@ export function generateMajorSpellWheel(
 				generateRandomPlayerWheel(
 					`${player.name}'s Chain Lightning Primary`,
 					(primary) => {
-						primary.hp -= 20;
+						primary.takeDamage(20);
 						ctx.addAuditTrail(
 							`${player.name}'s Chain Lightning strikes ${primary.name} for 20 damage!`
 						);
 						generateRandomPlayerWheel(
 							`Chain Lightning Secondary`,
 							(secondary) => {
-								secondary.hp -= 10;
+								secondary.takeDamage(10);
 								ctx.addAuditTrail(`Chain Lightning arcs to ${secondary.name} for 10 damage!`);
 							},
 							ctx
@@ -254,7 +254,7 @@ export function generateMajorSpellWheel(
 							return;
 						}
 
-						target.hp -= 25;
+						target.takeDamage(25);
 						ctx.addAuditTrail(`${player.name}'s Mana Burn scorches ${target.name} for 25 damage!`);
 					},
 					ctx
@@ -304,7 +304,7 @@ export function generateUltimateSpellWheel(
 					targetPlayer,
 					`${player.name}'s Meteor Strike Target`,
 					(target) => {
-						target.hp -= 60;
+						target.takeDamage(60);
 						ctx.addAuditTrail(`METEOR STRIKE obliterates ${target.name} for 60 damage!`);
 					},
 					ctx
@@ -342,7 +342,7 @@ export function generateUltimateSpellWheel(
 					targetPlayer,
 					`${player.name}'s Soul Drain Target`,
 					(target) => {
-						target.hp -= 40;
+						target.takeDamage(40);
 						player.hp += 40;
 						ctx.addAuditTrail(`${player.name} DRAINS ${target.name}'s SOUL! Stealing 40 HP!`);
 					},

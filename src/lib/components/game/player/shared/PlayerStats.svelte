@@ -3,7 +3,12 @@
 	import type { Player } from '$lib/game/player/player.svelte';
 	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
 	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
-	import { getHpColorClass, getHpGlowClass, SWENERGY_MAX } from './playerDisplayConstants';
+	import {
+		getHpColorClass,
+		getHpGlowClass,
+		HIDDEN_RESOURCES,
+		SWENERGY_MAX
+	} from './playerDisplayConstants';
 
 	interface ResourceBarConfig {
 		resource: string;
@@ -70,13 +75,11 @@
 		}
 	};
 
-	const hiddenResources = new Set([MANA_RESOURCE, SWENERGY_RESOURCE, 'RuneOfPowerTurns']);
-
 	let specialResourceBar = $derived(
 		player.classType === 'none' ? undefined : resourceBarConfigs[player.classType]
 	);
 	let genericResourceEntries = $derived(
-		Object.entries(player.resources).filter(([resource]) => !hiddenResources.has(resource))
+		Object.entries(player.resources).filter(([resource]) => !HIDDEN_RESOURCES.has(resource))
 	);
 	let primaryStatCards = $derived<PrimaryStatCard[]>([
 		{

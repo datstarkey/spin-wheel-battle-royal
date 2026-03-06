@@ -6,24 +6,13 @@ import type { Position } from '../board/types';
 import { classMap, type ClassBase, type ClassType } from '../classes/classType';
 import { getItemByType, type AllItems } from '../items/itemTypes';
 import type { SerializedPlayer, StatType } from '../serialization';
+import type { GameHookName } from '../types';
 import { generateDamageTakenWheel } from '../wheels/damageTakenWheel';
 import { generateLoseWheel } from '../wheels/loseWheel';
 import { generateShadowRealmWheel } from '../wheels/shadowRealm';
 import { generateWinWheel } from '../wheels/winWheel';
 import { PlayerGear } from './playerGear.svelte';
 import { PlayerStatuses } from './playerStatuses.svelte';
-
-type PlayerHookName =
-	| 'onAttackWin'
-	| 'onAttackLose'
-	| 'onDefendWin'
-	| 'onDefendLose'
-	| 'onAttackStart'
-	| 'onAttackEnd'
-	| 'onDefenseStart'
-	| 'onDefenseEnd'
-	| 'onTurnStart'
-	| 'onTurnEnd';
 
 export class Player {
 	constructor(name: string) {
@@ -478,14 +467,14 @@ export class Player {
 	 * Events
 	 */
 
-	private dispatchStatusesGearClassHook(hook: PlayerHookName, ...args: unknown[]) {
+	private dispatchStatusesGearClassHook(hook: GameHookName, ...args: unknown[]) {
 		this.statuses.dispatchHook(hook, ...args);
 		this.gear.dispatchHook(hook, ...args);
 		const classHandler = this.class[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
 		classHandler?.(this, ...args);
 	}
 
-	private dispatchClassGearStatusesHook(hook: PlayerHookName, ...args: unknown[]) {
+	private dispatchClassGearStatusesHook(hook: GameHookName, ...args: unknown[]) {
 		const classHandler = this.class[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
 		classHandler?.(this, ...args);
 		this.gear.dispatchHook(hook, ...args);
@@ -606,7 +595,8 @@ export class Player {
 		player._position = data.position;
 		player.gear = PlayerGear.deserialize(data.gear, player);
 		player.statuses = PlayerStatuses.deserialize(data.statuses, player);
-		player.statuses.applyDeserializedStatuses();
+		// Stat modifiers are restored directly from serialized _statModifiers,
+		// so onApply hooks are not re-invoked (they would require a GameContext).
 		return player;
 	}
 }

@@ -1,9 +1,3 @@
-<script module lang="ts">
-	import { localStorageStore } from '$lib/stores/localStorageStore.svelte';
-
-	export const quickMode = localStorageStore<boolean>('wheel-quick-mode', false);
-</script>
-
 <script lang="ts">
 	import { Wheel } from 'spin-wheel';
 	import { onDestroy, onMount, type Snippet } from 'svelte';
@@ -12,6 +6,7 @@
 	import type { WheelSpinParams } from '$lib/multiplayer/types';
 
 	import { shuffle } from './utils';
+	import { WHEEL_COLORS, quickMode } from './constants';
 
 	let wheelEl = $state<HTMLDivElement>();
 
@@ -74,16 +69,6 @@
 
 	let spinning = $state(false);
 
-	// Battle arena theme colors
-	const wheelColors = [
-		'#b91c1c', // primary-700 crimson
-		'#1e293b', // surface-800 dark
-		'#3b82f6', // secondary-500 blue
-		'#a855f7', // tertiary-500 purple
-		'#f59e0b', // warning-500 gold
-		'#10b981' // success-500 emerald
-	];
-
 	function random(min: number, max: number) {
 		return Math.floor(Math.random() * (max - min + 1) + min);
 	}
@@ -140,7 +125,7 @@
 		wheel = new Wheel(wheelEl, {
 			items: displayItems,
 			isInteractive: false,
-			itemBackgroundColors: wheelColors,
+			itemBackgroundColors: WHEEL_COLORS,
 			itemLabelColors: ['#f1f5f9'], // surface-100 for readability
 			borderColor: '#dc2626', // primary-600 crimson
 			borderWidth: 3,

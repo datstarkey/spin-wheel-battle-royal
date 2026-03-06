@@ -1,11 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Server as SocketServer, type Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
-import type {
-	ClientToServerEvents,
-	GameAction,
-	ServerToClientEvents
-} from '$lib/multiplayer/types';
+import type { ClientToServerEvents, ServerToClientEvents } from '$lib/multiplayer/types';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
 import { handleAction, type ActionResult } from './actionHandler';
 import { toPendingWheelPayload } from './pendingWheelPayload';
@@ -142,10 +138,6 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			}
 		}
 
-		function processAction(context: SocketActionContext, action: GameAction): ActionResult {
-			return handleAction(context.room, context.playerName, action);
-		}
-
 		// ================================================================
 		// Room: Create
 		// ================================================================
@@ -278,7 +270,7 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				data.action.type === 'WHEEL_SPIN_RESULT'
 					? context.room.pendingWheels.get(data.action.wheelKey)?.type
 					: undefined;
-			const result = processAction(context, data.action);
+			const result = handleAction(context.room, context.playerName, data.action);
 
 			if (!result.success) {
 				callback?.({ success: false, error: result.error });

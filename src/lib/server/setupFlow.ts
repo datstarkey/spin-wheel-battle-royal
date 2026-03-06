@@ -24,15 +24,13 @@ function queueSetupWheelStep<T>(params: {
 	forPlayerName: string;
 	options: SetupWheelOption<T>[];
 	onSelect: (option: T) => void;
-	onAutoSelect?: (option: T) => void;
 	onAdvance: () => void;
 }) {
-	const { room, keyPrefix, index, forPlayerName, options, onSelect, onAutoSelect, onAdvance } =
-		params;
+	const { room, keyPrefix, index, forPlayerName, options, onSelect, onAdvance } = params;
 
 	if (options.length <= 1) {
 		if (options.length === 1) {
-			(onAutoSelect ?? onSelect)(options[0].value);
+			onSelect(options[0].value);
 		}
 		onAdvance();
 		return;
@@ -52,6 +50,18 @@ function queueSetupWheelStep<T>(params: {
 		forPlayerName,
 		shuffledOrder: generateShuffleOrder(wheelItems.length)
 	});
+}
+
+function applyClassAssignment(
+	room: GameRoom,
+	game: Game,
+	playerName: string,
+	cls: { key: ClassType; name: string },
+	verb: string,
+	assignClassToPlayer: AssignClassToPlayer
+) {
+	room.assignedClasses.set(playerName, cls.key);
+	assignClassToPlayer(game, playerName, cls.key, `${playerName} ${verb} class: ${cls.name}`);
 }
 
 function startClassSelection(room: GameRoom, assignClassToPlayer: AssignClassToPlayer) {
@@ -103,22 +113,7 @@ function createClassWheel(
 		forPlayerName: currentPlayerName,
 		options: availableClasses,
 		onSelect: (cls) => {
-			room.assignedClasses.set(currentPlayerName, cls.key);
-			assignClassToPlayer(
-				game,
-				currentPlayerName,
-				cls.key,
-				`${currentPlayerName} chose class: ${cls.name}`
-			);
-		},
-		onAutoSelect: (cls) => {
-			room.assignedClasses.set(currentPlayerName, cls.key);
-			assignClassToPlayer(
-				game,
-				currentPlayerName,
-				cls.key,
-				`${currentPlayerName} assigned class: ${cls.name}`
-			);
+			applyClassAssignment(room, game, currentPlayerName, cls, 'chose', assignClassToPlayer);
 		},
 		onAdvance: () => {
 			createClassWheel(room, assignClassToPlayer, playerIndex + 1);
@@ -184,12 +179,9 @@ export function startTurnOrderSetup(room: GameRoom, assignClassToPlayer: AssignC
 		onSelect: (name) => {
 			room.turnOrder.push(name);
 			game.addAuditTrail(`${name} gets position #${room.turnOrder.length} in turn order`);
-			startTurnOrderSetup(room, assignClassToPlayer);
 		},
-		onAutoSelect: (name) => {
-			room.turnOrder.push(name);
+		onAdvance: () => {
 			startTurnOrderSetup(room, assignClassToPlayer);
-		},
-		onAdvance: () => {}
+		}
 	});
 }

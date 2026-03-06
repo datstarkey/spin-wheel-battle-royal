@@ -5,7 +5,7 @@
 	import GlobalGameStats from '$lib/components/game/GlobalGameStats.svelte';
 	import ClassesHelpModal from '$lib/components/help/ClassesHelpModal.svelte';
 	import ConnectionStatus from '$lib/components/multiplayer/ConnectionStatus.svelte';
-	import { quickMode } from '$lib/components/wheel/SpinWheel.svelte';
+	import { quickMode } from '$lib/components/wheel/constants';
 	import { setGameStore } from '$lib/stores/gameStore.svelte';
 	import { setAttackWindowStore } from '$lib/stores/attackWindowStore.svelte';
 	import { setBattleMusicStore } from '$lib/stores/battleMusic.svelte';

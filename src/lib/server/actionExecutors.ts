@@ -11,6 +11,7 @@ import { executeTileAction } from '$lib/game/board/tileActions';
 import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
 import { type ClassType } from '$lib/game/classes/classType';
 import items, { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
+import type { Consumables } from '$lib/game/items/itemTypes';
 import type { Player } from '$lib/game/player/player.svelte';
 import type { ActionOf, GMWheelType, Role } from '$lib/multiplayer/types';
 import { createCombatWheel } from '$lib/game/combat';
@@ -27,7 +28,7 @@ import {
 import type { ActionResult } from './actionHandler';
 import type { GameRoom } from './gameRooms';
 import { toPendingWheelPayload } from './pendingWheelPayload';
-import { createServerGameContext } from './serverGameContext';
+import type { ServerGameContext } from './serverGameContext';
 import { startTurnOrderSetup } from './setupFlow';
 import { generateShuffleOrder } from './wheelUtils';
 
@@ -55,8 +56,13 @@ type UseConsumableAction = ActionOf<'USE_CONSUMABLE'>;
 type TeleportAction = ActionOf<'TELEPORT'>;
 type WheelSpinResultAction = ActionOf<'WHEEL_SPIN_RESULT'>;
 
+/**
+ * Return type contract for action executors:
+ * - `void`: success — `handleAction` builds the standard result with delta/state
+ * - `{ success: false, ... }`: early error return
+ * - `{ success: true, ... }`: custom success result (bypasses `buildActionSuccessResult`)
+ */
 export type ActionMutationResult = ActionResult | void;
-export type ServerGameContext = ReturnType<typeof createServerGameContext>;
 
 export const gmWheelGenerators: Record<
 	GMWheelType,
@@ -156,9 +162,7 @@ function removeItemFromPlayer(player: Player, item: AllItems): ActionResult | un
 	const itemDef = getItemByType(item);
 	if (!itemDef) return { success: false, error: 'Invalid item' };
 	if (itemDef.type === 'consumables') {
-		const idx = player.gear.consumables.indexOf(
-			item as import('$lib/game/items/itemTypes').Consumables
-		);
+		const idx = player.gear.consumables.indexOf(item as Consumables);
 		if (idx < 0) return { success: false, error: 'Player does not have this consumable' };
 		player.gear.deleteItem('consumables', idx);
 		return;
@@ -325,15 +329,18 @@ export function handleAttackResolveAction(
 
 			const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
 			const combatWheel = createCombatWheel(attacker, defender, ctx);
-			room.pendingWheels.set(combatWheelKey, {
+			const pendingWheel = {
 				items: combatWheel.wheel,
 				forPlayerName: attacker.name,
-				type: 'combat',
+				type: 'combat' as const,
 				shuffledOrder: generateShuffleOrder(combatWheel.wheel.length)
-			});
+			};
+			room.pendingWheels.set(combatWheelKey, pendingWheel);
 			game.hasFought = true;
 
-			const combatPw = room.pendingWheels.get(combatWheelKey)!;
+			room.touch();
+			room.stateVersion++;
+
 			return {
 				success: true,
 				gameState: game.serialize(),
@@ -344,7 +351,7 @@ export function handleAttackResolveAction(
 					defenseWeight: combatWheel.defenseWeight,
 					wheelKey: combatWheelKey
 				},
-				pendingWheels: [toPendingWheelPayload(combatWheelKey, combatPw)]
+				pendingWheels: [toPendingWheelPayload(combatWheelKey, pendingWheel)]
 			};
 		}) ?? getPlayerNotFoundResult()
 	);
@@ -380,7 +387,7 @@ export function handleUseConsumableAction(
 		if (!(action.item in items.consumables))
 			return { success: false, error: 'Item is not a consumable' };
 
-		const consumableItem = action.item as import('$lib/game/items/itemTypes').Consumables;
+		const consumableItem = action.item as Consumables;
 		if (!player.gear.consumables.includes(consumableItem))
 			return { success: false, error: 'Player does not own this consumable' };
 

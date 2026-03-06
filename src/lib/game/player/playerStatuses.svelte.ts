@@ -3,19 +3,8 @@ import type { GameContext } from '../gameContext';
 import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
+import type { GameHookName } from '../types';
 import type { Player } from './player.svelte';
-
-type StatusHookName =
-	| 'onTurnStart'
-	| 'onTurnEnd'
-	| 'onAttackWin'
-	| 'onAttackLose'
-	| 'onDefendWin'
-	| 'onDefendLose'
-	| 'onAttackStart'
-	| 'onAttackEnd'
-	| 'onDefenseStart'
-	| 'onDefenseEnd';
 
 export class PlayerStatuses {
 	private _player: Player | null = null;
@@ -47,7 +36,7 @@ export class PlayerStatuses {
 		return this._statuses;
 	}
 
-	dispatchHook(hook: StatusHookName, ...args: unknown[]) {
+	dispatchHook(hook: GameHookName, ...args: unknown[]) {
 		for (const status of this._statuses) {
 			const handler = status.status[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
 			handler?.(this.player, ...args);
@@ -106,10 +95,6 @@ export class PlayerStatuses {
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
 	}
 
-	onTurnStart(ctx: GameContext) {
-		this.dispatchHook('onTurnStart', ctx);
-	}
-
 	onTurnEnd(ctx: GameContext) {
 		const statusesToRemove: PlayerStatusEffect[] = [];
 
@@ -127,38 +112,6 @@ export class PlayerStatuses {
 			s.status.onRemove?.(this.player, ctx);
 			this._statuses = this._statuses.filter((x) => x !== s);
 		});
-	}
-
-	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackWin', defendingPlayer, ctx);
-	}
-
-	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackLose', defendingPlayer, ctx);
-	}
-
-	onDefendWin(playerAttackingYou: Player, ctx: GameContext) {
-		this.dispatchHook('onDefendWin', playerAttackingYou, ctx);
-	}
-
-	onDefendLose(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefendLose', defendingPlayer, ctx);
-	}
-
-	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackStart', defendingPlayer, ctx);
-	}
-
-	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackEnd', defendingPlayer, ctx);
-	}
-
-	onDefenseStart(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefenseStart', defendingPlayer, ctx);
-	}
-
-	onDefenseEnd(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefenseEnd', defendingPlayer, ctx);
 	}
 
 	/**
@@ -186,12 +139,6 @@ export class PlayerStatuses {
 		});
 
 		return statuses;
-	}
-
-	// Note: stat modifiers are restored directly during deserialization via _statModifiers,
-	// so onApply hooks are not re-invoked here (they would require a GameContext).
-	applyDeserializedStatuses() {
-		// Intentionally empty — stat modifiers already restored from serialized data
 	}
 }
 

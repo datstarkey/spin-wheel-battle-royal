@@ -8,21 +8,10 @@ import items, {
 	type MainHands,
 	type OffHands
 } from '../items/itemTypes';
-import { getServerGameContext } from '../serverContext';
+import { resolveCtx } from '../serverContext';
 import type { SerializedPlayerGear } from '../serialization';
+import type { GameHookName } from '../types';
 import type { Player } from './player.svelte';
-
-type GearHookName =
-	| 'onAttackWin'
-	| 'onAttackLose'
-	| 'onDefendWin'
-	| 'onDefendLose'
-	| 'onAttackStart'
-	| 'onAttackEnd'
-	| 'onDefenseStart'
-	| 'onDefenseEnd'
-	| 'onTurnStart'
-	| 'onTurnEnd';
 
 export class PlayerGear {
 	private _player: Player | null = null;
@@ -48,11 +37,6 @@ export class PlayerGear {
 		throw new Error(`Player ${this._playerName} not resolved — call setPlayer() first`);
 	}
 
-	/** Resolve ctx — use provided value or fall back to server singleton */
-	private resolveCtx(ctx?: GameContext): GameContext {
-		return ctx ?? getServerGameContext();
-	}
-
 	private get gearItems(): Item[] {
 		const items = [this._mainHand, this._offHand, this._helm, this._chest].filter(
 			(x) => x !== null
@@ -65,56 +49,11 @@ export class PlayerGear {
 		return this.gearItems.concat(consumables);
 	}
 
-	dispatchHook(hook: GearHookName, ...args: unknown[]) {
+	dispatchHook(hook: GameHookName, ...args: unknown[]) {
 		for (const item of this.gearItems) {
 			const handler = item[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
 			handler?.(this.player, ...args);
 		}
-	}
-
-	/**
-	 * --------------------------------------------------------------------------
-	 * Events
-	 */
-
-	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackWin', defendingPlayer, ctx);
-	}
-
-	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackLose', defendingPlayer, ctx);
-	}
-
-	onDefendWin(attackingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefendWin', attackingPlayer, ctx);
-	}
-
-	onDefendLose(attackingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefendLose', attackingPlayer, ctx);
-	}
-
-	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackStart', defendingPlayer, ctx);
-	}
-
-	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onAttackEnd', defendingPlayer, ctx);
-	}
-
-	onDefenseStart(attackingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefenseStart', attackingPlayer, ctx);
-	}
-
-	onDefenseEnd(attackingPlayer: Player, ctx: GameContext) {
-		this.dispatchHook('onDefenseEnd', attackingPlayer, ctx);
-	}
-
-	onTurnStart(ctx: GameContext) {
-		this.dispatchHook('onTurnStart', ctx);
-	}
-
-	onTurnEnd(ctx: GameContext) {
-		this.dispatchHook('onTurnEnd', ctx);
 	}
 
 	/**
@@ -152,36 +91,13 @@ export class PlayerGear {
 	}
 
 	unequipItem(key: ItemType, ctx?: GameContext) {
-		const resolvedCtx = this.resolveCtx(ctx);
-		switch (key) {
-			case 'mainhand':
-				if (this._mainHand) {
-					const actualItem = getItemByType(this._mainHand);
-					actualItem?.onUnequip?.(this.player, 'mainhand', resolvedCtx);
-					this._mainHand = null;
-				}
-				break;
-			case 'offHand':
-				if (this._offHand) {
-					const actualItem = getItemByType(this._offHand);
-					actualItem?.onUnequip?.(this.player, 'offHand', resolvedCtx);
-					this._offHand = null;
-				}
-				break;
-			case 'helm':
-				if (this._helm) {
-					const actualItem = getItemByType(this._helm);
-					actualItem?.onUnequip?.(this.player, 'helm', resolvedCtx);
-					this._helm = null;
-				}
-				break;
-			case 'chest':
-				if (this._chest) {
-					const actualItem = getItemByType(this._chest);
-					actualItem?.onUnequip?.(this.player, 'chest', resolvedCtx);
-					this._chest = null;
-				}
-				break;
+		const slot = this.getSlotField(key);
+		if (!slot) return;
+
+		const currentItem = slot.get();
+		if (currentItem) {
+			getItemByType(currentItem)?.onUnequip?.(this.player, key, resolveCtx(ctx));
+			slot.set(null);
 		}
 	}
 
@@ -232,7 +148,7 @@ export class PlayerGear {
 		}
 
 		const actualItem = getItemByType(item);
-		actualItem?.onUse?.(this.player, this.resolveCtx(ctx));
+		actualItem?.onUse?.(this.player, resolveCtx(ctx));
 
 		this.player.game?.addAuditTrail(`${this.player.name} uses ${item}!`);
 		this._consumables.splice(index, 1);
@@ -240,114 +156,91 @@ export class PlayerGear {
 
 	/**
 	 * --------------------------------------------------------------------------
-	 * Main Hand
+	 * Equipment Slots
 	 */
 	private _mainHand = $state<MainHands | null>(null);
+	private _offHand = $state<OffHands | null>(null);
+	private _helm = $state<Helms | null>(null);
+	private _chest = $state<Chests | null>(null);
+
 	public get mainHand(): MainHands | null {
 		return this._mainHand;
 	}
-
 	public get mainHandItem(): Item | null {
 		return this._mainHand ? getItemByType(this._mainHand) : null;
 	}
-
-	addMainHand(item: AllItems, ctx?: GameContext) {
-		const actualItem = getItemByType(item);
-		if (!actualItem) {
-			toast.error('Item is not a valid item');
-			return;
-		}
-		if (actualItem.type !== 'mainhand') {
-			toast.error('Item is not a main hand!');
-			return;
-		}
-		if (this._mainHand) {
-			this.unequipItem('mainhand', ctx);
-		}
-		this._mainHand = item as MainHands;
-		actualItem.onEquip?.(this.player, 'mainhand', this.resolveCtx(ctx));
-	}
-
-	/**
-	 * --------------------------------------------------------------------------
-	 * off Hand
-	 */
-	private _offHand = $state<OffHands | null>(null);
 	public get offHand(): OffHands | null {
 		return this._offHand;
 	}
-
 	public get offHandItem(): Item | null {
 		return this._offHand ? getItemByType(this._offHand) : null;
 	}
-
-	addOffHand(item: AllItems, ctx?: GameContext) {
-		const actualItem = getItemByType(item);
-		if (!actualItem) {
-			toast.error('Item is not a valid item');
-			return;
-		}
-		if (actualItem.type !== 'offHand' && actualItem.type !== 'mainhand') {
-			toast.error('Item is not a main hand or offhand');
-			return;
-		}
-		if (this._offHand) {
-			this.unequipItem('offHand', ctx);
-		}
-		this._offHand = item as OffHands;
-		actualItem.onEquip?.(this.player, 'offHand', this.resolveCtx(ctx));
-	}
-
-	/**
-	 * --------------------------------------------------------------------------
-	 * Helm
-	 */
-	private _helm = $state<Helms | null>(null);
 	public get helm(): Helms | null {
 		return this._helm;
 	}
-
-	addHelm(item: AllItems, ctx?: GameContext) {
-		const actualItem = getItemByType(item);
-		if (!actualItem) {
-			toast.error('Item is not a valid item');
-			return;
-		}
-		if (actualItem.type !== 'helm') {
-			toast.error('Item is not a helm');
-			return;
-		}
-		if (this._helm) {
-			this.unequipItem('helm', ctx);
-		}
-		this._helm = item as Helms;
-		actualItem.onEquip?.(this.player, 'helm', this.resolveCtx(ctx));
-	}
-
-	/**
-	 * --------------------------------------------------------------------------
-	 * Chest
-	 */
-	private _chest = $state<Chests | null>(null);
 	public get chest(): Chests | null {
 		return this._chest;
 	}
 
-	addChest(item: AllItems, ctx?: GameContext) {
+	/** Slot accessor map for generic equip/unequip operations */
+	private getSlotField(
+		slot: ItemType
+	): { get: () => AllItems | null; set: (v: null) => void } | null {
+		switch (slot) {
+			case 'mainhand':
+				return { get: () => this._mainHand, set: () => (this._mainHand = null) };
+			case 'offHand':
+				return { get: () => this._offHand, set: () => (this._offHand = null) };
+			case 'helm':
+				return { get: () => this._helm, set: () => (this._helm = null) };
+			case 'chest':
+				return { get: () => this._chest, set: () => (this._chest = null) };
+			default:
+				return null;
+		}
+	}
+
+	private equipSlot(
+		item: AllItems,
+		expectedTypes: ItemType[],
+		slotType: ItemType,
+		assign: (item: AllItems) => void,
+		ctx?: GameContext
+	) {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error('Item is not a valid item');
 			return;
 		}
-		if (actualItem.type !== 'chest') {
-			toast.error('Item is not a chest');
+		if (!expectedTypes.includes(actualItem.type)) {
+			toast.error(`Item is not a ${slotType}`);
 			return;
 		}
-		if (this._chest) {
-			this.unequipItem('chest', ctx);
-		}
-		this._chest = item as Chests;
-		actualItem.onEquip?.(this.player, 'chest', this.resolveCtx(ctx));
+		this.unequipItem(slotType, ctx);
+		assign(item);
+		actualItem.onEquip?.(this.player, slotType, resolveCtx(ctx));
+	}
+
+	addMainHand(item: AllItems, ctx?: GameContext) {
+		this.equipSlot(item, ['mainhand'], 'mainhand', (i) => (this._mainHand = i as MainHands), ctx);
+	}
+
+	addOffHand(item: AllItems, ctx?: GameContext) {
+		this.equipSlot(
+			item,
+			['offHand', 'mainhand'],
+			'offHand',
+			(i) => (this._offHand = i as OffHands),
+			ctx
+		);
+	}
+
+	addHelm(item: AllItems, ctx?: GameContext) {
+		this.equipSlot(item, ['helm'], 'helm', (i) => (this._helm = i as Helms), ctx);
+	}
+
+	addChest(item: AllItems, ctx?: GameContext) {
+		this.equipSlot(item, ['chest'], 'chest', (i) => (this._chest = i as Chests), ctx);
 	}
 
 	/**
