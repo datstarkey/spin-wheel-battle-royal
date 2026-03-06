@@ -1,7 +1,11 @@
 import { randomUUID } from 'crypto';
 import { Server as SocketServer, type Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
-import type { ClientToServerEvents, ServerToClientEvents } from '$lib/multiplayer/types';
+import type {
+	ClientToServerEvents,
+	GameAction,
+	ServerToClientEvents
+} from '$lib/multiplayer/types';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
 import { handleAction, weightedRandomIndex, type ActionResult } from './actionHandler';
 import { toPendingWheelPayload } from './pendingWheelPayload';
@@ -12,6 +16,12 @@ const MAX_SPECTATOR_HINT_SIZE = 4096;
 
 type TypedServer = SocketServer<ClientToServerEvents, ServerToClientEvents>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+type ActionCallback = (response: { success: boolean; error?: string }) => void;
+type SocketActionContext = {
+	room: GameRoom;
+	roomCode: string;
+	playerName: string;
+};
 
 /** Send all pending wheels to a single socket (used on join/rejoin) */
 function sendPendingWheels(socket: TypedSocket, room: GameRoom) {
@@ -72,6 +82,68 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 
 	io.on('connection', (socket) => {
 		let currentRoomCode: string | null = null;
+
+		function resolveActionContext(callback?: ActionCallback): SocketActionContext | undefined {
+			if (actionLimiter.isThrottled(socket.id)) {
+				callback?.({ success: false, error: 'Too many actions, slow down' });
+				return;
+			}
+
+			if (!currentRoomCode) {
+				callback?.({ success: false, error: 'Not in a room' });
+				return;
+			}
+
+			const room = getRoom(currentRoomCode);
+			if (!room) {
+				callback?.({ success: false, error: 'Room not found' });
+				return;
+			}
+
+			const playerName = room.getPlayerNameBySocket(socket.id);
+			if (!playerName) {
+				callback?.({ success: false, error: 'Player not found' });
+				return;
+			}
+
+			return {
+				room,
+				roomCode: currentRoomCode,
+				playerName
+			};
+		}
+
+		function broadcastActionResult(params: {
+			context: SocketActionContext;
+			result: ActionResult;
+			dismissedWheelKey?: string;
+			combatState?: ActionResult['combat'] | null;
+		}) {
+			const { context, result, dismissedWheelKey, combatState } = params;
+
+			if (dismissedWheelKey) {
+				io?.to(context.roomCode).emit('room:wheel_dismiss', { wheelKey: dismissedWheelKey });
+			}
+
+			if (result.gameState) {
+				io?.to(context.roomCode).emit('room:state_update', {
+					gameState: result.gameState,
+					delta: result.delta,
+					roomState: context.room.getRoomState(),
+					combatState
+				});
+			}
+
+			if (result.pendingWheels) {
+				for (const wheel of result.pendingWheels) {
+					io?.to(context.roomCode).emit('room:wheel_pending', wheel);
+				}
+			}
+		}
+
+		function processAction(context: SocketActionContext, action: GameAction): ActionResult {
+			return handleAction(context.room, context.playerName, action);
+		}
 
 		// ================================================================
 		// Room: Create
@@ -198,29 +270,10 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		// Player: Action
 		// ================================================================
 		socket.on('player:action', (data, callback) => {
-			if (actionLimiter.isThrottled(socket.id)) {
-				callback?.({ success: false, error: 'Too many actions, slow down' });
-				return;
-			}
+			const context = resolveActionContext(callback);
+			if (!context) return;
 
-			if (!currentRoomCode) {
-				callback?.({ success: false, error: 'Not in a room' });
-				return;
-			}
-
-			const room = getRoom(currentRoomCode);
-			if (!room) {
-				callback?.({ success: false, error: 'Room not found' });
-				return;
-			}
-
-			const playerName = room.getPlayerNameBySocket(socket.id);
-			if (!playerName) {
-				callback?.({ success: false, error: 'Player not found' });
-				return;
-			}
-
-			const result: ActionResult = handleAction(room, playerName, data.action);
+			const result = processAction(context, data.action);
 
 			if (!result.success) {
 				callback?.({ success: false, error: result.error });
@@ -229,25 +282,14 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 
 			// Track combat state on the room for join/rejoin
 			if (result.combat) {
-				room.combatState = result.combat;
+				context.room.combatState = result.combat;
 			}
 
-			// Broadcast updated state to all clients in the room
-			if (result.gameState) {
-				io?.to(currentRoomCode).emit('room:state_update', {
-					gameState: result.gameState,
-					delta: result.delta,
-					roomState: room.getRoomState(),
-					combatState: result.combat ?? undefined
-				});
-			}
-
-			// Send any new pending wheels to all clients
-			if (result.pendingWheels) {
-				for (const wheel of result.pendingWheels) {
-					io?.to(currentRoomCode).emit('room:wheel_pending', wheel);
-				}
-			}
+			broadcastActionResult({
+				context,
+				result,
+				combatState: result.combat ?? undefined
+			});
 
 			callback?.({ success: true });
 		});
@@ -318,32 +360,13 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 		// Wheel: Spin Result
 		// ================================================================
 		socket.on('wheel:spin_result', (data, callback) => {
-			if (actionLimiter.isThrottled(socket.id)) {
-				callback?.({ success: false, error: 'Too many actions, slow down' });
-				return;
-			}
-
-			if (!currentRoomCode) {
-				callback?.({ success: false, error: 'Not in a room' });
-				return;
-			}
-
-			const room = getRoom(currentRoomCode);
-			if (!room) {
-				callback?.({ success: false, error: 'Room not found' });
-				return;
-			}
-
-			const playerName = room.getPlayerNameBySocket(socket.id);
-			if (!playerName) {
-				callback?.({ success: false, error: 'Player not found' });
-				return;
-			}
+			const context = resolveActionContext(callback);
+			if (!context) return;
 
 			// Capture wheel type before handleAction deletes it
-			const wheelType = room.pendingWheels.get(data.wheelKey)?.type;
+			const wheelType = context.room.pendingWheels.get(data.wheelKey)?.type;
 
-			const result = handleAction(room, playerName, {
+			const result = processAction(context, {
 				type: 'WHEEL_SPIN_RESULT',
 				wheelKey: data.wheelKey,
 				selectedIndex: data.selectedIndex
@@ -354,29 +377,18 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 				return;
 			}
 
-			// Broadcast the wheel dismissal
-			io?.to(currentRoomCode).emit('room:wheel_dismiss', { wheelKey: data.wheelKey });
-
 			// Broadcast updated state (include combatState: null if this was a combat wheel)
 			const combatEnded = wheelType === 'combat';
 			if (combatEnded) {
-				room.combatState = null;
-			}
-			if (result.gameState) {
-				io?.to(currentRoomCode).emit('room:state_update', {
-					gameState: result.gameState,
-					delta: result.delta,
-					roomState: room.getRoomState(),
-					combatState: combatEnded ? null : undefined
-				});
+				context.room.combatState = null;
 			}
 
-			// Send any new pending wheels that resulted from the spin
-			if (result.pendingWheels) {
-				for (const wheel of result.pendingWheels) {
-					io?.to(currentRoomCode).emit('room:wheel_pending', wheel);
-				}
-			}
+			broadcastActionResult({
+				context,
+				result,
+				dismissedWheelKey: data.wheelKey,
+				combatState: combatEnded ? null : undefined
+			});
 
 			callback?.({ success: true });
 		});
