@@ -104,18 +104,37 @@ interface ActionAccessResult {
 	role?: ReturnType<GameRoom['getPlayerRole']>;
 }
 
+type ActionType = GameAction['type'];
+type ActionOf<T extends ActionType> = Extract<GameAction, { type: T }>;
 type ActionMutationResult = ActionResult | void;
+type ServerGameContext = ReturnType<typeof createServerGameContext>;
 
-const gmWheelGenerators: Record<
-	GMWheelType,
-	(playerName: string, ctx: ReturnType<typeof createServerGameContext>) => void
-> = {
-	loot: generateLootWheel,
-	button: generateButtonWheel,
-	casino: generateCasinoWheel,
-	shadow: generateShadowRealmWheel,
-	gambler: generateGamblerWheel
-};
+interface ActionExecutionContext<T extends ActionType> {
+	room: GameRoom;
+	game: Game;
+	playerName: string;
+	role: NonNullable<ActionAccessResult['role']>;
+	action: ActionOf<T>;
+	ctx: ServerGameContext;
+}
+
+interface ActionHandlerDefinition<T extends ActionType> {
+	gmOnly?: boolean;
+	requiresTurn?: boolean;
+	allowSpectator?: boolean;
+	execute: (params: ActionExecutionContext<T>) => ActionMutationResult;
+}
+
+type ActionRegistry = { [K in ActionType]: ActionHandlerDefinition<K> };
+
+const gmWheelGenerators: Record<GMWheelType, (playerName: string, ctx: ServerGameContext) => void> =
+	{
+		loot: generateLootWheel,
+		button: generateButtonWheel,
+		casino: generateCasinoWheel,
+		shadow: generateShadowRealmWheel,
+		gambler: generateGamblerWheel
+	};
 
 const spellManaCosts: Record<SpellCastAction['spellLevel'], number> = {
 	minor: 25,
@@ -125,29 +144,27 @@ const spellManaCosts: Record<SpellCastAction['spellLevel'], number> = {
 
 const spellWheelGenerators: Record<
 	SpellCastAction['spellLevel'],
-	(playerName: string, ctx: ReturnType<typeof createServerGameContext>, target?: Player) => void
+	(playerName: string, ctx: ServerGameContext, target?: Player) => void
 > = {
 	minor: generateMinorSpellWheel,
 	major: generateMajorSpellWheel,
 	ultimate: generateUltimateSpellWheel
 };
 
+function defineActionHandler<T extends ActionType>(
+	handler: ActionHandlerDefinition<T>
+): ActionHandlerDefinition<T> {
+	return handler;
+}
+
 function getPlayerNotFoundResult(): ActionResult {
 	return { success: false, error: 'Player not found' };
-}
-
-function isGMAction(action: GameAction): boolean {
-	return action.type.startsWith('GM_');
-}
-
-function requiresCurrentTurn(action: GameAction): boolean {
-	return !isGMAction(action) && action.type !== 'WHEEL_SPIN_RESULT';
 }
 
 function validateActionAccess(
 	room: GameRoom,
 	playerName: string,
-	action: GameAction
+	handler: Pick<ActionHandlerDefinition<ActionType>, 'gmOnly' | 'requiresTurn' | 'allowSpectator'>
 ): ActionAccessResult {
 	const role = room.getPlayerRole(playerName);
 	if (!role) {
@@ -157,21 +174,21 @@ function validateActionAccess(
 		};
 	}
 
-	if (isGMAction(action) && role !== 'gm') {
+	if (handler.gmOnly && role !== 'gm') {
 		return {
 			ok: false,
 			result: { success: false, error: 'Only the GM can perform this action' }
 		};
 	}
 
-	if (role === 'spectator' && !isGMAction(action)) {
+	if (role === 'spectator' && !handler.allowSpectator) {
 		return {
 			ok: false,
 			result: { success: false, error: 'Spectators cannot perform actions' }
 		};
 	}
 
-	if (role === 'player' && requiresCurrentTurn(action)) {
+	if (role === 'player' && handler.requiresTurn) {
 		const currentPlayer = room.game.currentPlayer;
 		if (!currentPlayer || currentPlayer.name !== playerName) {
 			return {
@@ -379,7 +396,7 @@ function handleMoveAction(
 	game: Game,
 	playerName: string,
 	action: MoveAction,
-	ctx: ReturnType<typeof createServerGameContext>
+	ctx: ServerGameContext
 ): ActionMutationResult {
 	return withPlayer(game, playerName, (player) => {
 		if (game.hasMoved) return { success: false, error: 'Already moved this turn' };
@@ -416,7 +433,7 @@ function handleAttackResolveAction(
 	game: Game,
 	playerName: string,
 	action: AttackResolveAction,
-	ctx: ReturnType<typeof createServerGameContext>
+	ctx: ServerGameContext
 ): ActionResult {
 	if (action.attackerName !== playerName) {
 		return { success: false, error: 'Cannot attack as another player' };
@@ -466,7 +483,7 @@ function handleSpellCastAction(
 	game: Game,
 	playerName: string,
 	action: SpellCastAction,
-	ctx: ReturnType<typeof createServerGameContext>
+	ctx: ServerGameContext
 ): ActionMutationResult {
 	return withPlayer(game, playerName, (caster) => {
 		if (caster.classType !== 'magicman')
@@ -504,7 +521,7 @@ function handleTeleportAction(
 	game: Game,
 	playerName: string,
 	action: TeleportAction,
-	ctx: ReturnType<typeof createServerGameContext>
+	ctx: ServerGameContext
 ): ActionMutationResult {
 	return withPlayer(game, playerName, (player) => {
 		const destTile = getTileAt(action.destination);
@@ -552,12 +569,126 @@ function handleGMStartGameAction(room: GameRoom, game: Game): ActionResult | und
 	createTurnOrderWheel(room, 0);
 }
 
+const actionRegistry = {
+	MOVE: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game, playerName, action, ctx }) => handleMoveAction(game, playerName, action, ctx)
+	}),
+	FINISH_TURN: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game }) => {
+			game.finishTurn();
+		}
+	}),
+	ATTACK_RESOLVE: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ room, game, playerName, action, ctx }) =>
+			handleAttackResolveAction(room, game, playerName, action, ctx)
+	}),
+	SHOP_BUY: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game, playerName, action }) =>
+			withPlayer(game, playerName, (player) => {
+				if (game.hasShopped) return { success: false, error: 'Already shopped this turn' };
+				if (!player.canBuyItem(action.item))
+					return { success: false, error: 'Cannot buy this item' };
+				player.buyItem(action.item);
+			})
+	}),
+	SHOP_REROLL: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game }) => {
+			const success = game.rerollShopItems();
+			if (!success) return { success: false, error: 'Cannot afford reroll' };
+		}
+	}),
+	CASINO: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ playerName, ctx }) => {
+			if (ctx.getHasUsedCasinoThisTurn())
+				return { success: false, error: 'Already used casino this turn' };
+			generateCasinoWheel(playerName, ctx);
+		}
+	}),
+	SPELL_CAST: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game, playerName, action, ctx }) =>
+			handleSpellCastAction(game, playerName, action, ctx)
+	}),
+	USE_CONSUMABLE: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game, playerName, action }) => handleUseConsumableAction(game, playerName, action)
+	}),
+	TELEPORT: defineActionHandler({
+		requiresTurn: true,
+		execute: ({ game, playerName, action, ctx }) =>
+			handleTeleportAction(game, playerName, action, ctx)
+	}),
+	WHEEL_SPIN_RESULT: defineActionHandler({
+		execute: ({ room, playerName, role, action }) =>
+			handleWheelSpinResultAction(room, playerName, role, action)
+	}),
+	GM_SET_CLASS: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSimplePlayerAction(game, action)
+	}),
+	GM_START_GAME: defineActionHandler({
+		gmOnly: true,
+		execute: ({ room, game }) => handleGMStartGameAction(room, game)
+	}),
+	GM_REMOVE_PLAYER: defineActionHandler({
+		gmOnly: true,
+		execute: ({ room, action }) => {
+			room.removeGamePlayer(action.playerName);
+		}
+	}),
+	GM_SET_HP: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMNumericAction(game, action)
+	}),
+	GM_SET_GOLD: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMNumericAction(game, action)
+	}),
+	GM_SET_ATTACK: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMNumericAction(game, action)
+	}),
+	GM_SET_DEFENSE: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMNumericAction(game, action)
+	}),
+	GM_GIVE_ITEM: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSimplePlayerAction(game, action)
+	}),
+	GM_REMOVE_ITEM: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSimplePlayerAction(game, action)
+	}),
+	GM_ADD_WHEEL: defineActionHandler({
+		gmOnly: true,
+		execute: ({ action, ctx }) => {
+			gmWheelGenerators[action.wheelType](action.playerName, ctx);
+		}
+	}),
+	GM_KILL_PLAYER: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSimplePlayerAction(game, action)
+	}),
+	GM_REVIVE_PLAYER: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSimplePlayerAction(game, action)
+	})
+} satisfies ActionRegistry;
+
 /**
  * Process a game action from a client.
  * Validates permissions and executes the action on the room's game.
  */
 export function handleAction(room: GameRoom, playerName: string, action: GameAction): ActionResult {
-	const access = validateActionAccess(room, playerName, action);
+	const handler = actionRegistry[action.type];
+	const access = validateActionAccess(room, playerName, handler);
 	if (!access.ok) return access.result!;
 	const role = access.role!;
 
@@ -580,110 +711,19 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 	const beforeState = game.serialize();
 
 	try {
-		switch (action.type) {
-			case 'MOVE': {
-				const result = handleMoveAction(game, playerName, action, ctx);
-				if (result) return result;
-				break;
-			}
-
-			case 'FINISH_TURN': {
-				game.finishTurn();
-				break;
-			}
-
-			case 'ATTACK_RESOLVE': {
-				const result = handleAttackResolveAction(room, game, playerName, action, ctx);
-				if (result) return result;
-				break;
-			}
-
-			case 'SHOP_BUY': {
-				const result = withPlayer(game, playerName, (player) => {
-					if (game.hasShopped) return { success: false, error: 'Already shopped this turn' };
-					if (!player.canBuyItem(action.item))
-						return { success: false, error: 'Cannot buy this item' };
-					player.buyItem(action.item);
-				});
-				if (result) return result;
-				break;
-			}
-
-			case 'SHOP_REROLL': {
-				const success = game.rerollShopItems();
-				if (!success) return { success: false, error: 'Cannot afford reroll' };
-				break;
-			}
-
-			case 'CASINO': {
-				if (ctx.getHasUsedCasinoThisTurn())
-					return { success: false, error: 'Already used casino this turn' };
-				generateCasinoWheel(playerName, ctx);
-				break;
-			}
-
-			case 'SPELL_CAST': {
-				const result = handleSpellCastAction(game, playerName, action, ctx);
-				if (result) return result;
-				break;
-			}
-
-			case 'USE_CONSUMABLE': {
-				const result = handleUseConsumableAction(game, playerName, action);
-				if (result) return result;
-				break;
-			}
-
-			case 'TELEPORT': {
-				const result = handleTeleportAction(game, playerName, action, ctx);
-				if (result) return result;
-				break;
-			}
-
-			case 'WHEEL_SPIN_RESULT': {
-				const result = handleWheelSpinResultAction(room, playerName, role, action);
-				if (result) return result;
-				break;
-			}
-
-			// GM Actions
-			case 'GM_START_GAME': {
-				const result = handleGMStartGameAction(room, game);
-				if (result) return result;
-				break;
-			}
-
-			case 'GM_REMOVE_PLAYER': {
-				room.removeGamePlayer(action.playerName);
-				break;
-			}
-
-			case 'GM_SET_HP':
-			case 'GM_SET_GOLD':
-			case 'GM_SET_ATTACK':
-			case 'GM_SET_DEFENSE': {
-				const result = handleGMNumericAction(game, action);
-				if (result) return result;
-				break;
-			}
-
-			case 'GM_SET_CLASS':
-			case 'GM_GIVE_ITEM':
-			case 'GM_KILL_PLAYER':
-			case 'GM_REVIVE_PLAYER':
-			case 'GM_REMOVE_ITEM': {
-				const result = handleGMSimplePlayerAction(game, action);
-				if (result) return result;
-				break;
-			}
-
-			case 'GM_ADD_WHEEL': {
-				gmWheelGenerators[action.wheelType](action.playerName, ctx);
-				break;
-			}
-
-			default:
-				return { success: false, error: `Unknown action type: ${(action as GameAction).type}` };
+		const execute = handler.execute as (
+			params: ActionExecutionContext<ActionType>
+		) => ActionMutationResult;
+		const result = execute({
+			room,
+			game,
+			playerName,
+			role,
+			action,
+			ctx
+		});
+		if (result) {
+			return result;
 		}
 	} catch (err) {
 		const message = err instanceof Error ? err.message : 'Unknown error';
