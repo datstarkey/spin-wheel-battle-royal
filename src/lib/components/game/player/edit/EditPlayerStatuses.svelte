@@ -13,9 +13,9 @@
 
 	let availableStatuses = $derived(
 		Object.entries(statusEffects).filter(
-			([key]) =>
+			([key, status]) =>
 				player.statuses.canHaveStatus(key as StatusType) &&
-				!player.statuses.hasStatus(key as StatusType)
+				(status.allowMultiple || !player.statuses.hasStatus(key as StatusType))
 		)
 	);
 
@@ -39,14 +39,14 @@
 <!-- Current Status Effects -->
 {#if player.statuses.statuses.length > 0}
 	<div class="flex flex-wrap gap-1">
-		{#each player.statuses.statuses as status (status.status.name)}
+		{#each player.statuses.statuses as statusEffect (statusEffect)}
 			<div
 				class="border-warning-500/20 bg-warning-500/10 flex items-center gap-1.5 rounded border px-2 py-1"
 			>
-				<span class="text-warning-400 text-xs">{status.status.name}</span>
-				{#if status.duration && status.duration > 0}
+				<span class="text-warning-400 text-xs">{statusEffect.status.name}</span>
+				{#if statusEffect.duration && statusEffect.duration > 0}
 					<span class="text-warning-500 rounded bg-black/30 px-1 py-0.5 text-[0.6rem] font-bold"
-						>{status.duration}T</span
+						>{statusEffect.duration}T</span
 					>
 				{:else}
 					<span class="text-tertiary-400 text-xs">&#8734;</span>
@@ -54,12 +54,7 @@
 				<button
 					type="button"
 					class="text-surface-500 hover:text-error-400 transition-colors"
-					onclick={() => {
-						const key = Object.entries(statusEffects).find(
-							([, s]) => s.name === status.status.name
-						)?.[0] as StatusType | undefined;
-						if (key) player.statuses.removeStatus(key);
-					}}
+					onclick={() => player.statuses.removeStatusEffect(statusEffect)}
 				>
 					<Icon icon="mdi:close" class="text-xs" />
 				</button>

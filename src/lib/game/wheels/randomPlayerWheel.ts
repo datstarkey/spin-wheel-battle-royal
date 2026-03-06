@@ -21,3 +21,17 @@ export function generateRandomPlayerWheel(
 
 	ctx.addCustomWheel(key, wheel);
 }
+
+export function withTargetPlayerOrRandomWheel(
+	targetPlayer: Player | undefined,
+	key: string,
+	onPlayer: (winner: Player) => void,
+	ctx: GameContext
+) {
+	if (targetPlayer && !targetPlayer.dead) {
+		onPlayer(targetPlayer);
+		return;
+	}
+
+	generateRandomPlayerWheel(key, onPlayer, ctx);
+}

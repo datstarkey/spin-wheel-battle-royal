@@ -5,6 +5,18 @@ import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
 import type { Player } from './player.svelte';
 
+type StatusHookName =
+	| 'onTurnStart'
+	| 'onTurnEnd'
+	| 'onAttackWin'
+	| 'onAttackLose'
+	| 'onDefendWin'
+	| 'onDefendLose'
+	| 'onAttackStart'
+	| 'onAttackEnd'
+	| 'onDefenseStart'
+	| 'onDefenseEnd';
+
 export class PlayerStatuses {
 	private _player: Player | null = null;
 	private _playerName: string;
@@ -33,6 +45,13 @@ export class PlayerStatuses {
 
 	public get statuses(): PlayerStatusEffect[] {
 		return this._statuses;
+	}
+
+	dispatchHook(hook: StatusHookName, ...args: unknown[]) {
+		for (const status of this._statuses) {
+			const handler = status.status[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
+			handler?.(this.player, ...args);
+		}
 	}
 
 	addStatus(status: StatusType, ctx?: GameContext) {
@@ -74,6 +93,10 @@ export class PlayerStatuses {
 	removeStatus(status: StatusType, ctx?: GameContext) {
 		const statusEffect = this._statuses.find((s) => s.statusName === status);
 		if (!statusEffect) return;
+		this.removeStatusEffect(statusEffect, ctx);
+	}
+
+	removeStatusEffect(statusEffect: PlayerStatusEffect, ctx?: GameContext) {
 		this.player.game?.addAuditTrail(
 			`${this.player.name} no longer has ${statusEffect.status.name}!`
 		);
@@ -84,9 +107,7 @@ export class PlayerStatuses {
 	}
 
 	onTurnStart(ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onTurnStart?.(this.player, ctx);
-		});
+		this.dispatchHook('onTurnStart', ctx);
 	}
 
 	onTurnEnd(ctx: GameContext) {
@@ -109,39 +130,35 @@ export class PlayerStatuses {
 	}
 
 	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onAttackWin?.(this.player, defendingPlayer, ctx);
-		});
+		this.dispatchHook('onAttackWin', defendingPlayer, ctx);
 	}
 
 	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onAttackLose?.(this.player, defendingPlayer, ctx);
-		});
+		this.dispatchHook('onAttackLose', defendingPlayer, ctx);
 	}
 
 	onDefendWin(playerAttackingYou: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onDefendWin?.(this.player, playerAttackingYou, ctx);
-		});
+		this.dispatchHook('onDefendWin', playerAttackingYou, ctx);
 	}
 
 	onDefendLose(defendingPlayer: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onDefendLose?.(this.player, defendingPlayer, ctx);
-		});
+		this.dispatchHook('onDefendLose', defendingPlayer, ctx);
+	}
+
+	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
+		this.dispatchHook('onAttackStart', defendingPlayer, ctx);
+	}
+
+	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
+		this.dispatchHook('onAttackEnd', defendingPlayer, ctx);
 	}
 
 	onDefenseStart(defendingPlayer: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onDefenseStart?.(this.player, defendingPlayer, ctx);
-		});
+		this.dispatchHook('onDefenseStart', defendingPlayer, ctx);
 	}
 
 	onDefenseEnd(defendingPlayer: Player, ctx: GameContext) {
-		this._statuses.forEach((s) => {
-			s.status.onDefenseEnd?.(this.player, defendingPlayer, ctx);
-		});
+		this.dispatchHook('onDefenseEnd', defendingPlayer, ctx);
 	}
 
 	/**

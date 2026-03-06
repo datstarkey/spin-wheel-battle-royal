@@ -7,6 +7,7 @@ import type { AllItems } from '$lib/game/items/itemTypes';
 import type {
 	ClientToServerEvents,
 	GameAction,
+	GMWheelType,
 	Role,
 	ServerToClientEvents,
 	SpectatorHint,
@@ -413,7 +414,7 @@ class SocketStore {
 	gmRevivePlayer(playerName: string) {
 		this.dispatch({ type: 'GM_REVIVE_PLAYER', playerName });
 	}
-	gmAddWheel(playerName: string, wheelType: string) {
+	gmAddWheel(playerName: string, wheelType: GMWheelType) {
 		this.dispatch({ type: 'GM_ADD_WHEEL', playerName, wheelType });
 	}
 }

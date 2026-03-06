@@ -9,11 +9,34 @@
 	let { player }: Props = $props();
 
 	let modifiers = $derived(player.activeModifiers);
+	const modifierSections = [
+		{
+			key: 'attack',
+			label: 'ATK',
+			icon: 'mdi:sword',
+			colorClass: 'text-primary-400'
+		},
+		{
+			key: 'defense',
+			label: 'DEF',
+			icon: 'mdi:shield',
+			colorClass: 'text-secondary-400'
+		},
+		{
+			key: 'movement',
+			label: 'MOV',
+			icon: 'ion:footsteps',
+			colorClass: 'text-success-400'
+		},
+		{
+			key: 'attackRange',
+			label: 'RNG',
+			icon: 'material-symbols:social-distance',
+			colorClass: 'text-warning-400'
+		}
+	] as const;
 	let hasModifiers = $derived(
-		Object.keys(modifiers.attack).length > 0 ||
-			Object.keys(modifiers.defense).length > 0 ||
-			Object.keys(modifiers.movement).length > 0 ||
-			Object.keys(modifiers.attackRange).length > 0
+		modifierSections.some((section) => Object.keys(modifiers[section.key]).length > 0)
 	);
 </script>
 
@@ -26,94 +49,32 @@
 			<span>Active Modifiers</span>
 		</div>
 		<div class="grid gap-1 text-xs">
-			{#if Object.keys(modifiers.attack).length > 0}
-				<div class="flex flex-col gap-1">
-					<div class="flex items-center gap-2">
-						<Icon icon="mdi:sword" class="text-primary-400 text-xs" />
-						<span class="text-surface-400">ATK:</span>
-					</div>
-					{#each Object.entries(modifiers.attack) as [source, value]}
-						<div class="ml-4 flex items-center gap-2">
-							<button
-								type="button"
-								class="text-error-400 hover:text-error-300 transition-colors"
-								onclick={() => player.removeStatModifier(source, 'attack')}
-								title="Remove modifier"
-							>
-								<Icon icon="mdi:close-circle" class="text-xs" />
-							</button>
-							<span class="text-surface-300 font-mono">{source}: {value > 0 ? '+' : ''}{value}</span
-							>
+			{#each modifierSections as section (section.key)}
+				{@const entries = Object.entries(modifiers[section.key])}
+				{#if entries.length > 0}
+					<div class="flex flex-col gap-1">
+						<div class="flex items-center gap-2">
+							<Icon icon={section.icon} class="{section.colorClass} text-xs" />
+							<span class="text-surface-400">{section.label}:</span>
 						</div>
-					{/each}
-				</div>
-			{/if}
-			{#if Object.keys(modifiers.defense).length > 0}
-				<div class="flex flex-col gap-1">
-					<div class="flex items-center gap-2">
-						<Icon icon="mdi:shield" class="text-secondary-400 text-xs" />
-						<span class="text-surface-400">DEF:</span>
+						{#each entries as [source, value]}
+							<div class="ml-4 flex items-center gap-2">
+								<button
+									type="button"
+									class="text-error-400 hover:text-error-300 transition-colors"
+									onclick={() => player.removeStatModifier(source, section.key)}
+									title="Remove modifier"
+								>
+									<Icon icon="mdi:close-circle" class="text-xs" />
+								</button>
+								<span class="text-surface-300 font-mono"
+									>{source}: {value > 0 ? '+' : ''}{value}</span
+								>
+							</div>
+						{/each}
 					</div>
-					{#each Object.entries(modifiers.defense) as [source, value]}
-						<div class="ml-4 flex items-center gap-2">
-							<button
-								type="button"
-								class="text-error-400 hover:text-error-300 transition-colors"
-								onclick={() => player.removeStatModifier(source, 'defense')}
-								title="Remove modifier"
-							>
-								<Icon icon="mdi:close-circle" class="text-xs" />
-							</button>
-							<span class="text-surface-300 font-mono">{source}: {value > 0 ? '+' : ''}{value}</span
-							>
-						</div>
-					{/each}
-				</div>
-			{/if}
-			{#if Object.keys(modifiers.movement).length > 0}
-				<div class="flex flex-col gap-1">
-					<div class="flex items-center gap-2">
-						<Icon icon="ion:footsteps" class="text-success-400 text-xs" />
-						<span class="text-surface-400">MOV:</span>
-					</div>
-					{#each Object.entries(modifiers.movement) as [source, value]}
-						<div class="ml-4 flex items-center gap-2">
-							<button
-								type="button"
-								class="text-error-400 hover:text-error-300 transition-colors"
-								onclick={() => player.removeStatModifier(source, 'movement')}
-								title="Remove modifier"
-							>
-								<Icon icon="mdi:close-circle" class="text-xs" />
-							</button>
-							<span class="text-surface-300 font-mono">{source}: {value > 0 ? '+' : ''}{value}</span
-							>
-						</div>
-					{/each}
-				</div>
-			{/if}
-			{#if Object.keys(modifiers.attackRange).length > 0}
-				<div class="flex flex-col gap-1">
-					<div class="flex items-center gap-2">
-						<Icon icon="material-symbols:social-distance" class="text-warning-400 text-xs" />
-						<span class="text-surface-400">RNG:</span>
-					</div>
-					{#each Object.entries(modifiers.attackRange) as [source, value]}
-						<div class="ml-4 flex items-center gap-2">
-							<button
-								type="button"
-								class="text-error-400 hover:text-error-300 transition-colors"
-								onclick={() => player.removeStatModifier(source, 'attackRange')}
-								title="Remove modifier"
-							>
-								<Icon icon="mdi:close-circle" class="text-xs" />
-							</button>
-							<span class="text-surface-300 font-mono">{source}: {value > 0 ? '+' : ''}{value}</span
-							>
-						</div>
-					{/each}
-				</div>
-			{/if}
+				{/if}
+			{/each}
 		</div>
 	</div>
 {/if}

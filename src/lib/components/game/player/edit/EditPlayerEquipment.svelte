@@ -14,51 +14,100 @@
 		type Consumables
 	} from '$lib/game/items/itemTypes';
 
+	type EquipmentSlotKey = 'mainhand' | 'offHand' | 'helm' | 'chest';
+	type EquipmentSelectionKey = EquipmentSlotKey | 'consumable';
+	type EquipmentSelections = {
+		mainhand: MainHands | '';
+		offHand: OffHands | '';
+		helm: Helms | '';
+		chest: Chests | '';
+		consumable: Consumables | '';
+	};
+
 	interface Props {
 		player: Player;
 	}
 
 	let { player }: Props = $props();
 
-	let selectedMainHand = $state<MainHands | ''>('');
-	let selectedOffHand = $state<OffHands | ''>('');
-	let selectedHelm = $state<Helms | ''>('');
-	let selectedChest = $state<Chests | ''>('');
-	let selectedConsumable = $state<Consumables | ''>('');
+	let selectedItems = $state<EquipmentSelections>({
+		mainhand: '',
+		offHand: '',
+		helm: '',
+		chest: '',
+		consumable: ''
+	});
 
-	function addEquipment(type: 'mainhand' | 'offHand' | 'helm' | 'chest' | 'consumable') {
-		switch (type) {
-			case 'mainhand':
-				if (selectedMainHand) {
-					player.gear.addItem(selectedMainHand);
-					selectedMainHand = '';
-				}
-				break;
-			case 'offHand':
-				if (selectedOffHand) {
-					player.gear.addItem(selectedOffHand);
-					selectedOffHand = '';
-				}
-				break;
-			case 'helm':
-				if (selectedHelm) {
-					player.gear.addItem(selectedHelm);
-					selectedHelm = '';
-				}
-				break;
-			case 'chest':
-				if (selectedChest) {
-					player.gear.addItem(selectedChest);
-					selectedChest = '';
-				}
-				break;
-			case 'consumable':
-				if (selectedConsumable) {
-					player.gear.addItem(selectedConsumable);
-					selectedConsumable = '';
-				}
-				break;
+	const equipmentSlots: {
+		key: EquipmentSlotKey;
+		gearKey: 'mainHand' | 'offHand' | 'helm' | 'chest';
+		placeholder: string;
+		label: string;
+		icon: string;
+		colorClass: string;
+		buttonClass: string;
+		options: string[];
+	}[] = [
+		{
+			key: 'mainhand',
+			gearKey: 'mainHand',
+			placeholder: '+ Main Hand',
+			label: 'Main',
+			icon: 'mdi:sword',
+			colorClass: 'text-primary-400',
+			buttonClass:
+				'text-surface-400 hover:border-primary-500/50 hover:bg-primary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30',
+			options: Object.keys(mainhands)
+		},
+		{
+			key: 'offHand',
+			gearKey: 'offHand',
+			placeholder: '+ Off Hand',
+			label: 'Off',
+			icon: 'mdi:shield-half-full',
+			colorClass: 'text-secondary-400',
+			buttonClass:
+				'text-surface-400 hover:border-secondary-500/50 hover:bg-secondary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30',
+			options: Object.keys(offhands)
+		},
+		{
+			key: 'helm',
+			gearKey: 'helm',
+			placeholder: '+ Helm',
+			label: 'Helm',
+			icon: 'game-icons:crested-helmet',
+			colorClass: 'text-tertiary-400',
+			buttonClass:
+				'text-surface-400 hover:border-tertiary-500/50 hover:bg-tertiary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30',
+			options: Object.keys(helms)
+		},
+		{
+			key: 'chest',
+			gearKey: 'chest',
+			placeholder: '+ Chest',
+			label: 'Chest',
+			icon: 'mdi:tshirt-crew',
+			colorClass: 'text-warning-400',
+			buttonClass:
+				'text-surface-400 hover:border-warning-500/50 hover:bg-warning-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30',
+			options: Object.keys(chests)
 		}
+	];
+
+	const consumableConfig = {
+		key: 'consumable' as const,
+		placeholder: '+ Add Consumable',
+		buttonClass:
+			'text-surface-400 hover:border-success-500/50 hover:bg-success-500/20 rounded border border-white/10 bg-black/30 px-3 transition-all hover:text-white disabled:opacity-30',
+		options: Object.keys(consumables)
+	};
+
+	function addEquipment(type: EquipmentSelectionKey) {
+		const item = selectedItems[type];
+		if (!item) return;
+
+		player.gear.addItem(item);
+		selectedItems[type] = '';
 	}
 </script>
 
@@ -100,94 +149,37 @@
 
 <!-- Current Equipment -->
 <div class="grid grid-cols-2 gap-2">
-	{@render equipmentSlot('mdi:sword', 'Main', 'text-primary-400', player.gear.mainHand, () =>
-		player.gear.unequipItem('mainhand')
-	)}
-	{@render equipmentSlot(
-		'mdi:shield-half-full',
-		'Off',
-		'text-secondary-400',
-		player.gear.offHand,
-		() => player.gear.unequipItem('offHand')
-	)}
-	{@render equipmentSlot(
-		'game-icons:crested-helmet',
-		'Helm',
-		'text-tertiary-400',
-		player.gear.helm,
-		() => player.gear.unequipItem('helm')
-	)}
-	{@render equipmentSlot('mdi:tshirt-crew', 'Chest', 'text-warning-400', player.gear.chest, () =>
-		player.gear.unequipItem('chest')
-	)}
+	{#each equipmentSlots as slot (slot.key)}
+		{@render equipmentSlot(
+			slot.icon,
+			slot.label,
+			slot.colorClass,
+			player.gear[slot.gearKey],
+			() => player.gear.unequipItem(slot.key)
+		)}
+	{/each}
 </div>
 
 <!-- Add Equipment Dropdowns -->
 <div class="grid grid-cols-2 gap-2">
-	<div class="flex gap-1">
-		<select class="select flex-1 text-xs" bind:value={selectedMainHand}>
-			<option value="">+ Main Hand</option>
-			{#each Object.keys(mainhands) as item (item)}
-				<option value={item}>{item}</option>
-			{/each}
-		</select>
-		<button
-			type="button"
-			class="text-surface-400 hover:border-primary-500/50 hover:bg-primary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30"
-			disabled={!selectedMainHand}
-			onclick={() => addEquipment('mainhand')}
-		>
-			<Icon icon="mdi:plus" />
-		</button>
-	</div>
-	<div class="flex gap-1">
-		<select class="select flex-1 text-xs" bind:value={selectedOffHand}>
-			<option value="">+ Off Hand</option>
-			{#each Object.keys(offhands) as item (item)}
-				<option value={item}>{item}</option>
-			{/each}
-		</select>
-		<button
-			type="button"
-			class="text-surface-400 hover:border-secondary-500/50 hover:bg-secondary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30"
-			disabled={!selectedOffHand}
-			onclick={() => addEquipment('offHand')}
-		>
-			<Icon icon="mdi:plus" />
-		</button>
-	</div>
-	<div class="flex gap-1">
-		<select class="select flex-1 text-xs" bind:value={selectedHelm}>
-			<option value="">+ Helm</option>
-			{#each Object.keys(helms) as item (item)}
-				<option value={item}>{item}</option>
-			{/each}
-		</select>
-		<button
-			type="button"
-			class="text-surface-400 hover:border-tertiary-500/50 hover:bg-tertiary-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30"
-			disabled={!selectedHelm}
-			onclick={() => addEquipment('helm')}
-		>
-			<Icon icon="mdi:plus" />
-		</button>
-	</div>
-	<div class="flex gap-1">
-		<select class="select flex-1 text-xs" bind:value={selectedChest}>
-			<option value="">+ Chest</option>
-			{#each Object.keys(chests) as item (item)}
-				<option value={item}>{item}</option>
-			{/each}
-		</select>
-		<button
-			type="button"
-			class="text-surface-400 hover:border-warning-500/50 hover:bg-warning-500/20 rounded border border-white/10 bg-black/30 px-2 transition-all hover:text-white disabled:opacity-30"
-			disabled={!selectedChest}
-			onclick={() => addEquipment('chest')}
-		>
-			<Icon icon="mdi:plus" />
-		</button>
-	</div>
+	{#each equipmentSlots as slot (slot.key)}
+		<div class="flex gap-1">
+			<select class="select flex-1 text-xs" bind:value={selectedItems[slot.key]}>
+				<option value="">{slot.placeholder}</option>
+				{#each slot.options as item (item)}
+					<option value={item}>{item}</option>
+				{/each}
+			</select>
+			<button
+				type="button"
+				class={slot.buttonClass}
+				disabled={!selectedItems[slot.key]}
+				onclick={() => addEquipment(slot.key)}
+			>
+				<Icon icon="mdi:plus" />
+			</button>
+		</div>
+	{/each}
 </div>
 
 <!-- Divider: Consumables -->
@@ -220,17 +212,17 @@
 
 <!-- Add Consumable -->
 <div class="flex gap-1">
-	<select class="select flex-1 text-xs" bind:value={selectedConsumable}>
-		<option value="">+ Add Consumable</option>
-		{#each Object.keys(consumables) as item (item)}
+	<select class="select flex-1 text-xs" bind:value={selectedItems[consumableConfig.key]}>
+		<option value="">{consumableConfig.placeholder}</option>
+		{#each consumableConfig.options as item (item)}
 			<option value={item}>{item}</option>
 		{/each}
 	</select>
 	<button
 		type="button"
-		class="text-surface-400 hover:border-success-500/50 hover:bg-success-500/20 rounded border border-white/10 bg-black/30 px-3 transition-all hover:text-white disabled:opacity-30"
-		disabled={!selectedConsumable}
-		onclick={() => addEquipment('consumable')}
+		class={consumableConfig.buttonClass}
+		disabled={!selectedItems[consumableConfig.key]}
+		onclick={() => addEquipment(consumableConfig.key)}
 	>
 		<Icon icon="mdi:plus" />
 	</button>

@@ -6,10 +6,37 @@ import type { GameContext } from './gameContext';
 import items, { getItemByType, type AllItems, type Item } from './items/itemTypes';
 import { Player } from './player/player.svelte';
 import { getServerGameContext } from './serverContext';
+import type { SerializedGame } from './serialization';
 import { validateGame } from './serialization';
 import type { CustomWheelConfig } from './wheels/wheels';
 
 export class Game {
+	private static readonly DELTA_SIMPLE_FIELDS = [
+		'started',
+		'globalHpReduction',
+		'globalTurnCount',
+		'turnsThisRound',
+		'_currentTurn',
+		'playerOrder',
+		'shopCostModifier',
+		'shopConsumableCostModifier',
+		'shopRerollCost',
+		'hasTurnStarted',
+		'skippedNextTurns',
+		'hasMoved',
+		'hasFought',
+		'hasShopped',
+		'hasUsedCasino'
+	] as const;
+
+	private static readonly DELTA_COMPLEX_FIELDS = [
+		'customWheels',
+		'itemCostModifiers',
+		'shopItems',
+		'lootedTreasures',
+		'_shadowRealm'
+	] as const;
+
 	players: Player[] = $state([]);
 
 	alivePlayers = $derived(this.players.filter((player) => !player.dead));
@@ -395,15 +422,25 @@ export class Game {
 		return this.players.find((player) => player.name === name);
 	}
 
-	// Serialize the Game instance to a JSON string
-	public serialize(): string {
-		return JSON.stringify({
+	private static normalizeCustomWheels(
+		customWheels: SerializedGame['customWheels']
+	): [string, CustomWheelConfig][] {
+		return customWheels.map(([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
+			if (Array.isArray(value)) {
+				return [key, { items: value }];
+			}
+			return [key, value as CustomWheelConfig];
+		});
+	}
+
+	private toSerializedGame(): SerializedGame {
+		return {
 			players: this.players.map((player) => player.serialize()),
 			started: this.started,
 			globalHpReduction: this.globalHpReduction,
 			globalTurnCount: this.globalTurnCount,
 			turnsThisRound: this.turnsThisRound,
-			customWheels: Array.from(this.customWheels.entries()), // Convert SvelteMap to array
+			customWheels: Array.from(this.customWheels.entries()),
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
 			_shadowRealm: this._shadowRealm,
@@ -420,7 +457,113 @@ export class Game {
 			hasShopped: this.hasShopped,
 			hasUsedCasino: this.hasUsedCasino,
 			lootedTreasures: Array.from(this.lootedTreasures)
+		};
+	}
+
+	private applySerializedField(key: string, value: unknown) {
+		switch (key) {
+			case 'customWheels':
+				this.customWheels = new SvelteMap(
+					Game.normalizeCustomWheels(value as SerializedGame['customWheels'])
+				);
+				break;
+			case 'itemCostModifiers':
+				this.itemCostModifiers = new SvelteMap(value as SerializedGame['itemCostModifiers']);
+				break;
+			case 'skippedNextTurns':
+				this.skippedNextTurns = new SvelteSet(value as SerializedGame['skippedNextTurns']);
+				break;
+			case 'lootedTreasures':
+				this.lootedTreasures = new SvelteSet(value as SerializedGame['lootedTreasures']);
+				break;
+			case 'shopItems':
+				this.shopItems = value as [string, Item, string][];
+				break;
+			default:
+				(this as Record<string, unknown>)[key] = value;
+				break;
+		}
+	}
+
+	private loadSerializedGame(data: SerializedGame) {
+		this.players = data.players.map((p) => {
+			const player = Player.deserialize(p);
+			player.setGame(this);
+			return player;
 		});
+
+		for (const key of Game.DELTA_SIMPLE_FIELDS) {
+			this.applySerializedField(key, data[key]);
+		}
+
+		this.applySerializedField('customWheels', data.customWheels);
+		this.applySerializedField('itemCostModifiers', data.itemCostModifiers);
+		this.auditTrail = data.auditTrail;
+
+		if (data.shopItems && data.shopItems.length > 0) {
+			this.applySerializedField('shopItems', data.shopItems);
+		} else {
+			this.randomizeShopItems();
+		}
+
+		this.applySerializedField('lootedTreasures', data.lootedTreasures ?? []);
+
+		this._shadowRealm = data._shadowRealm
+			.map((sr) => this.players.find((p) => p.name === sr.name))
+			.filter((p): p is Player => p !== undefined);
+	}
+
+	static generateDelta(
+		beforeJson: string,
+		afterJson: string,
+		version: number
+	): GameStateDelta | null {
+		if (beforeJson === afterJson) return null;
+
+		const before = JSON.parse(beforeJson) as SerializedGame;
+		const after = JSON.parse(afterJson) as SerializedGame;
+		const delta: GameStateDelta = { version };
+		let hasChanges = false;
+
+		const gameDelta: Record<string, unknown> = {};
+		for (const key of Game.DELTA_SIMPLE_FIELDS) {
+			if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
+				gameDelta[key] = after[key];
+				hasChanges = true;
+			}
+		}
+
+		for (const key of Game.DELTA_COMPLEX_FIELDS) {
+			if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
+				gameDelta[key] = after[key];
+				hasChanges = true;
+			}
+		}
+
+		if (Object.keys(gameDelta).length > 0) delta.game = gameDelta;
+
+		if (after.auditTrail.length > before.auditTrail.length) {
+			delta.auditTrailAppend = after.auditTrail.slice(before.auditTrail.length);
+			hasChanges = true;
+		}
+
+		const playerDelta: Record<string, unknown> = {};
+		for (const afterPlayer of after.players) {
+			const beforePlayer = before.players.find((p) => p.name === afterPlayer.name);
+			if (!beforePlayer || JSON.stringify(beforePlayer) !== JSON.stringify(afterPlayer)) {
+				playerDelta[afterPlayer.name] = afterPlayer;
+				hasChanges = true;
+			}
+		}
+
+		if (Object.keys(playerDelta).length > 0) delta.players = playerDelta;
+
+		return hasChanges ? delta : null;
+	}
+
+	// Serialize the Game instance to a JSON string
+	public serialize(): string {
+		return JSON.stringify(this.toSerializedGame());
 	}
 
 	// Deserialize a JSON string to create a Game instance
@@ -434,51 +577,7 @@ export class Game {
 		}
 
 		const game = new Game();
-		game.players = data.players.map((p) => {
-			const player = Player.deserialize(p);
-			player.setGame(game);
-			return player;
-		});
-		game.started = data.started;
-		game.globalHpReduction = data.globalHpReduction;
-		game.globalTurnCount = data.globalTurnCount ?? 0;
-		game.turnsThisRound = data.turnsThisRound ?? 0;
-		// Normalize wheel data to handle both old (array) and new (config object) formats
-		const normalizedWheels = data.customWheels.map(
-			([key, value]: [string, unknown]): [string, CustomWheelConfig] => {
-				if (Array.isArray(value)) {
-					// Old format: just an array of items
-					return [key, { items: value }];
-				}
-				// New format: already a CustomWheelConfig
-				return [key, value as CustomWheelConfig];
-			}
-		);
-		game.customWheels = new SvelteMap(normalizedWheels);
-		game.playerOrder = data.playerOrder;
-		game._currentTurn = data._currentTurn;
-		// Shadow realm players need to be references to actual player objects
-		game._shadowRealm = data._shadowRealm
-			.map((sr) => game.players.find((p) => p.name === sr.name))
-			.filter((p): p is Player => p !== undefined);
-		game.itemCostModifiers = new SvelteMap(data.itemCostModifiers);
-		game.auditTrail = data.auditTrail;
-		game.shopCostModifier = data.shopCostModifier;
-		game.shopConsumableCostModifier = data.shopConsumableCostModifier;
-		game.shopRerollCost = data.shopRerollCost ?? Game.INITIAL_REROLL_COST;
-		// Regenerate shop items on load (old saves won't have shopItems)
-		if (data.shopItems && data.shopItems.length > 0) {
-			game.shopItems = data.shopItems as [string, Item, string][];
-		} else {
-			game.randomizeShopItems();
-		}
-		game.hasTurnStarted = data.hasTurnStarted ?? false;
-		game.skippedNextTurns = new SvelteSet(data.skippedNextTurns ?? []);
-		game.hasMoved = data.hasMoved ?? false;
-		game.hasFought = data.hasFought ?? false;
-		game.hasShopped = data.hasShopped ?? false;
-		game.hasUsedCasino = data.hasUsedCasino ?? false;
-		game.lootedTreasures = new SvelteSet(data.lootedTreasures ?? []);
+		game.loadSerializedGame(data);
 		return game;
 	}
 
@@ -491,7 +590,7 @@ export class Game {
 		if (delta.game) {
 			for (const [key, value] of Object.entries(delta.game)) {
 				if (key === '_shadowRealm') continue; // Handled below after player replacement
-				(this as Record<string, unknown>)[key] = value;
+				this.applySerializedField(key, value);
 			}
 		}
 

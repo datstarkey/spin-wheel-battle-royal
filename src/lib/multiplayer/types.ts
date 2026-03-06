@@ -73,6 +73,8 @@ interface ActionBase {
 	actionId?: string;
 }
 
+export type GMWheelType = 'loot' | 'button' | 'casino' | 'shadow' | 'gambler';
+
 export type GameAction = ActionBase &
 	(
 		| { type: 'MOVE'; position: Position }
@@ -95,7 +97,7 @@ export type GameAction = ActionBase &
 		| { type: 'GM_SET_DEFENSE'; playerName: string; defense: number }
 		| { type: 'GM_GIVE_ITEM'; playerName: string; item: AllItems }
 		| { type: 'GM_REMOVE_ITEM'; playerName: string; item: AllItems; slot?: string }
-		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: string }
+		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: GMWheelType }
 		| { type: 'GM_KILL_PLAYER'; playerName: string }
 		| { type: 'GM_REVIVE_PLAYER'; playerName: string }
 	);

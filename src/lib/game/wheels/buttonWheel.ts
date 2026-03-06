@@ -1,5 +1,6 @@
 import { getRandomSpawnPoint } from '../board/board.svelte';
 import type { Position } from '../board/types';
+import { createCombatWheel } from '../combat';
 import { requirePlayer, type GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { generateLootWheel } from './lootWheel';
@@ -19,32 +20,11 @@ function teleportToRandomSpawn(player: Player, ctx: GameContext) {
  * The wheel outcome determines who wins, then triggers appropriate event handlers.
  */
 function generateCombatWheel(attacker: Player, defender: Player, ctx: GameContext) {
-	const wheel: WheelBase = [
-		{
-			label: attacker.name,
-			weight: attacker.attack,
-			onWin: () => {
-				ctx.addAuditTrail(
-					`${attacker.name} (ATK ${attacker.attack}) beat ${defender.name} (DEF ${defender.defense}) [Button Attack]`
-				);
-				attacker.onAttackWin(defender, ctx);
-				defender.onDefendLose(attacker, ctx);
-			}
-		},
-		{
-			label: defender.name,
-			weight: defender.defense,
-			onWin: () => {
-				ctx.addAuditTrail(
-					`${attacker.name} (ATK ${attacker.attack}) lost to ${defender.name} (DEF ${defender.defense}) [Button Attack]`
-				);
-				attacker.onAttackLose(defender, ctx);
-				defender.onDefendWin(attacker, ctx);
-			}
-		}
-	];
+	const combatWheel = createCombatWheel(attacker, defender, ctx, {
+		auditLabelSuffix: '[Button Attack]'
+	});
 
-	ctx.addCustomWheel(`${attacker.name} attacks ${defender.name}!`, wheel);
+	ctx.addCustomWheel(`${attacker.name} attacks ${defender.name}!`, combatWheel.wheel);
 }
 
 /**

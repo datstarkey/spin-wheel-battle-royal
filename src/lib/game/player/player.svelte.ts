@@ -13,6 +13,18 @@ import { generateWinWheel } from '../wheels/winWheel';
 import { PlayerGear } from './playerGear.svelte';
 import { PlayerStatuses } from './playerStatuses.svelte';
 
+type PlayerHookName =
+	| 'onAttackWin'
+	| 'onAttackLose'
+	| 'onDefendWin'
+	| 'onDefendLose'
+	| 'onAttackStart'
+	| 'onAttackEnd'
+	| 'onDefenseStart'
+	| 'onDefenseEnd'
+	| 'onTurnStart'
+	| 'onTurnEnd';
+
 export class Player {
 	constructor(name: string) {
 		this._name = name;
@@ -466,11 +478,23 @@ export class Player {
 	 * Events
 	 */
 
+	private dispatchStatusesGearClassHook(hook: PlayerHookName, ...args: unknown[]) {
+		this.statuses.dispatchHook(hook, ...args);
+		this.gear.dispatchHook(hook, ...args);
+		const classHandler = this.class[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
+		classHandler?.(this, ...args);
+	}
+
+	private dispatchClassGearStatusesHook(hook: PlayerHookName, ...args: unknown[]) {
+		const classHandler = this.class[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
+		classHandler?.(this, ...args);
+		this.gear.dispatchHook(hook, ...args);
+		this.statuses.dispatchHook(hook, ...args);
+	}
+
 	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
 		this.gold += 1;
-		this.statuses.onAttackWin(defendingPlayer, ctx);
-		this.gear.onAttackWin(defendingPlayer, ctx);
-		this.class.onAttackWin(this, defendingPlayer, ctx);
+		this.dispatchStatusesGearClassHook('onAttackWin', defendingPlayer, ctx);
 		if (this.name) generateWinWheel(this.name, ctx);
 		if (defendingPlayer.name) generateDamageTakenWheel(defendingPlayer.name, ctx);
 	}
@@ -478,9 +502,7 @@ export class Player {
 	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
 		defendingPlayer.gold += 1;
 		this.takeDamage(this._game?.globalHpReduction ?? 0);
-		this.statuses.onAttackLose(defendingPlayer, ctx);
-		this.gear.onAttackLose(defendingPlayer, ctx);
-		this.class.onAttackLose?.(this, defendingPlayer, ctx);
+		this.dispatchStatusesGearClassHook('onAttackLose', defendingPlayer, ctx);
 		if (this.name) generateLoseWheel(this.name, ctx);
 		if (this.name) generateDamageTakenWheel(this.name, ctx);
 		// Teleport to random spawn on loss (unless in shadow realm)
@@ -490,15 +512,11 @@ export class Player {
 	}
 
 	onDefendWin(playerAttackingYou: Player, ctx: GameContext) {
-		this.statuses.onDefendWin(playerAttackingYou, ctx);
-		this.gear.onDefendWin(playerAttackingYou, ctx);
-		this.class.onDefendWin?.(this, playerAttackingYou, ctx);
+		this.dispatchStatusesGearClassHook('onDefendWin', playerAttackingYou, ctx);
 	}
 
 	onDefendLose(playerAttackingYou: Player, ctx: GameContext) {
-		this.statuses.onDefendLose(playerAttackingYou, ctx);
-		this.gear.onDefendLose(playerAttackingYou, ctx);
-		this.class.onDefendLose?.(this, playerAttackingYou, ctx);
+		this.dispatchStatusesGearClassHook('onDefendLose', playerAttackingYou, ctx);
 		// Teleport to random spawn on loss (unless in shadow realm)
 		if (!this.inShadowRealm) {
 			teleportToRandomSpawn(this);
@@ -506,21 +524,15 @@ export class Player {
 	}
 
 	onDefenseStart(playerAttackingYou: Player, ctx: GameContext) {
-		this.statuses.onDefenseStart(playerAttackingYou, ctx);
-		this.gear.onDefenseStart(playerAttackingYou, ctx);
-		this.class.onDefenseStart?.(this, playerAttackingYou, ctx);
+		this.dispatchStatusesGearClassHook('onDefenseStart', playerAttackingYou, ctx);
 	}
 
 	onDefenseEnd(playerAttackingYou: Player, ctx: GameContext) {
-		this.statuses.onDefenseEnd(playerAttackingYou, ctx);
-		this.gear.onDefenseEnd(playerAttackingYou, ctx);
-		this.class.onDefenseEnd?.(this, playerAttackingYou, ctx);
+		this.dispatchStatusesGearClassHook('onDefenseEnd', playerAttackingYou, ctx);
 	}
 
 	onTurnStart(ctx: GameContext) {
-		this.class.onTurnStart?.(this, ctx);
-		this.gear.onTurnStart(ctx);
-		this.statuses.onTurnStart(ctx);
+		this.dispatchClassGearStatusesHook('onTurnStart', ctx);
 		if (this.inShadowRealm) {
 			this._game?.addAuditTrail(`${this.name} is in the Shadow Realm!`);
 			if (this.name) generateShadowRealmWheel(this.name, ctx);
@@ -528,16 +540,15 @@ export class Player {
 	}
 
 	onTurnEnd(ctx: GameContext, context?: { hasMoved: boolean; totalMovement: number }) {
-		this.class.onTurnEnd?.(this, ctx, context);
-		this.gear.onTurnEnd(ctx);
-		this.statuses.onTurnEnd(ctx);
+		this.dispatchClassGearStatusesHook('onTurnEnd', ctx, context);
 	}
 
-	onAttackStart(attackingPlayer: Player, ctx: GameContext) {
-		this.gear.onAttackStart(attackingPlayer, ctx);
+	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
+		this.dispatchStatusesGearClassHook('onAttackStart', defendingPlayer, ctx);
 	}
-	onAttackEnd(attackingPlayer: Player, ctx: GameContext) {
-		this.gear.onAttackEnd(attackingPlayer, ctx);
+
+	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
+		this.dispatchStatusesGearClassHook('onAttackEnd', defendingPlayer, ctx);
 	}
 
 	/**

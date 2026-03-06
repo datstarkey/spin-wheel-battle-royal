@@ -2,6 +2,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Player } from '$lib/game/player/player.svelte';
 	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import type { GMWheelType } from '$lib/multiplayer/types';
 
 	const socket = getSocketStore();
 	import toast from '$lib/stores/toaster.svelte';
@@ -15,7 +16,7 @@
 
 	let wheelDropdownOpen = $state(false);
 
-	const wheels = [
+	const wheels: { name: string; type: GMWheelType; condition?: () => boolean }[] = [
 		{ name: 'Loot Wheel', type: 'loot' },
 		{ name: 'Button Wheel', type: 'button' },
 		{ name: 'Casino Wheel', type: 'casino' },

@@ -4,6 +4,7 @@ import type { Server as HttpServer } from 'http';
 import type { ClientToServerEvents, ServerToClientEvents } from '$lib/multiplayer/types';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
 import { handleAction, weightedRandomIndex, type ActionResult } from './actionHandler';
+import { toPendingWheelPayload } from './pendingWheelPayload';
 import { PerSocketRateLimiter } from './rateLimiter';
 
 /** Max spectator hint payload size in bytes */
@@ -30,18 +31,13 @@ function sendPendingWheels(socket: TypedSocket, room: GameRoom) {
 					}
 				: undefined;
 
-		socket.emit('room:wheel_pending', {
-			key,
-			items: wheel.items.map((item) => ({
-				label: item.label,
-				weight: item.weight
-			})),
-			theme: wheel.theme,
-			forPlayerName: wheel.forPlayerName,
-			shuffledOrder: wheel.shuffledOrder,
-			spinState: isMidSpin ? 'spinning' : undefined,
-			spinParams: catchUpSpinParams
-		});
+		socket.emit(
+			'room:wheel_pending',
+			toPendingWheelPayload(key, wheel, {
+				spinState: isMidSpin ? 'spinning' : undefined,
+				spinParams: catchUpSpinParams
+			})
+		);
 
 		// Also emit the separate spin event for catch-up (in case client listens for it)
 		if (catchUpSpinParams) {

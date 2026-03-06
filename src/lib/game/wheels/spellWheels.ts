@@ -2,7 +2,7 @@ import { requirePlayer, type GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { addResource, getResource, setResource } from '../player/playerResources';
 import { generateLootWheel } from './lootWheel';
-import { generateRandomPlayerWheel } from './randomPlayerWheel';
+import { generateRandomPlayerWheel, withTargetPlayerOrRandomWheel } from './randomPlayerWheel';
 import { generateWinWheel } from './winWheel';
 
 export const MANA_RESOURCE = 'Mana';
@@ -74,19 +74,15 @@ export function generateMinorSpellWheel(
 		{
 			label: 'Arcane Bolt - 15 damage',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 15;
-					ctx.addAuditTrail(`${player.name} zaps ${targetPlayer.name} for 15 damage!`);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Arcane Bolt Target`,
-						(target) => {
-							target.hp -= 15;
-							ctx.addAuditTrail(`${player.name}'s Arcane Bolt hits ${target.name} for 15 damage!`);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Arcane Bolt Target`,
+					(target) => {
+						target.hp -= 15;
+						ctx.addAuditTrail(`${player.name}'s Arcane Bolt hits ${target.name} for 15 damage!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -106,21 +102,16 @@ export function generateMinorSpellWheel(
 		{
 			label: 'Magic Missile - 8 dmg, +3 gold',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 8;
-					player.gold += 3;
-					ctx.addAuditTrail(`${player.name} fires magic missiles at ${targetPlayer.name}!`);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Magic Missile Target`,
-						(target) => {
-							target.hp -= 8;
-							player.gold += 3;
-							ctx.addAuditTrail(`${player.name}'s Magic Missiles hit ${target.name}!`);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Magic Missile Target`,
+					(target) => {
+						target.hp -= 8;
+						player.gold += 3;
+						ctx.addAuditTrail(`${player.name}'s Magic Missiles hit ${target.name}!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -173,45 +164,34 @@ export function generateMajorSpellWheel(
 		{
 			label: 'Fireball - 30 damage',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 30;
-					ctx.addAuditTrail(
-						`${player.name} hurls a fireball at ${targetPlayer.name} for 30 damage!`
-					);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Fireball Target`,
-						(target) => {
-							target.hp -= 30;
-							ctx.addAuditTrail(
-								`${player.name}'s Fireball incinerates ${target.name} for 30 damage!`
-							);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Fireball Target`,
+					(target) => {
+						target.hp -= 30;
+						ctx.addAuditTrail(
+							`${player.name}'s Fireball incinerates ${target.name} for 30 damage!`
+						);
+					},
+					ctx
+				);
 			}
 		},
 		{
 			label: 'Ice Storm - 15 dmg, slow',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 15;
-					targetPlayer.statuses.addStatus('IceStorm');
-					ctx.addAuditTrail(`${player.name} freezes ${targetPlayer.name}! 15 damage and slowed!`);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Ice Storm Target`,
-						(target) => {
-							target.hp -= 15;
-							target.statuses.addStatus('IceStorm');
-							ctx.addAuditTrail(
-								`${player.name}'s Ice Storm hits ${target.name}! 15 damage and slowed!`
-							);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Ice Storm Target`,
+					(target) => {
+						target.hp -= 15;
+						target.statuses.addStatus('IceStorm');
+						ctx.addAuditTrail(
+							`${player.name}'s Ice Storm hits ${target.name}! 15 damage and slowed!`
+						);
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -261,57 +241,40 @@ export function generateMajorSpellWheel(
 		{
 			label: 'Mana Burn - Drain or 25 dmg',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					const targetMana = getMana(targetPlayer);
-					if (targetMana > 0) {
-						const drained = Math.min(30, targetMana);
-						setMana(targetPlayer, targetMana - drained);
-						addMana(player, drained);
-						ctx.addAuditTrail(`${player.name} drains ${drained} mana from ${targetPlayer.name}!`);
-					} else {
-						targetPlayer.hp -= 25;
-						ctx.addAuditTrail(`${player.name} burns ${targetPlayer.name} for 25 damage!`);
-					}
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Mana Burn Target`,
-						(target) => {
-							const targetMana = getMana(target);
-							if (targetMana > 0) {
-								const drained = Math.min(30, targetMana);
-								setMana(target, targetMana - drained);
-								addMana(player, drained);
-								ctx.addAuditTrail(`${player.name} drains ${drained} mana from ${target.name}!`);
-							} else {
-								target.hp -= 25;
-								ctx.addAuditTrail(
-									`${player.name}'s Mana Burn scorches ${target.name} for 25 damage!`
-								);
-							}
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Mana Burn Target`,
+					(target) => {
+						const targetMana = getMana(target);
+						if (targetMana > 0) {
+							const drained = Math.min(30, targetMana);
+							setMana(target, targetMana - drained);
+							addMana(player, drained);
+							ctx.addAuditTrail(`${player.name} drains ${drained} mana from ${target.name}!`);
+							return;
+						}
+
+						target.hp -= 25;
+						ctx.addAuditTrail(`${player.name}'s Mana Burn scorches ${target.name} for 25 damage!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
 			label: 'Polymorph - Skip turn',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					ctx.skipNextTurn(targetPlayer);
-					ctx.addAuditTrail(
-						`${player.name} polymorphs ${targetPlayer.name}! They skip their next turn!`
-					);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Polymorph Target`,
-						(target) => {
-							ctx.skipNextTurn(target);
-							ctx.addAuditTrail(`${target.name} is polymorphed! They skip their next turn!`);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Polymorph Target`,
+					(target) => {
+						ctx.skipNextTurn(target);
+						ctx.addAuditTrail(
+							`${player.name} polymorphs ${target.name}! They skip their next turn!`
+						);
+					},
+					ctx
+				);
 			}
 		}
 	];
@@ -337,21 +300,15 @@ export function generateUltimateSpellWheel(
 		{
 			label: 'Meteor Strike - 60 damage',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 60;
-					ctx.addAuditTrail(
-						`${player.name} calls down a METEOR on ${targetPlayer.name} for 60 damage!`
-					);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Meteor Strike Target`,
-						(target) => {
-							target.hp -= 60;
-							ctx.addAuditTrail(`METEOR STRIKE obliterates ${target.name} for 60 damage!`);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Meteor Strike Target`,
+					(target) => {
+						target.hp -= 60;
+						ctx.addAuditTrail(`METEOR STRIKE obliterates ${target.name} for 60 damage!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -381,21 +338,16 @@ export function generateUltimateSpellWheel(
 		{
 			label: 'Soul Drain - Steal 40 HP',
 			onWin: () => {
-				if (targetPlayer && !targetPlayer.dead) {
-					targetPlayer.hp -= 40;
-					player.hp += 40;
-					ctx.addAuditTrail(`${player.name} DRAINS ${targetPlayer.name}'s SOUL! Stealing 40 HP!`);
-				} else {
-					generateRandomPlayerWheel(
-						`${player.name}'s Soul Drain Target`,
-						(target) => {
-							target.hp -= 40;
-							player.hp += 40;
-							ctx.addAuditTrail(`${player.name} DRAINS ${target.name}'s SOUL! Stealing 40 HP!`);
-						},
-						ctx
-					);
-				}
+				withTargetPlayerOrRandomWheel(
+					targetPlayer,
+					`${player.name}'s Soul Drain Target`,
+					(target) => {
+						target.hp -= 40;
+						player.hp += 40;
+						ctx.addAuditTrail(`${player.name} DRAINS ${target.name}'s SOUL! Stealing 40 HP!`);
+					},
+					ctx
+				);
 			}
 		},
 		{
@@ -405,7 +357,8 @@ export function generateUltimateSpellWheel(
 					player.inShadowRealm = false;
 					ctx.addAuditTrail(`${player.name} tears open a rift and ESCAPES the Shadow Realm!`);
 				} else {
-					generateRandomPlayerWheel(
+					withTargetPlayerOrRandomWheel(
+						targetPlayer,
 						`${player.name}'s Dimensional Rift Target`,
 						(target) => {
 							target.inShadowRealm = true;

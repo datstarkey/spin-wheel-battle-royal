@@ -12,6 +12,18 @@ import { getServerGameContext } from '../serverContext';
 import type { SerializedPlayerGear } from '../serialization';
 import type { Player } from './player.svelte';
 
+type GearHookName =
+	| 'onAttackWin'
+	| 'onAttackLose'
+	| 'onDefendWin'
+	| 'onDefendLose'
+	| 'onAttackStart'
+	| 'onAttackEnd'
+	| 'onDefenseStart'
+	| 'onDefenseEnd'
+	| 'onTurnStart'
+	| 'onTurnEnd';
+
 export class PlayerGear {
 	private _player: Player | null = null;
 	private _playerName: string;
@@ -53,49 +65,56 @@ export class PlayerGear {
 		return this.gearItems.concat(consumables);
 	}
 
+	dispatchHook(hook: GearHookName, ...args: unknown[]) {
+		for (const item of this.gearItems) {
+			const handler = item[hook] as ((...handlerArgs: unknown[]) => void) | undefined;
+			handler?.(this.player, ...args);
+		}
+	}
+
 	/**
 	 * --------------------------------------------------------------------------
 	 * Events
 	 */
 
 	onAttackWin(defendingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onAttackWin?.(this.player, defendingPlayer, ctx));
+		this.dispatchHook('onAttackWin', defendingPlayer, ctx);
 	}
 
 	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onAttackLose?.(this.player, defendingPlayer, ctx));
+		this.dispatchHook('onAttackLose', defendingPlayer, ctx);
 	}
 
 	onDefendWin(attackingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onDefendWin?.(this.player, attackingPlayer, ctx));
+		this.dispatchHook('onDefendWin', attackingPlayer, ctx);
 	}
 
 	onDefendLose(attackingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onDefendLose?.(this.player, attackingPlayer, ctx));
+		this.dispatchHook('onDefendLose', attackingPlayer, ctx);
 	}
 
 	onAttackStart(defendingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onAttackStart?.(this.player, defendingPlayer, ctx));
+		this.dispatchHook('onAttackStart', defendingPlayer, ctx);
 	}
 
 	onAttackEnd(defendingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onAttackEnd?.(this.player, defendingPlayer, ctx));
+		this.dispatchHook('onAttackEnd', defendingPlayer, ctx);
 	}
 
 	onDefenseStart(attackingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onDefenseStart?.(this.player, attackingPlayer, ctx));
+		this.dispatchHook('onDefenseStart', attackingPlayer, ctx);
 	}
 
 	onDefenseEnd(attackingPlayer: Player, ctx: GameContext) {
-		this.gearItems.forEach((x) => x.onDefenseEnd?.(this.player, attackingPlayer, ctx));
+		this.dispatchHook('onDefenseEnd', attackingPlayer, ctx);
 	}
 
 	onTurnStart(ctx: GameContext) {
-		this.gearItems.forEach((s) => s.onTurnStart?.(this.player, ctx));
+		this.dispatchHook('onTurnStart', ctx);
 	}
 
 	onTurnEnd(ctx: GameContext) {
-		this.gearItems.forEach((s) => s.onTurnEnd?.(this.player, ctx));
+		this.dispatchHook('onTurnEnd', ctx);
 	}
 
 	/**
