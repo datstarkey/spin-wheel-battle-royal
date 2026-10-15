@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Icon from '$lib/components/Icon.svelte';
-	import Players from '$lib/components/game/Players.svelte';
-	import CustomWheels from '$lib/components/wheel/CustomWheels.svelte';
-	import RoomLobby from '$lib/components/multiplayer/RoomLobby.svelte';
-	import LobbyMenu from '$lib/components/multiplayer/LobbyMenu.svelte';
-	import { getMultiplayerStore, loadSession } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import Players from '#lib/components/game/Players.svelte';
+	import CustomWheels from '#lib/components/wheel/CustomWheels.svelte';
+	import VictoryScreen from '#lib/components/game/VictoryScreen.svelte';
+	import RoomLobby from '#lib/components/multiplayer/RoomLobby.svelte';
+	import LobbyMenu from '#lib/components/multiplayer/LobbyMenu.svelte';
+	import { getMultiplayerStore, loadSession } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 
 	const gs = getGameStore();
 	const mp = getMultiplayerStore();
@@ -46,7 +47,11 @@
 	<!-- View 1: Game is running -->
 {:else if gameStarted}
 	<Players />
-	<CustomWheels />
+	{#if gs.game?.winner}
+		<VictoryScreen winner={gs.game.winner} players={gs.game.players} />
+	{:else}
+		<CustomWheels />
+	{/if}
 
 	<!-- View 2: Connected to room, waiting/setup -->
 {:else if mp.isConnected}

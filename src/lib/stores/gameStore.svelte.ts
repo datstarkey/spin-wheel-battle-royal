@@ -1,8 +1,8 @@
 import { createContext } from 'svelte';
-import { gameBoard } from '$lib/game/board/board.svelte';
-import type { Game } from '$lib/game/game.svelte';
-import type { AllItems } from '$lib/game/items/itemTypes';
-import type { Player } from '$lib/game/player/player.svelte';
+import { gameBoard } from '#lib/game/board/board.svelte.js';
+import type { Game } from '#lib/game/game.svelte.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
 
 // ============================================================================
 // Store Class
@@ -56,19 +56,6 @@ class GameStore {
 
 	getShopRerollCost(): number {
 		return this._game?.shopRerollCost ?? 2;
-	}
-
-	// -----------------------------------------------------------
-	// Audit Trail
-	// -----------------------------------------------------------
-
-	addAuditTrail(message: string) {
-		try {
-			if (!this._game) return;
-			this._game.addAuditTrail(message);
-		} catch {
-			// Silently ignore during initialization
-		}
 	}
 }
 

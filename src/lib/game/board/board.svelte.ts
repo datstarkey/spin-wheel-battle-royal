@@ -96,6 +96,7 @@ function bfsSearch(
 		excludeShadowRealm?: boolean;
 	} = {}
 ): number {
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- server-side BFS scratch set, no reactive subscribers
 	const visited = new Set<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
 	let head = 0;
@@ -142,6 +143,7 @@ function bfsReachable(
 	excludeShadowRealm: boolean = false
 ): Position[] {
 	const validMoves: Position[] = [];
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- server-side BFS scratch set, no reactive subscribers
 	const visited = new Set<string>();
 	const queue: { pos: Position; distance: number }[] = [{ pos: startPos, distance: 0 }];
 	let head = 0;

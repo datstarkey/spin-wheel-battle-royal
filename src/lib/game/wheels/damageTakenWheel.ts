@@ -15,59 +15,32 @@ export function generateDamageTakenWheel(playerName: string, ctx: GameContext) {
 
 	const reductionPercentageInversion = (100 - reductionPercentage) / 100;
 
-	const wheel: WheelBase = [
-		{
-			label: `Take ${globalHpValue * 1} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 1 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 2} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 2 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 3} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 3 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 4} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 4 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 5} damage`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 5 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 10} damage`,
-			weight: 2,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 10 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 15} damage`,
-			weight: 2,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 15 * reductionPercentageInversion);
-			}
-		},
-		{
-			label: `Take ${globalHpValue * 20} damage and go to shadow realm`,
-			onWin: () => {
-				player.hp -= Math.floor(globalHpValue * 20 * reductionPercentageInversion);
-				ctx.banishToShadowRealm(player, `${player.name} was banished to the Shadow Realm!`);
-			}
-		}
+	// [multiplier of the global HP reduction, wheel weight]; the last slice also banishes
+	const slices: [number, number][] = [
+		[1, 1],
+		[2, 1],
+		[3, 1],
+		[4, 1],
+		[5, 1],
+		[10, 2],
+		[15, 2],
+		[20, 1]
 	];
+	const wheel: WheelBase = slices.map(([multiplier, weight], i) => {
+		// Labels show the damage actually dealt, after Absolute Unit's reduction
+		const damage = Math.floor(globalHpValue * multiplier * reductionPercentageInversion);
+		const banishes = i === slices.length - 1;
+		return {
+			label: `Take ${damage} damage${banishes ? ' and go to shadow realm' : ''}`,
+			weight,
+			onWin: () => {
+				player.takeDamage(damage);
+				if (banishes && !player.dead) {
+					ctx.banishToShadowRealm(player, `${player.name} was banished to the Shadow Realm!`);
+				}
+			}
+		};
+	});
 
 	ctx.addCustomWheel(`Damage Taken Wheel - ${player.name}`, wheel, 'damage');
 }

@@ -9,6 +9,6 @@ export const Halo: Item = {
 	image: '/Items/HelmEquipables/Halo.svg',
 
 	onUse(player) {
-		player.inShadowRealm = false;
+		player.game?.removePlayerFromShadowRealm(player);
 	}
 };

@@ -80,18 +80,21 @@ function buildItemDestructionWheel(
 		}
 	}
 
-	if (wheelItems.length) {
-		const wheel = wheelItems.concat(
-			target.gear.consumables.map((x, index) => ({
-				label: x,
-				onWin() {
-					pooper.game?.addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${x}!`);
-					target.gear.deleteItem('consumables', index);
-					addToPoopPile(pooper);
-				}
-			}))
-		);
+	const wheel = wheelItems.concat(
+		target.gear.consumables.map((x) => ({
+			label: x,
+			onWin() {
+				// Look the item up at resolution time: the inventory may have changed since
+				const index = target.gear.consumables.indexOf(x);
+				if (index < 0) return;
+				pooper.game?.addAuditTrail(`${pooper.name} ${verb} ${target.name}'s ${x}!`);
+				target.gear.deleteItem('consumables', index);
+				addToPoopPile(pooper);
+			}
+		}))
+	);
 
+	if (wheel.length) {
 		ctx.addCustomWheel(`${pooper.name}'s ${wheelName}`, wheel);
 	} else {
 		const stolenGold = Math.min(5, target.gold);

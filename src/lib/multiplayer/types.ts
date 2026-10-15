@@ -1,7 +1,9 @@
-import type { Position } from '$lib/game/board/types';
-import type { ClassType } from '$lib/game/classes/classType';
-import type { AllItems } from '$lib/game/items/itemTypes';
-import type { WheelTheme } from '$lib/components/wheel/types';
+import type { Position } from '#lib/game/board/types.js';
+import type { ClassType } from '#lib/game/classes/classType.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type { StatType } from '#lib/game/serialization.js';
+import type { StatusType } from '#lib/game/statuses/statusTypes.js';
 
 // ============================================================================
 // Roles
@@ -75,6 +77,32 @@ interface ActionBase {
 
 export type GMWheelType = 'loot' | 'button' | 'casino' | 'shadow' | 'gambler';
 
+/** Player stats the GM can set directly */
+export const GM_STATS = [
+	'hp',
+	'gold',
+	'baseAttack',
+	'bonusAttack',
+	'baseDefense',
+	'bonusDefense',
+	'baseMovement',
+	'baseAttackRange'
+] as const;
+export type GMStat = (typeof GM_STATS)[number];
+
+/** Game-wide values the GM can override from the settings panel */
+export const GM_GAME_NUMBERS = [
+	'globalTurnCount',
+	'globalHpReduction',
+	'shopRerollCost',
+	'shopCostModifier',
+	'shopConsumableCostModifier'
+] as const;
+export const GM_GAME_FLAGS = ['hasMoved', 'hasFought', 'hasShopped', 'hasUsedCasino'] as const;
+export type GMGameValues = Partial<
+	Record<(typeof GM_GAME_NUMBERS)[number], number> & Record<(typeof GM_GAME_FLAGS)[number], boolean>
+>;
+
 export type GameAction = ActionBase &
 	(
 		| { type: 'MOVE'; position: Position }
@@ -85,16 +113,22 @@ export type GameAction = ActionBase &
 		| { type: 'CASINO' }
 		| { type: 'SPELL_CAST'; spellLevel: 'minor' | 'major' | 'ultimate'; targetName?: string }
 		| { type: 'USE_CONSUMABLE'; item: AllItems }
-		| { type: 'WHEEL_SPIN_RESULT'; wheelKey: string; selectedIndex: number }
+		| { type: 'WHEEL_SPIN_RESULT'; wheelKey: string }
 		| { type: 'TELEPORT'; destination: Position }
 		// GM-only actions
 		| { type: 'GM_SET_CLASS'; playerName: string; classType: ClassType }
 		| { type: 'GM_START_GAME' }
 		| { type: 'GM_REMOVE_PLAYER'; playerName: string }
-		| { type: 'GM_SET_HP'; playerName: string; hp: number }
-		| { type: 'GM_SET_GOLD'; playerName: string; gold: number }
-		| { type: 'GM_SET_ATTACK'; playerName: string; attack: number }
-		| { type: 'GM_SET_DEFENSE'; playerName: string; defense: number }
+		| { type: 'GM_SET_STAT'; playerName: string; stat: GMStat; value: number }
+		| { type: 'GM_SET_RESOURCE'; playerName: string; resource: string; value: number }
+		| { type: 'GM_SET_SHADOW_REALM'; playerName: string; inShadowRealm: boolean }
+		| { type: 'GM_ADD_STATUS'; playerName: string; status: StatusType }
+		| { type: 'GM_REMOVE_STATUS'; playerName: string; status: StatusType }
+		| { type: 'GM_REMOVE_MODIFIER'; playerName: string; stat: StatType; source: string }
+		| { type: 'GM_SET_GAME'; values: GMGameValues }
+		| { type: 'GM_SET_TURN'; playerName: string }
+		| { type: 'GM_GAME_COMMAND'; command: 'randomizeShop' | 'clearSkippedTurns' }
+		| { type: 'GM_SKIP_TURN'; playerName: string; skip: boolean }
 		| { type: 'GM_GIVE_ITEM'; playerName: string; item: AllItems }
 		| { type: 'GM_REMOVE_ITEM'; playerName: string; item: AllItems; slot?: string }
 		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: GMWheelType }
@@ -154,6 +188,8 @@ export interface ClientToServerEvents {
 		callback: (response: {
 			success: boolean;
 			roomCode?: string;
+			/** The name as the server stored it (normalized) */
+			playerName?: string;
 			rejoinToken?: string;
 			error?: string;
 		}) => void
@@ -164,6 +200,8 @@ export interface ClientToServerEvents {
 		callback: (response: {
 			success: boolean;
 			role?: Role;
+			/** The name as the server stored it (trimmed) */
+			playerName?: string;
 			rejoinToken?: string;
 			error?: string;
 		}) => void
@@ -193,6 +231,8 @@ export interface StateUpdatePayload {
 	/** Full serialized game state (always included as fallback) */
 	gameState: string;
 	roomState: RoomState;
+	/** Server state version this snapshot corresponds to */
+	version: number;
 	/** Combat state: present = combat started, null = combat ended, undefined = no change */
 	combatState?: CombatState | null;
 	/** Incremental delta (if available — client can apply this instead of full deserialize) */

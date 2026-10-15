@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 	import { fly, fade } from 'svelte/transition';
 
 	const gs = getGameStore();

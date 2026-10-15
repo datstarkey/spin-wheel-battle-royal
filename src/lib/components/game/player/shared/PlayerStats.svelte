@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
-	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { MANA_RESOURCE, MAX_MANA } from '#lib/game/wheels/spellWheels.js';
+	import { Swenergy as SWENERGY_RESOURCE } from '#lib/game/classes/swe.js';
 	import {
 		getHpColorClass,
 		getHpGlowClass,

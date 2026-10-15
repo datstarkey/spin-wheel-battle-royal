@@ -1,5 +1,5 @@
 import { createContext } from 'svelte';
-import type { Position } from '$lib/game/board/types';
+import type { Position } from '#lib/game/board/types.js';
 import type {
 	CombatState,
 	PendingWheelPayload,
@@ -113,8 +113,9 @@ class MultiplayerStore {
 		return this._myRole === 'gm';
 	}
 
+	/** Turn actions belong to the turn owner only; the GM's override is force-ending a turn */
 	get canAct(): boolean {
-		return this.isMyTurn || this.iAmGM;
+		return this.isMyTurn;
 	}
 
 	// -----------------------------------------------------------
@@ -162,7 +163,7 @@ class MultiplayerStore {
 	// -----------------------------------------------------------
 
 	addPendingWheel(wheel: PendingWheelPayload) {
-		this._pendingWheels = [...this._pendingWheels, wheel];
+		this._pendingWheels = [...this._pendingWheels.filter((w) => w.key !== wheel.key), wheel];
 	}
 
 	removePendingWheel(wheelKey: string) {
@@ -178,13 +179,6 @@ class MultiplayerStore {
 		if (!wheel) return;
 		wheel.spinState = 'spinning';
 		wheel.spinParams = params;
-		this._pendingWheels = [...this._pendingWheels];
-	}
-
-	setWheelLanded(wheelKey: string) {
-		const wheel = this._pendingWheels.find((w) => w.key === wheelKey);
-		if (!wheel) return;
-		wheel.spinState = 'landed';
 		this._pendingWheels = [...this._pendingWheels];
 	}
 

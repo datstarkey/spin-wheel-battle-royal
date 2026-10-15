@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
-	import { localStorageStore } from '$lib/stores/localStorageStore.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import { localStorageStore } from '#lib/stores/localStorageStore.svelte.js';
 
 	const socket = getSocketStore();
 

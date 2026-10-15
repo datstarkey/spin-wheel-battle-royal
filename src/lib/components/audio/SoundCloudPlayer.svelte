@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getBattleMusicStore } from '$lib/stores/battleMusic.svelte';
+	import { getBattleMusicStore } from '#lib/stores/battleMusic.svelte.js';
 
 	const music = getBattleMusicStore();
 

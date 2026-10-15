@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 	import { getEventType } from './auditEventRules';
 
 	const gs = getGameStore();
@@ -116,7 +116,7 @@
 			<!-- Scrollable content -->
 			<div
 				bind:this={scrollContainer}
-				class="scrollbar-thin scrollbar-track-surface-900 scrollbar-thumb-surface-600 max-h-[50vh] min-h-[200px] overflow-y-auto px-3 py-4"
+				class="scrollbar-track-surface-900 scrollbar-thumb-surface-600 max-h-[50vh] min-h-[200px] scrollbar-thin overflow-y-auto px-3 py-4"
 			>
 				{#if processedEntries.length === 0}
 					<div class="flex flex-col items-center justify-center py-8 text-center">

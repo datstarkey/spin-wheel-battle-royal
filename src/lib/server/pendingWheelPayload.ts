@@ -1,4 +1,4 @@
-import type { PendingWheelPayload } from '$lib/multiplayer/types';
+import type { PendingWheelPayload } from '#lib/multiplayer/types.js';
 import type { PendingWheel } from './gameRooms';
 
 interface PendingWheelPayloadOptions {

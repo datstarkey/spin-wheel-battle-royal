@@ -1,16 +1,14 @@
 import { createContext } from 'svelte';
 import { io, type Socket } from 'socket.io-client';
-import { Game } from '$lib/game/game.svelte';
-import type { Position } from '$lib/game/board/types';
-import type { ClassType } from '$lib/game/classes/classType';
-import type { AllItems } from '$lib/game/items/itemTypes';
+import { Game } from '#lib/game/game.svelte.js';
+import type { Position } from '#lib/game/board/types.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
 import type {
 	ActionOf,
 	ActionPayload,
 	ActionType,
 	ClientToServerEvents,
 	GameAction,
-	GMWheelType,
 	Role,
 	ServerToClientEvents,
 	SpectatorHint,
@@ -22,7 +20,7 @@ import { loadSession } from './multiplayerStore.svelte';
 // Store Instance Types (inferred from setter return values)
 // ============================================================================
 
-type GameStoreInstance = ReturnType<typeof import('$lib/stores/gameStore.svelte').setGameStore>;
+type GameStoreInstance = ReturnType<typeof import('#lib/stores/gameStore.svelte.js').setGameStore>;
 type MultiplayerStoreInstance = ReturnType<
 	typeof import('./multiplayerStore.svelte').setMultiplayerStore
 >;
@@ -68,6 +66,8 @@ class SocketStore {
 			this.mpStore.setConnectionStatus('connected');
 			const session = loadSession();
 			if (session?.rejoinToken) {
+				// The server resends every live wheel on rejoin; drop ours so dismissed ones don't linger
+				this.mpStore.clearPendingWheels();
 				this.rejoinRoom(session.roomCode, session.playerName, session.rejoinToken);
 			}
 		});
@@ -86,20 +86,15 @@ class SocketStore {
 
 		this.socket.on('room:state_update', (data) => {
 			try {
-				// Try delta update if we have a valid sequential version
-				const canApplyDelta =
-					data.delta && this.gameStore.game && data.delta.version === this.lastStateVersion + 1;
-
-				if (canApplyDelta) {
-					this.gameStore.game!.applyDelta(data.delta!);
-					this.lastStateVersion = data.delta!.version;
-				} else {
-					// Full state replacement (initial load, rejoin, version gap)
+				// Apply the delta only when it directly follows the state we hold
+				const game = this.gameStore.game;
+				if (game && data.delta && data.delta.version === this.lastStateVersion + 1) {
+					game.applyDelta(data.delta);
+				} else if (!game || data.version !== this.lastStateVersion || !data.delta) {
+					// Initial load, rejoin, version gap, or a change the server sent without a delta
 					this.gameStore.game = Game.deserialize(data.gameState);
-					if (data.delta) {
-						this.lastStateVersion = data.delta.version;
-					}
 				}
+				this.lastStateVersion = data.version;
 
 				this.gameStore.syncPlayerPositionsToBoard();
 
@@ -245,7 +240,7 @@ class SocketStore {
 			this.socket!.emit('room:create', { gmName, password }, (response) => {
 				if (response.success && response.roomCode) {
 					this.mpStore.setMyRole('gm');
-					this.mpStore.setMyPlayerName(gmName);
+					this.mpStore.setMyPlayerName(response.playerName ?? gmName);
 					this.mpStore.setRoomCode(response.roomCode);
 					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();
@@ -267,7 +262,7 @@ class SocketStore {
 			this.socket!.emit('room:join', { roomCode, playerName, password, role }, (response) => {
 				if (response.success) {
 					this.mpStore.setMyRole(response.role ?? role ?? 'player');
-					this.mpStore.setMyPlayerName(playerName);
+					this.mpStore.setMyPlayerName(response.playerName ?? playerName);
 					this.mpStore.setRoomCode(roomCode);
 					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();
@@ -290,6 +285,8 @@ class SocketStore {
 					this.mpStore.setMyRole(response.role ?? 'player');
 					this.mpStore.setMyPlayerName(playerName);
 					this.mpStore.setRoomCode(roomCode);
+					// Keep the token in the saved session, or the next refresh can't rejoin
+					this.mpStore.setRejoinToken(rejoinToken);
 					this.mpStore.saveSession();
 				} else {
 					this.mpStore.reset();
@@ -323,12 +320,9 @@ class SocketStore {
 		this.socket?.emit('wheel:request_spin', { wheelKey });
 	}
 
-	sendWheelSpinResult(
-		wheelKey: string,
-		selectedIndex: number,
-		callback?: (response: { success: boolean; error?: string }) => void
-	) {
-		this.sendAction({ type: 'WHEEL_SPIN_RESULT', wheelKey, selectedIndex }, callback);
+	/** Confirm a landed wheel; the server applies the outcome it chose */
+	confirmWheel(wheelKey: string) {
+		this.act('WHEEL_SPIN_RESULT', { wheelKey });
 	}
 
 	private dispatch(action: GameAction) {
@@ -339,7 +333,8 @@ class SocketStore {
 		});
 	}
 
-	private dispatchAction<T extends ActionType>(type: T, payload?: ActionPayload<T>) {
+	/** Send any action; failures are logged (the server is the source of truth) */
+	act<T extends ActionType>(type: T, payload?: ActionPayload<T>) {
 		this.dispatch({ type, ...(payload ?? {}) } as ActionOf<T>);
 	}
 
@@ -348,69 +343,31 @@ class SocketStore {
 	// =================================================================
 
 	move(position: Position) {
-		this.dispatchAction('MOVE', { position });
+		this.act('MOVE', { position });
 	}
 	finishTurn() {
-		this.dispatchAction('FINISH_TURN');
+		this.act('FINISH_TURN');
 	}
 	attackResolve(attackerName: string, defenderName: string) {
-		this.dispatchAction('ATTACK_RESOLVE', { attackerName, defenderName });
+		this.act('ATTACK_RESOLVE', { attackerName, defenderName });
 	}
 	shopBuy(item: AllItems) {
-		this.dispatchAction('SHOP_BUY', { item });
+		this.act('SHOP_BUY', { item });
 	}
 	shopReroll() {
-		this.dispatchAction('SHOP_REROLL');
+		this.act('SHOP_REROLL');
 	}
 	casino() {
-		this.dispatchAction('CASINO');
+		this.act('CASINO');
 	}
 	castSpell(spellLevel: 'minor' | 'major' | 'ultimate', targetName?: string) {
-		this.dispatchAction('SPELL_CAST', { spellLevel, targetName });
+		this.act('SPELL_CAST', { spellLevel, targetName });
 	}
 	useConsumable(item: AllItems) {
-		this.dispatchAction('USE_CONSUMABLE', { item });
+		this.act('USE_CONSUMABLE', { item });
 	}
 	teleport(destination: Position) {
-		this.dispatchAction('TELEPORT', { destination });
-	}
-
-	// =================================================================
-	// GM Actions
-	// =================================================================
-
-	gmStartGame() {
-		this.dispatchAction('GM_START_GAME');
-	}
-	gmRemovePlayer(playerName: string) {
-		this.dispatchAction('GM_REMOVE_PLAYER', { playerName });
-	}
-	gmSetClass(playerName: string, classType: ClassType) {
-		this.dispatchAction('GM_SET_CLASS', { playerName, classType });
-	}
-	gmSetHp(playerName: string, hp: number) {
-		this.dispatchAction('GM_SET_HP', { playerName, hp });
-	}
-	gmSetGold(playerName: string, gold: number) {
-		this.dispatchAction('GM_SET_GOLD', { playerName, gold });
-	}
-	gmSetAttack(playerName: string, attack: number) {
-		this.dispatchAction('GM_SET_ATTACK', { playerName, attack });
-	}
-	gmSetDefense(playerName: string, defense: number) {
-		this.dispatchAction('GM_SET_DEFENSE', { playerName, defense });
-	}
-	gmGiveItem(playerName: string, item: AllItems) {
-		this.dispatchAction('GM_GIVE_ITEM', { playerName, item });
-	}
-	gmKillPlayer(playerName: string) {
-		this.dispatchAction('GM_KILL_PLAYER', { playerName });
-	}
-	gmRevivePlayer(playerName: string) {
-		this.dispatchAction('GM_REVIVE_PLAYER', { playerName });
-	}
-	gmAddWheel(playerName: string, wheelType: GMWheelType) {
-		this.dispatchAction('GM_ADD_WHEEL', { playerName, wheelType });
+		this.act('TELEPORT', { destination });
 	}
 }
 

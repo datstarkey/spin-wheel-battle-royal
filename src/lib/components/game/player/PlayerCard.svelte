@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
-	import { canCastSpell } from '$lib/game/wheels/spellWheels';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import { getMovementStore } from '$lib/stores/movementStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import { canCastSpell } from '#lib/game/wheels/spellWheels.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import { getMovementStore } from '#lib/stores/movementStore.svelte.js';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
 	import WheelDropdown from './WheelDropdown.svelte';
@@ -59,7 +59,7 @@
 	{/if}
 
 	<!-- Corner accents -->
-	{#each ['top-1 left-1 border-t-2 border-l-2', 'top-1 right-1 border-t-2 border-r-2', 'bottom-1 left-1 border-b-2 border-l-2', 'right-1 bottom-1 border-r-2 border-b-2'] as pos}
+	{#each ['top-1 left-1 border-t-2 border-l-2', 'top-1 right-1 border-t-2 border-r-2', 'bottom-1 left-1 border-b-2 border-l-2', 'right-1 bottom-1 border-r-2 border-b-2'] as pos (pos)}
 		<div
 			class="pointer-events-none absolute h-3 w-3 opacity-50 transition-all duration-300 {pos}
 				{isActiveTurn ? 'border-primary-500 animate-pulse opacity-100' : ''}
@@ -151,6 +151,15 @@
 					</button>
 				{/if}
 			</div>
+
+			{#if mpCanAct && gs.game?.teleportDestinations.length}
+				<p
+					class="border-tertiary-500/40 bg-tertiary-500/10 text-tertiary-200 mb-3 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs"
+				>
+					<Icon icon="mdi:portal" class="text-tertiary-300 shrink-0 text-base" />
+					Click a glowing teleporter on the board to jump there, or carry on to stay put.
+				</p>
+			{/if}
 
 			<!-- Magic Man Spell Buttons -->
 			{#if player.classType === 'magicman'}

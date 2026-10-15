@@ -1,4 +1,5 @@
 import type { GameContext } from './gameContext';
+import { getCombatWeights } from './rules';
 import type { Player } from './player/player.svelte';
 import type { WheelBase } from './wheels/wheels';
 
@@ -27,8 +28,7 @@ export function createCombatWheel(
 	attacker.onAttackStart(defender, ctx);
 	defender.onDefenseStart(attacker, ctx);
 
-	const attackWeight = attacker.attack;
-	const defenseWeight = defender.defense;
+	const { attackWeight, defenseWeight } = getCombatWeights(attacker, defender);
 
 	const wheel: WheelBase = [
 		{

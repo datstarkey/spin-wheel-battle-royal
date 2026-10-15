@@ -24,7 +24,7 @@ export const Intern: ClassBase = {
 			{
 				label: 'Actually, I can help with that! (+15 ATK)',
 				onWin() {
-					player.addStatModifier('Helpful Insight', 'attack', 15);
+					player.adjustStatModifier('Helpful Insight', 'attack', 15);
 					player.game?.addAuditTrail(
 						`${player.name} provides unsolicited optimization advice. +15 ATK permanently!`
 					);
@@ -53,7 +53,7 @@ export const Intern: ClassBase = {
 			{
 				label: "Here's a detailed analysis... (Enemy -5 DEF)",
 				onWin() {
-					defendingPlayer.addStatModifier('Overanalyzed', 'defense', -5);
+					defendingPlayer.adjustStatModifier('Overanalyzed', 'defense', -5);
 					player.game?.addAuditTrail(
 						`${player.name} writes a 500-word analysis of ${defendingPlayer.name}'s weaknesses. -5 DEF to them!`
 					);
@@ -71,7 +71,7 @@ export const Intern: ClassBase = {
 			{
 				label: 'Let me research that... (+2 Range)',
 				onWin() {
-					player.addStatModifier('Research Complete', 'attackRange', 2);
+					player.adjustStatModifier('Research Complete', 'attackRange', 2);
 					player.game?.addAuditTrail(
 						`${player.name} thoroughly researches the battlefield. +2 Attack Range permanently!`
 					);

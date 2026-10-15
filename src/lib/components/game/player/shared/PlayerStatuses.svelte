@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
 
 	interface Props {
 		player: Player;

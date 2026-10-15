@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Grenze:wght@600;800&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @import '@skeletonlabs/skeleton';
@@ -6,6 +6,58 @@
 @import './themes/battle-arena.css';
 
 /* Load JetBrains Mono for the tactical aesthetic */
+
+/* Wheel stage: tavern-board display face and the one-off landing animations */
+@theme {
+	--font-display: 'Grenze', 'Georgia', serif;
+	--animate-wheel-pop: wheel-pop 450ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+	--animate-wheel-burst: wheel-burst 900ms ease-out both;
+	--animate-wheel-shine: wheel-shine 1.4s ease-in-out both;
+	--animate-wheel-rise: wheel-rise 300ms ease-out both;
+}
+
+@keyframes wheel-pop {
+	0% {
+		transform: scale(1);
+	}
+	45% {
+		transform: scale(1.08);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+@keyframes wheel-burst {
+	from {
+		opacity: 0.9;
+		transform: scale(0.4);
+	}
+	to {
+		opacity: 0;
+		transform: scale(1.8);
+	}
+}
+
+@keyframes wheel-shine {
+	from {
+		transform: translateX(-120%) skewX(-20deg);
+	}
+	to {
+		transform: translateX(220%) skewX(-20deg);
+	}
+}
+
+@keyframes wheel-rise {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
 
 /* Enable dark mode with data-mode attribute */
 @custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
@@ -58,8 +110,9 @@ h6 {
 }
 
 code {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-		'Courier New', monospace;
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
 	font-size: 0.875rem;
 	background-color: var(--color-surface-200);
 	padding: 0.125rem 0.25rem;
@@ -68,9 +121,7 @@ code {
 
 .select,
 .input,
-.textarea,
-.ig-input,
-.ig-select {
+.textarea {
 	background-color: var(--color-surface-50-950);
 	color: var(--color-surface-950-50);
 }

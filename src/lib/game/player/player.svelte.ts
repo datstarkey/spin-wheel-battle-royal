@@ -1,4 +1,4 @@
-import toast from '$lib/stores/toaster.svelte';
+import toast from '#lib/stores/toaster.svelte.js';
 import { teleportToRandomSpawn } from '../board/teleportUtils';
 import type { GameContext } from '../gameContext';
 import type { Game } from '../game.svelte';
@@ -75,6 +75,13 @@ export class Player {
 		);
 	}
 
+	/** Shift a source's modifier by delta (stacking effects); drops it when it reaches 0 */
+	adjustStatModifier(source: string, stat: StatType, delta: number) {
+		const next = (this._statModifiers[stat][source] ?? 0) + delta;
+		if (next === 0) this.removeStatModifier(source, stat);
+		else this.addStatModifier(source, stat, next);
+	}
+
 	// Remove a stat modifier
 	removeStatModifier(source: string, stat: StatType) {
 		const value = this._statModifiers[stat][source];
@@ -131,27 +138,27 @@ export class Player {
 		if (this.classType === 'gambler') {
 			this._gold = this._hp;
 		}
+		this.trackMaxHp();
+		this.dieIfOutOfHp();
+	}
 
-		// Track max HP as highest value seen
-		if (this._hp > this._maxHp) {
-			this._maxHp = this._hp;
-		}
+	/** Max HP is the highest HP seen */
+	private trackMaxHp() {
+		if (this._hp > this._maxHp) this._maxHp = this._hp;
+	}
+
+	/** Every HP (and Gambler gold) change funnels here, so no damage path can leave a 0 HP survivor */
+	private dieIfOutOfHp() {
+		if (this._hp === 0 && this._game?.started) this.die();
 	}
 
 	takeDamage(amount: number) {
 		if (this.dead || amount <= 0) return;
 
-		const oldHp = this._hp;
-		this.hp = oldHp - amount;
-
-		if (this._hp === 0) {
-			this._game?.addAuditTrail(`${this.name} took ${amount} damage and is dead!`);
-			this.die();
-		} else {
-			this._game?.addAuditTrail(
-				`${this.name} took ${amount} damage (${this._hp}/${this._maxHp} HP)`
-			);
-		}
+		this._game?.addAuditTrail(
+			`${this.name} took ${amount} damage (${Math.max(0, this._hp - amount)}/${this._maxHp} HP)`
+		);
+		this.hp = this._hp - amount;
 	}
 
 	heal(amount: number) {
@@ -161,14 +168,21 @@ export class Player {
 		this._game?.addAuditTrail(`${this.name} healed ${amount} HP (${this._hp}/${this._maxHp})`);
 	}
 
+	/** The server ends a dead player's turn once their pending wheels resolve */
 	die() {
 		if (this.dead) return;
+		this._hp = 0;
 		this.dead = true;
+		this._game?.addAuditTrail(`${this.name} has been eliminated!`);
 		this._game?.increaseGlobalHpReduction();
+	}
 
-		if (this._game?.currentPlayer === this) {
-			this._game?.finishTurn();
-		}
+	revive() {
+		if (!this.dead) return;
+		this.dead = false;
+		this.hp = this._maxHp;
+		this._game?.addAuditTrail(`${this.name} has been revived!`);
+		if (this._game && this._game.alivePlayers.length > 1) this._game.winnerName = null;
 	}
 
 	dead = $state(false);
@@ -355,12 +369,14 @@ export class Player {
 	public set gold(value: number) {
 		const oldGold = this._gold;
 		this._gold = Math.max(0, value);
-		if (this.classType === 'gambler') {
-			this._hp = this._gold;
-		}
 		const delta = this._gold - oldGold;
 		if (delta !== 0) {
 			this._game?.addAuditTrail(`${this.name} now has ${this.gold} gold!`);
+		}
+		if (this.classType === 'gambler' && !this.dead) {
+			this._hp = this._gold;
+			this.trackMaxHp();
+			this.dieIfOutOfHp();
 		}
 	}
 
@@ -380,6 +396,8 @@ export class Player {
 		}
 
 		this._class = classType;
+		// Resources (Mana, Swenergy, Confidence...) belong to the old class
+		this.resources = {};
 		this._hp = this.class.hp;
 		this._baseAttack = this.class.attack;
 		this._baseDefense = this.class.defense;
@@ -389,6 +407,7 @@ export class Player {
 		if (this.classType === 'gambler') {
 			this._hp = this.class.startingGold ?? 0;
 		}
+		this._maxHp = this._hp;
 	}
 
 	inventoryCount(itemName: string): number {
@@ -429,6 +448,11 @@ export class Player {
 		const actualItem = getItemByType(item);
 		if (!actualItem) {
 			toast.error(`${item} is not a valid item!`);
+			return;
+		}
+
+		if (actualItem.maxAmount && this.inventoryCount(actualItem.name) >= actualItem.maxAmount) {
+			this._game?.addAuditTrail(`${this.name} can't carry another ${item}!`);
 			return;
 		}
 
@@ -491,6 +515,7 @@ export class Player {
 	onAttackLose(defendingPlayer: Player, ctx: GameContext) {
 		defendingPlayer.gold += 1;
 		this.takeDamage(this._game?.globalHpReduction ?? 0);
+		if (this.dead) return;
 		this.dispatchStatusesGearClassHook('onAttackLose', defendingPlayer, ctx);
 		if (this.name) generateLoseWheel(this.name, ctx);
 		if (this.name) generateDamageTakenWheel(this.name, ctx);
@@ -528,6 +553,7 @@ export class Player {
 
 	onTurnEnd(ctx: GameContext, context?: { hasMoved: boolean; totalMovement: number }) {
 		this.dispatchClassGearStatusesHook('onTurnEnd', ctx, context);
+		this.statuses.tickDurations(ctx);
 	}
 
 	onAttackStart(defendingPlayer: Player, ctx: GameContext) {

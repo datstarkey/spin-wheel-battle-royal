@@ -1,5 +1,5 @@
-import type { WheelTheme } from '$lib/components/wheel/types';
-import type { SpinWheelItem } from '$lib/components/wheel/types';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type { SpinWheelItem } from '#lib/components/wheel/types.js';
 import type { Game } from './game.svelte';
 import type { Player } from './player/player.svelte';
 import type { WheelBase } from './wheels/wheels';

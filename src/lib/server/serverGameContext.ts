@@ -1,7 +1,7 @@
-import type { WheelTheme } from '$lib/components/wheel/types';
-import type { GameContext } from '$lib/game/gameContext';
-import type { Player } from '$lib/game/player/player.svelte';
-import type { WheelBase } from '$lib/game/wheels/wheels';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type { GameContext } from '#lib/game/gameContext.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
+import type { WheelBase } from '#lib/game/wheels/wheels.js';
 import type { GameRoom } from './gameRooms';
 import { generateShuffleOrder } from './wheelUtils';
 
@@ -27,8 +27,12 @@ export function createServerGameContext(room: GameRoom, forPlayerName: string): 
 			theme?: WheelTheme,
 			wheelForPlayer?: string
 		): void {
+			// Generators reuse keys like "Swenergy for X"; never let a second wheel overwrite the first
+			let uniqueKey = key;
+			for (let n = 2; room.pendingWheels.has(uniqueKey); n++) uniqueKey = `${key} #${n}`;
+
 			// Store wheel with closures server-side (NOT in game.customWheels)
-			room.pendingWheels.set(key, {
+			room.pendingWheels.set(uniqueKey, {
 				items: wheel,
 				theme,
 				forPlayerName: wheelForPlayer ?? forPlayerName,

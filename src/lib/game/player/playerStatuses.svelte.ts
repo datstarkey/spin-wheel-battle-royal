@@ -1,5 +1,5 @@
-import toast from '$lib/stores/toaster.svelte';
 import type { GameContext } from '../gameContext';
+import { resolveCtx } from '../serverContext';
 import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';
 import statusEffects from '../statuses/statusTypes';
@@ -36,20 +36,19 @@ export class PlayerStatuses {
 		const statusEffect = new PlayerStatusEffect(status);
 		statusEffect.duration = statusEffect.status.turnDuration;
 
-		//Don't allow duplicates unless the status allows it
-		if (
-			!statusEffect.status.allowMultiple &&
-			this._statuses.some((s) => s.status === statusEffect.status)
-		) {
-			toast.error(`${this.player.name} already has ${statusEffect.status.name}!`);
+		// A non-stacking status that is already active gets its duration refreshed instead
+		const existing = this._statuses.find((s) => s.statusName === status);
+		if (existing && !statusEffect.status.allowMultiple) {
+			existing.duration = statusEffect.duration;
+			this.player.game?.addAuditTrail(
+				`${this.player.name}'s ${existing.status.name} is refreshed!`
+			);
 			return;
 		}
 
 		this.player.game?.addAuditTrail(`${this.player.name} now has ${statusEffect.status.name}!`);
 		this._statuses.push(statusEffect);
-		if (ctx) {
-			statusEffect.status.onApply?.(this.player, ctx);
-		}
+		statusEffect.status.onApply?.(this.player, resolveCtx(ctx));
 	}
 
 	canHaveStatus(status: StatusType) {
@@ -78,13 +77,12 @@ export class PlayerStatuses {
 		this.player.game?.addAuditTrail(
 			`${this.player.name} no longer has ${statusEffect.status.name}!`
 		);
-		if (ctx) {
-			statusEffect.status.onRemove?.(this.player, ctx);
-		}
+		statusEffect.status.onRemove?.(this.player, resolveCtx(ctx));
 		this._statuses = this._statuses.filter((x) => x !== statusEffect);
 	}
 
-	onTurnEnd(ctx: GameContext) {
+	/** Count timed statuses down by one turn and remove the ones that ran out */
+	tickDurations(ctx: GameContext) {
 		const statusesToRemove: PlayerStatusEffect[] = [];
 
 		this._statuses.forEach((s) => {
@@ -96,11 +94,7 @@ export class PlayerStatuses {
 			}
 		});
 
-		statusesToRemove.forEach((s) => {
-			this.player.game?.addAuditTrail(`${this.player.name} no longer has ${s.status.name}!`);
-			s.status.onRemove?.(this.player, ctx);
-			this._statuses = this._statuses.filter((x) => x !== s);
-		});
+		statusesToRemove.forEach((s) => this.removeStatusEffect(s, ctx));
 	}
 
 	/**

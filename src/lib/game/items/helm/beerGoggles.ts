@@ -1,6 +1,17 @@
+import type { Player } from '../../player/player.svelte';
 import type { Item } from '../itemTypes';
 
 const modName = 'Beer Goggles';
+
+function debuff(opponent: Player) {
+	opponent.addStatModifier(modName, 'attack', -5);
+	opponent.addStatModifier(modName, 'defense', -5);
+}
+
+function clearDebuff(opponent: Player) {
+	opponent.removeStatModifier(modName, 'attack');
+	opponent.removeStatModifier(modName, 'defense');
+}
 
 export const BeerGoggles: Item = {
 	name: 'Beer Goggles',
@@ -10,13 +21,8 @@ export const BeerGoggles: Item = {
 	maxAmount: 1,
 	image: '/Items/HelmEquipables/BeerGoggles.svg',
 
-	onAttackStart(player, defendingPlayer) {
-		defendingPlayer.addStatModifier(modName, 'attack', -5);
-		defendingPlayer.addStatModifier(modName, 'defense', -5);
-	},
-
-	onAttackEnd(player, defendingPlayer) {
-		defendingPlayer.removeStatModifier(modName, 'attack');
-		defendingPlayer.removeStatModifier(modName, 'defense');
-	}
+	onAttackStart: (_player, opponent) => debuff(opponent),
+	onAttackEnd: (_player, opponent) => clearDebuff(opponent),
+	onDefenseStart: (_player, opponent) => debuff(opponent),
+	onDefenseEnd: (_player, opponent) => clearDebuff(opponent)
 };

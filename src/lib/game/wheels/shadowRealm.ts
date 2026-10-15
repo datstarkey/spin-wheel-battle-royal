@@ -1,3 +1,4 @@
+import { getRandomSpawnPoint } from '../board/board.svelte';
 import { addShade } from '../classes/shadeweaver';
 import { requirePlayer, type GameContext } from '../gameContext';
 import { generateRandomPlayerWheel } from './randomPlayerWheel';
@@ -20,11 +21,18 @@ export function generateShadowRealmWheel(playerName: string, ctx: GameContext) {
 	// Grant Shade to all Shadeweavers when someone spins the wheel
 	grantShadeToShadeweavers(ctx);
 
+	const gifts: [stat: 'gold' | 'baseAttack' | 'baseDefense', amount: number, label: string][] = [
+		['gold', 5, 'gold'],
+		['baseAttack', 3, 'Base Attack'],
+		['baseDefense', 3, 'Base Defense']
+	];
+
 	const wheel: WheelBase = [
 		{
 			label: 'Return to spawn',
 			onWin: () => {
-				player.inShadowRealm = false;
+				player.game?.removePlayerFromShadowRealm(player);
+				player.position = { ...getRandomSpawnPoint() };
 				ctx.addAuditTrail(`${player.name} returns to spawn`);
 			}
 		},
@@ -35,48 +43,25 @@ export function generateShadowRealmWheel(playerName: string, ctx: GameContext) {
 				ctx.addAuditTrail(`${player.name} lost 5 gold in the Shadow Realm`);
 			}
 		},
-		{
-			label: 'Give 5 gold to someone',
+		...gifts.map(([stat, amount, label]) => ({
+			label: `Give ${amount} ${label} to someone`,
 			onWin: () => {
 				generateRandomPlayerWheel(
-					`${player.name} Gives 5 gold to someone`,
+					`${player.name} Gives ${amount} ${label} to someone`,
 					(winner) => {
-						player.gold -= 5;
-						winner.gold += 5;
-						ctx.addAuditTrail(`${player.name} gave 5 gold to ${winner.name}`);
+						// Only hand over what was actually lost (stats are clamped at their floor)
+						const before = player[stat];
+						player[stat] -= amount;
+						const given = before - player[stat];
+						winner[stat] += given;
+						ctx.addAuditTrail(
+							`${player.name} gave ${given} ${label.toLowerCase()} to ${winner.name}`
+						);
 					},
 					ctx
 				);
 			}
-		},
-		{
-			label: 'Give 3 Base Attack to someone',
-			onWin: () => {
-				generateRandomPlayerWheel(
-					`${player.name} Gives 3 Base Attack to someone`,
-					(winner) => {
-						player.baseAttack -= 3;
-						winner.baseAttack += 3;
-						ctx.addAuditTrail(`${player.name} gave 3 base attack to ${winner.name}`);
-					},
-					ctx
-				);
-			}
-		},
-		{
-			label: 'Give 3 Base Defense to someone',
-			onWin: () => {
-				generateRandomPlayerWheel(
-					`${player.name} Gives 3 Base Defense to someone`,
-					(winner) => {
-						player.baseDefense -= 3;
-						winner.baseDefense += 3;
-						ctx.addAuditTrail(`${player.name} gave 3 base defense to ${winner.name}`);
-					},
-					ctx
-				);
-			}
-		},
+		})),
 		{
 			label: 'Swap Places with someone',
 			onWin: () => {
@@ -113,10 +98,7 @@ export function generateShadowRealmWheel(playerName: string, ctx: GameContext) {
 						const targetPosition = winner.position;
 						const targetInShadowRealm = winner.inShadowRealm;
 
-						// First change shadow realm status (this triggers auto-teleport to spawn)
 						player.inShadowRealm = targetInShadowRealm;
-
-						// Then override position to target's actual location
 						player.position = targetPosition;
 
 						ctx.addAuditTrail(`${player.name} teleports to ${winner.name}`);

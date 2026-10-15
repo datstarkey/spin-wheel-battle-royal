@@ -1,4 +1,4 @@
-import { localStorageStore } from '$lib/stores/localStorageStore.svelte';
+import { localStorageStore } from '#lib/stores/localStorageStore.svelte.js';
 
 /** Shared wheel color palette for SpinWheel and SlotReel */
 export const WHEEL_COLORS = [

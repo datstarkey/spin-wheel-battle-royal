@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Player } from '$lib/game/player/player.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
 
 	interface Props {
 		player: Player;

@@ -1,4 +1,4 @@
-import { randomFromArray } from '$lib/utils/random';
+import { randomFromArray } from '#lib/utils/random.js';
 import { requirePlayer, type GameContext } from '../gameContext';
 import items, { type AllItems } from '../items/itemTypes';
 import type { Player } from '../player/player.svelte';

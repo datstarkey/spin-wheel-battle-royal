@@ -1,7 +1,7 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import superjson from 'superjson';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, svelte/prefer-svelte-reactivity -- instance cache, not UI state
 const stores = new Map<string, any>();
 
 export class LocalStorageStore<T> {

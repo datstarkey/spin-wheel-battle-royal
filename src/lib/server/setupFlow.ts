@@ -1,7 +1,7 @@
-import { SPAWN_ZONES } from '$lib/game/board/boardData';
-import { classMap, type ClassType } from '$lib/game/classes/classType';
-import type { Game } from '$lib/game/game.svelte';
-import type { Player } from '$lib/game/player/player.svelte';
+import { SPAWN_ZONES } from '#lib/game/board/boardData.js';
+import { classMap, type ClassType } from '#lib/game/classes/classType.js';
+import type { Game } from '#lib/game/game.svelte.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
 import type { GameRoom } from './gameRooms';
 import { generateShuffleOrder } from './wheelUtils';
 

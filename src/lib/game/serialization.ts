@@ -34,6 +34,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isPosition(value: unknown): value is Position {
+	return isObject(value) && isNumber(value.x) && isNumber(value.y);
+}
+
 function isClassType(value: unknown): value is ClassType {
 	return isString(value) && value in classMap;
 }
@@ -140,7 +144,6 @@ export interface SerializedGame {
 	customWheels: [string, unknown][];
 	playerOrder: Record<number, string>;
 	_currentTurn: number;
-	_shadowRealm: { name: string }[];
 	itemCostModifiers: [AllItems, number][];
 	auditTrail: string[];
 	shopCostModifier: number;
@@ -154,6 +157,8 @@ export interface SerializedGame {
 	hasShopped: boolean;
 	hasUsedCasino: boolean;
 	lootedTreasures: string[];
+	winnerName: string | null;
+	teleportDestinations: Position[];
 }
 
 // ============================================================================
@@ -267,7 +272,7 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 
 	// Validate position
 	let position: Position | null = null;
-	if (isObject(data.position) && isNumber(data.position.x) && isNumber(data.position.y)) {
+	if (isPosition(data.position)) {
 		position = { x: data.position.x, y: data.position.y };
 	}
 
@@ -315,16 +320,6 @@ export function validateGame(data: unknown): SerializedGame | null {
 			const validated = validatePlayer(playerData);
 			if (validated) {
 				players.push(validated);
-			}
-		}
-	}
-
-	// Validate shadow realm (stored as name references, not full player data)
-	const shadowRealm: { name: string }[] = [];
-	if (isArray(data._shadowRealm)) {
-		for (const entry of data._shadowRealm) {
-			if (isObject(entry) && isString(entry.name)) {
-				shadowRealm.push({ name: entry.name });
 			}
 		}
 	}
@@ -416,7 +411,6 @@ export function validateGame(data: unknown): SerializedGame | null {
 		customWheels,
 		playerOrder,
 		_currentTurn: isNumber(data._currentTurn) ? data._currentTurn : 0,
-		_shadowRealm: shadowRealm,
 		itemCostModifiers,
 		auditTrail,
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,
@@ -431,6 +425,10 @@ export function validateGame(data: unknown): SerializedGame | null {
 		hasFought: isBoolean(data.hasFought) ? data.hasFought : false,
 		hasShopped: isBoolean(data.hasShopped) ? data.hasShopped : false,
 		hasUsedCasino: isBoolean(data.hasUsedCasino) ? data.hasUsedCasino : false,
-		lootedTreasures
+		lootedTreasures,
+		winnerName: isString(data.winnerName) ? data.winnerName : null,
+		teleportDestinations: isArray(data.teleportDestinations)
+			? data.teleportDestinations.filter(isPosition).map(({ x, y }) => ({ x, y }))
+			: []
 	};
 }
