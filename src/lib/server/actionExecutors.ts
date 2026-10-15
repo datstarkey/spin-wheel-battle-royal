@@ -254,8 +254,9 @@ export function handleGMEditAction(game: Game, action: GMEditAction): ActionMuta
 				return;
 			}
 			case 'GM_SET_RESOURCE':
-				if (typeof action.resource !== 'string' || !(action.resource in player.resources)) {
-					return { success: false, error: 'Unknown resource' };
+				// New keys are allowed: class resources (Mana, Swenergy) only exist once first initialised
+				if (typeof action.resource !== 'string' || action.resource in Object.prototype) {
+					return { success: false, error: 'Invalid resource' };
 				}
 				if (!isValidNonNegativeNumber(action.value)) {
 					return { success: false, error: 'Invalid resource value' };
@@ -268,7 +269,10 @@ export function handleGMEditAction(game: Game, action: GMEditAction): ActionMuta
 				else game.removePlayerFromShadowRealm(player);
 				return;
 			case 'GM_ADD_STATUS':
-				if (!(action.status in statusEffects) || !player.statuses.canHaveStatus(action.status)) {
+				if (
+					!Object.hasOwn(statusEffects, action.status) ||
+					!player.statuses.canHaveStatus(action.status)
+				) {
 					return { success: false, error: 'Invalid status' };
 				}
 				player.statuses.addStatus(action.status);

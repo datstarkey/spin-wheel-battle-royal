@@ -181,8 +181,8 @@ export class Player {
 		if (!this.dead) return;
 		this.dead = false;
 		this.hp = this._maxHp;
-		if (this.classType === 'gambler') this._gold = this._hp;
 		this._game?.addAuditTrail(`${this.name} has been revived!`);
+		if (this._game && this._game.alivePlayers.length > 1) this._game.winnerName = null;
 	}
 
 	dead = $state(false);

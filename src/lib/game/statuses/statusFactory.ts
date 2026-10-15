@@ -17,6 +17,7 @@ export function createStatModifierStatus(
 		},
 		onRemove: (player: Player, _ctx: GameContext) => {
 			for (const { stat, value } of modifiers) {
+				if (player.activeModifiers[stat][config.name] === undefined) continue;
 				player.adjustStatModifier(config.name, stat, -value);
 			}
 		}

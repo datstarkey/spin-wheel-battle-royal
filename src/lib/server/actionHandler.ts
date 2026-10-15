@@ -219,7 +219,12 @@ const actionRegistry = {
 	}),
 	GM_SET_TURN: defineActionHandler({
 		gmOnly: true,
-		execute: ({ game, action }) => handleGMSetTurnAction(game, action.playerName)
+		execute: ({ room, game, action }) => {
+			if (room.pendingWheels.size > 0) {
+				return { success: false, error: 'Resolve the pending wheels first' };
+			}
+			return handleGMSetTurnAction(game, action.playerName);
+		}
 	}),
 	GM_GAME_COMMAND: defineActionHandler({
 		gmOnly: true,

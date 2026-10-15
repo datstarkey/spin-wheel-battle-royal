@@ -114,9 +114,18 @@ export class GameRoom {
 		this.lastActivity = Date.now();
 	}
 
-	/** Register a new name. Known names (even disconnected ones) can only come back via rejoin. */
+	/**
+	 * Register a name. Once setup starts, a known name can only come back through rejoin (its
+	 * token). In the lobby a disconnected non-GM name can be reclaimed: nothing is at stake yet,
+	 * and it stops a player who left from being locked out of their own name.
+	 */
 	addPlayer(name: string, socketId: string, role: Role): boolean {
-		if (this.playerRoles.has(name)) return false;
+		const knownRole = this.playerRoles.get(name);
+		if (knownRole) {
+			const reclaimable =
+				this.phase === 'waiting' && knownRole !== 'gm' && !this.connectedPlayers.has(name);
+			if (!reclaimable) return false;
+		}
 		this.connectedPlayers.set(name, socketId);
 		this.socketToPlayer.set(socketId, name);
 		this.playerRoles.set(name, role);

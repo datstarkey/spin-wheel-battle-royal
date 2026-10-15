@@ -1,4 +1,5 @@
 import type { GameContext } from './gameContext';
+import { getCombatWeights } from './rules';
 import type { Player } from './player/player.svelte';
 import type { WheelBase } from './wheels/wheels';
 
@@ -27,9 +28,7 @@ export function createCombatWheel(
 	attacker.onAttackStart(defender, ctx);
 	defender.onDefenseStart(attacker, ctx);
 
-	// Debuffs can push stats to 0 or below; every fighter keeps at least a sliver of a chance
-	const attackWeight = Math.max(1, attacker.attack);
-	const defenseWeight = Math.max(1, defender.defense);
+	const { attackWeight, defenseWeight } = getCombatWeights(attacker, defender);
 
 	const wheel: WheelBase = [
 		{

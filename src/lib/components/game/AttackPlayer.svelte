@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Player } from '#lib/game/player/player.svelte.js';
 	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
-	import { canAttackTarget, isPlayerOnTile } from '#lib/game/rules.js';
+	import { canAttackTarget, getCombatWeights, isPlayerOnTile } from '#lib/game/rules.js';
 	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
@@ -49,13 +49,16 @@
 		}
 	}
 
-	let totalWeight = $derived((player?.attack ?? 0) + (defendingPlayer?.defense ?? 0));
+	// Same weights the server's combat wheel uses, so the odds shown are the real ones
+	let weights = $derived(
+		defendingPlayer
+			? getCombatWeights(player, defendingPlayer)
+			: { attackWeight: 1, defenseWeight: 1 }
+	);
 	let attackerWinChance = $derived(
-		totalWeight > 0 ? ((player?.attack ?? 0) / totalWeight) * 100 : 50
+		(weights.attackWeight / (weights.attackWeight + weights.defenseWeight)) * 100
 	);
-	let defenderWinChance = $derived(
-		totalWeight > 0 ? ((defendingPlayer?.defense ?? 0) / totalWeight) * 100 : 50
-	);
+	let defenderWinChance = $derived(100 - attackerWinChance);
 	let isFavored = $derived(attackerWinChance > 50);
 
 	let casinoCheck = $derived.by(() => {

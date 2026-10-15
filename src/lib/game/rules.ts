@@ -26,6 +26,14 @@ export function canAttackTarget(attacker: Player, target: Player): boolean {
 	return getManhattanDistance(attacker.position, target.position) <= attacker.attackRange;
 }
 
+/** Combat wheel weights. Debuffs can push stats to 0 or below; every fighter keeps a sliver of a chance */
+export function getCombatWeights(attacker: Player, defender: Player) {
+	return {
+		attackWeight: Math.max(1, attacker.attack),
+		defenseWeight: Math.max(1, defender.defense)
+	};
+}
+
 export function isPlayerOnTile(player: Player, type: TileType): boolean {
 	return !!player.position && getTileAt(player.position)?.type === type;
 }

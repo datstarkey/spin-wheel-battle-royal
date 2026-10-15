@@ -294,6 +294,10 @@ export class Game {
 
 	/** GM override: hand the turn to a slot, starting it fresh */
 	setTurnTo(turnIndex: number, ctx?: GameContext) {
+		this.currentPlayer?.onTurnEnd(resolveCtx(ctx), {
+			hasMoved: this.hasMoved,
+			totalMovement: this.currentPlayer.movement
+		});
 		this.currentTurn = turnIndex;
 		this.hasTurnStarted = false;
 		this.resetTurnActions();

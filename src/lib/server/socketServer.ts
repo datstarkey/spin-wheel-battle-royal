@@ -69,11 +69,12 @@ export function getIO(): TypedServer | null {
 
 /** Execute an action for a player and broadcast the outcome to their room. */
 function runAction(room: GameRoom, playerName: string, action: GameAction) {
-	const wheel =
-		action.type === 'WHEEL_SPIN_RESULT' ? room.pendingWheels.get(action.wheelKey) : undefined;
-	clearTimeout(wheel?.resolveTimer);
+	const wheelKey = action.type === 'WHEEL_SPIN_RESULT' ? action.wheelKey : undefined;
+	const wheel = wheelKey !== undefined ? room.pendingWheels.get(wheelKey) : undefined;
 
 	const result = handleAction(room, playerName, action);
+	// Only a resolved wheel cancels its auto-resolve; a rejected confirm must not disarm it
+	if (wheel && room.pendingWheels.get(wheelKey!) !== wheel) clearTimeout(wheel.resolveTimer);
 	// Failed actions only broadcast when they still changed state (an executor threw mid-way)
 	if (!result.success && !result.gameState) return result;
 
@@ -179,7 +180,7 @@ export function initSocketServer(httpServer: HttpServer): TypedServer {
 			room.rejoinTokens.set(gmName, rejoinToken);
 
 			socket.emit('room:state_update', snapshot(room));
-			ack({ success: true, roomCode: room.code, rejoinToken });
+			ack({ success: true, roomCode: room.code, playerName: gmName, rejoinToken });
 		});
 
 		on('room:join', (data, callback) => {

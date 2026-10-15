@@ -240,7 +240,7 @@ class SocketStore {
 			this.socket!.emit('room:create', { gmName, password }, (response) => {
 				if (response.success && response.roomCode) {
 					this.mpStore.setMyRole('gm');
-					this.mpStore.setMyPlayerName(gmName);
+					this.mpStore.setMyPlayerName(response.playerName ?? gmName);
 					this.mpStore.setRoomCode(response.roomCode);
 					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();

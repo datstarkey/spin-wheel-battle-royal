@@ -188,6 +188,8 @@ export interface ClientToServerEvents {
 		callback: (response: {
 			success: boolean;
 			roomCode?: string;
+			/** The name as the server stored it (normalized) */
+			playerName?: string;
 			rejoinToken?: string;
 			error?: string;
 		}) => void
