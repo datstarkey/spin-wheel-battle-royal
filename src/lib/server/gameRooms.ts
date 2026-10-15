@@ -1,9 +1,15 @@
 import { createHash } from 'crypto';
-import { Game } from '$lib/game/game.svelte';
-import { Player } from '$lib/game/player/player.svelte';
-import type { WheelBase } from '$lib/game/wheels/wheels';
-import type { WheelTheme } from '$lib/components/wheel/types';
-import type { CombatState, Role, RoomPhase, RoomPlayer, RoomState } from '$lib/multiplayer/types';
+import { Game } from '#lib/game/game.svelte.js';
+import { Player } from '#lib/game/player/player.svelte.js';
+import type { WheelBase } from '#lib/game/wheels/wheels.js';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type {
+	CombatState,
+	Role,
+	RoomPhase,
+	RoomPlayer,
+	RoomState
+} from '#lib/multiplayer/types.js';
 
 /** Hash a password with SHA-256 */
 function hashPassword(password: string): string {

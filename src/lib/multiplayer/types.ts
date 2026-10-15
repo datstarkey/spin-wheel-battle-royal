@@ -1,7 +1,7 @@
-import type { Position } from '$lib/game/board/types';
-import type { ClassType } from '$lib/game/classes/classType';
-import type { AllItems } from '$lib/game/items/itemTypes';
-import type { WheelTheme } from '$lib/components/wheel/types';
+import type { Position } from '#lib/game/board/types.js';
+import type { ClassType } from '#lib/game/classes/classType.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
 
 // ============================================================================
 // Roles

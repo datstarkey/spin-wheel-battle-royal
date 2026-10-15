@@ -1,4 +1,4 @@
-import toast from '$lib/stores/toaster.svelte';
+import toast from '#lib/stores/toaster.svelte.js';
 import type { GameContext } from '../gameContext';
 import type { SerializedPlayerStatuses } from '../serialization';
 import type { StatusEffect, StatusType } from '../statuses/statusTypes';

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
 	const socket = getSocketStore();
-	import type { CustomWheelConfig } from '$lib/game/wheels/wheels';
+	import type { CustomWheelConfig } from '#lib/game/wheels/wheels.js';
 	import CustomWheel from './CustomWheel.svelte';
 
 	const mp = getMultiplayerStore();

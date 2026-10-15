@@ -1,5 +1,5 @@
-import { classMap } from '$lib/game/classes/classType';
-import type { Game } from '$lib/game/game.svelte';
+import { classMap } from '#lib/game/classes/classType.js';
+import type { Game } from '#lib/game/game.svelte.js';
 import type { SpinWheelItem } from './types';
 
 export function playerNameSpinItems(game: Game | null): SpinWheelItem[] {

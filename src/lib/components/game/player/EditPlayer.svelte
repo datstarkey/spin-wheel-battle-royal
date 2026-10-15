@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import Select from '$lib/components/forms/Select.svelte';
-	import Stepper from '$lib/components/ui/Stepper.svelte';
-	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
-	import { classMap } from '$lib/game/classes/classType';
-	import type { Player } from '$lib/game/player/player.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import Select from '#lib/components/forms/Select.svelte';
+	import Stepper from '#lib/components/ui/Stepper.svelte';
+	import PullOutMenu from '#lib/components/pullOutMenu/PullOutMenu.svelte';
+	import { classMap } from '#lib/game/classes/classType.js';
+	import type { Player } from '#lib/game/player/player.svelte.js';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import EditPlayerResources from './edit/EditPlayerResources.svelte';
 	import EditPlayerEquipment from './edit/EditPlayerEquipment.svelte';

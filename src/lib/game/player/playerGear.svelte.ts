@@ -1,4 +1,4 @@
-import toast from '$lib/stores/toaster.svelte';
+import toast from '#lib/stores/toaster.svelte.js';
 import type { GameContext } from '../gameContext';
 import type { AllItems, Consumables, Item, ItemType } from '../items/itemTypes';
 import items, {

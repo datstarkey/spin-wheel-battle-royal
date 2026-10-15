@@ -1,4 +1,4 @@
-import toast from '$lib/stores/toaster.svelte';
+import toast from '#lib/stores/toaster.svelte.js';
 import { teleportToRandomSpawn } from '../board/teleportUtils';
 import type { GameContext } from '../gameContext';
 import type { Game } from '../game.svelte';

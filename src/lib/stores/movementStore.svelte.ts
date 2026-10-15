@@ -1,13 +1,13 @@
 import { createContext } from 'svelte';
-import { gameBoard, getValidMoves } from '$lib/game/board/board.svelte';
-import type { Position } from '$lib/game/board/types';
-import { getManhattanDistance, positionsEqual } from '$lib/game/board/types';
-import toast from '$lib/stores/toaster.svelte';
-import { canPlayerMove } from '$lib/game/board/teleportUtils';
+import { gameBoard, getValidMoves } from '#lib/game/board/board.svelte.js';
+import type { Position } from '#lib/game/board/types.js';
+import { getManhattanDistance, positionsEqual } from '#lib/game/board/types.js';
+import toast from '#lib/stores/toaster.svelte.js';
+import { canPlayerMove } from '#lib/game/board/teleportUtils.js';
 
 type GameStoreInstance = ReturnType<typeof import('./gameStore.svelte').setGameStore>;
 type SocketStoreInstance = ReturnType<
-	typeof import('$lib/multiplayer/socketStore.svelte').setSocketStore
+	typeof import('#lib/multiplayer/socketStore.svelte.js').setSocketStore
 >;
 
 class MovementStore {

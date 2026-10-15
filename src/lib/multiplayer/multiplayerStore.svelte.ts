@@ -1,5 +1,5 @@
 import { createContext } from 'svelte';
-import type { Position } from '$lib/game/board/types';
+import type { Position } from '#lib/game/board/types.js';
 import type {
 	CombatState,
 	PendingWheelPayload,

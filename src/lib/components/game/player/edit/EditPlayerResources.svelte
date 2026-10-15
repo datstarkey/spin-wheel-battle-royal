@@ -1,11 +1,14 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import Stepper from '$lib/components/ui/Stepper.svelte';
-	import { HIDDEN_RESOURCES } from '$lib/components/game/player/shared/playerDisplayConstants';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { MANA_RESOURCE, MAX_MANA } from '$lib/game/wheels/spellWheels';
-	import { LUCKY_STREAK_RESOURCE, updateLuckyStreakMultipliers } from '$lib/game/classes/gambler';
-	import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
+	import Icon from '#lib/components/Icon.svelte';
+	import Stepper from '#lib/components/ui/Stepper.svelte';
+	import { HIDDEN_RESOURCES } from '#lib/components/game/player/shared/playerDisplayConstants.js';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { MANA_RESOURCE, MAX_MANA } from '#lib/game/wheels/spellWheels.js';
+	import {
+		LUCKY_STREAK_RESOURCE,
+		updateLuckyStreakMultipliers
+	} from '#lib/game/classes/gambler.js';
+	import { Swenergy as SWENERGY_RESOURCE } from '#lib/game/classes/swe.js';
 
 	interface SpecialResourceCard {
 		resource: string;

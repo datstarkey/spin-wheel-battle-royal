@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import GameBoard from '$lib/components/board/GameBoard.svelte';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import GameBoard from '#lib/components/board/GameBoard.svelte';
 	import GameHistory from './GameHistory.svelte';
 	import PlayerCard from './player/PlayerCard.svelte';
 	import PlayerCardSmall from './player/PlayerCardSmall.svelte';

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
 	import {
 		mainhands,
 		offhands,
@@ -12,7 +12,7 @@
 		type Helms,
 		type Chests,
 		type Consumables
-	} from '$lib/game/items/itemTypes';
+	} from '#lib/game/items/itemTypes.js';
 
 	type EquipmentSlotKey = 'mainhand' | 'offHand' | 'helm' | 'chest';
 	type EquipmentSelectionKey = EquipmentSlotKey | 'consumable';

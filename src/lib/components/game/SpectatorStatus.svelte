@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 
 	const mp = getMultiplayerStore();
 

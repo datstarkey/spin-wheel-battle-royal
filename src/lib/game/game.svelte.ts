@@ -1,6 +1,6 @@
-import { shuffle } from '$lib/components/wheel/utils';
-import type { GameStateDelta } from '$lib/multiplayer/types';
-import toast from '$lib/stores/toaster.svelte';
+import { shuffle } from '#lib/components/wheel/utils.js';
+import type { GameStateDelta } from '#lib/multiplayer/types.js';
+import toast from '#lib/stores/toaster.svelte.js';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import type { GameContext } from './gameContext';
 import items, { getItemByType, type AllItems, type Item } from './items/itemTypes';

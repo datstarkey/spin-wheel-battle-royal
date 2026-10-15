@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { WheelTheme } from '$lib/components/wheel/types';
-	import type { WheelSpinParams, WheelSpinState } from '$lib/multiplayer/types';
-	import type { WheelBase } from '$lib/game/wheels/wheels';
+	import type { WheelTheme } from '#lib/components/wheel/types.js';
+	import type { WheelSpinParams, WheelSpinState } from '#lib/multiplayer/types.js';
+	import type { WheelBase } from '#lib/game/wheels/wheels.js';
 	import { tick, untrack } from 'svelte';
 	import SpinWheel from './SpinWheel.svelte';
 	import SlotReel from './SlotReel.svelte';

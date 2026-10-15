@@ -1,21 +1,21 @@
 <script lang="ts">
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import { getMovementStore } from '$lib/stores/movementStore.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import { getMovementStore } from '#lib/stores/movementStore.svelte.js';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
 	const gs = getGameStore();
 	const movement = getMovementStore();
 	const mp = getMultiplayerStore();
 	const socket = getSocketStore();
-	import { getCasinoEntryFee } from '$lib/game/wheels/casinoWheel';
-	import toast from '$lib/stores/toaster.svelte';
+	import { getCasinoEntryFee } from '#lib/game/wheels/casinoWheel.js';
+	import toast from '#lib/stores/toaster.svelte.js';
 	import Portal from '../Portal.svelte';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
 	import type { SpinWheelItem } from '../wheel/types';
 	import PlayerShop from './player/PlayerShop.svelte';
-	import Icon from '$lib/components/Icon.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 
 	interface Props {
 		player: Player;

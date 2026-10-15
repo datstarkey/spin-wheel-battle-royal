@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 	import AttackPlayer from '../AttackPlayer.svelte';
 	import EditPlayer from './EditPlayer.svelte';
 	import WheelDropdown from './WheelDropdown.svelte';

@@ -1,30 +1,30 @@
-import { Game } from '$lib/game/game.svelte';
+import { Game } from '#lib/game/game.svelte.js';
 import {
 	getPathDistance,
 	getValidMoves,
 	getTileAt,
 	isOuterTeleporter,
 	isInnerTeleporter
-} from '$lib/game/board/board.svelte';
-import { getManhattanDistance } from '$lib/game/board/types';
-import { executeTileAction } from '$lib/game/board/tileActions';
-import { grantUnusedMovementMana } from '$lib/game/classes/magicman';
-import { type ClassType } from '$lib/game/classes/classType';
-import items, { getItemByType, type AllItems } from '$lib/game/items/itemTypes';
-import type { Consumables } from '$lib/game/items/itemTypes';
-import type { Player } from '$lib/game/player/player.svelte';
-import type { ActionOf, GMWheelType, Role } from '$lib/multiplayer/types';
-import { createCombatWheel } from '$lib/game/combat';
-import { generateButtonWheel } from '$lib/game/wheels/buttonWheel';
-import { generateCasinoWheel } from '$lib/game/wheels/casinoWheel';
-import { generateGamblerWheel } from '$lib/game/wheels/gamblerWheel';
-import { generateLootWheel } from '$lib/game/wheels/lootWheel';
-import { generateShadowRealmWheel } from '$lib/game/wheels/shadowRealm';
+} from '#lib/game/board/board.svelte.js';
+import { getManhattanDistance } from '#lib/game/board/types.js';
+import { executeTileAction } from '#lib/game/board/tileActions.js';
+import { grantUnusedMovementMana } from '#lib/game/classes/magicman.js';
+import { type ClassType } from '#lib/game/classes/classType.js';
+import items, { getItemByType, type AllItems } from '#lib/game/items/itemTypes.js';
+import type { Consumables } from '#lib/game/items/itemTypes.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
+import type { ActionOf, GMWheelType, Role } from '#lib/multiplayer/types.js';
+import { createCombatWheel } from '#lib/game/combat.js';
+import { generateButtonWheel } from '#lib/game/wheels/buttonWheel.js';
+import { generateCasinoWheel } from '#lib/game/wheels/casinoWheel.js';
+import { generateGamblerWheel } from '#lib/game/wheels/gamblerWheel.js';
+import { generateLootWheel } from '#lib/game/wheels/lootWheel.js';
+import { generateShadowRealmWheel } from '#lib/game/wheels/shadowRealm.js';
 import {
 	generateMajorSpellWheel,
 	generateMinorSpellWheel,
 	generateUltimateSpellWheel
-} from '$lib/game/wheels/spellWheels';
+} from '#lib/game/wheels/spellWheels.js';
 import type { ActionResult } from './actionHandler';
 import type { GameRoom } from './gameRooms';
 import { toPendingWheelPayload } from './pendingWheelPayload';
@@ -42,11 +42,7 @@ type GMSimplePlayerAction = Extract<
 	>,
 	{
 		type:
-			| 'GM_SET_CLASS'
-			| 'GM_GIVE_ITEM'
-			| 'GM_KILL_PLAYER'
-			| 'GM_REVIVE_PLAYER'
-			| 'GM_REMOVE_ITEM';
+			'GM_SET_CLASS' | 'GM_GIVE_ITEM' | 'GM_KILL_PLAYER' | 'GM_REVIVE_PLAYER' | 'GM_REMOVE_ITEM';
 	}
 >;
 type MoveAction = ActionOf<'MOVE'>;

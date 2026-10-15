@@ -1,6 +1,6 @@
-import type { Handle, ServerInit } from '@sveltejs/kit';
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import type { Server as HttpServer } from 'http';
-import { initSocketServer } from '$lib/server/socketServer';
+import { initSocketServer } from '#lib/server/socketServer.js';
 
 declare global {
 	// eslint-disable-next-line no-var

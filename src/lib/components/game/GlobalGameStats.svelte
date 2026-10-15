@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import Stepper from '$lib/components/ui/Stepper.svelte';
-	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import toast from '$lib/stores/toaster.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import Stepper from '#lib/components/ui/Stepper.svelte';
+	import PullOutMenu from '#lib/components/pullOutMenu/PullOutMenu.svelte';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import toast from '#lib/stores/toaster.svelte.js';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
 	const gs = getGameStore();

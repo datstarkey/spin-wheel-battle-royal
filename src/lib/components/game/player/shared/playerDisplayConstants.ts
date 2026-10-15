@@ -1,5 +1,5 @@
-import { MANA_RESOURCE, RUNE_OF_POWER_TURNS_KEY } from '$lib/game/wheels/spellWheels';
-import { Swenergy as SWENERGY_RESOURCE } from '$lib/game/classes/swe';
+import { MANA_RESOURCE, RUNE_OF_POWER_TURNS_KEY } from '#lib/game/wheels/spellWheels.js';
+import { Swenergy as SWENERGY_RESOURCE } from '#lib/game/classes/swe.js';
 
 /** HP thresholds for color transitions on HP bars */
 export const HP_CRITICAL = 5;

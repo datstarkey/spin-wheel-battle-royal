@@ -1,8 +1,8 @@
 import { createContext } from 'svelte';
-import { gameBoard } from '$lib/game/board/board.svelte';
-import type { Game } from '$lib/game/game.svelte';
-import type { AllItems } from '$lib/game/items/itemTypes';
-import type { Player } from '$lib/game/player/player.svelte';
+import { gameBoard } from '#lib/game/board/board.svelte.js';
+import type { Game } from '#lib/game/game.svelte.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
 
 // ============================================================================
 // Store Class

@@ -58,8 +58,9 @@ h6 {
 }
 
 code {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-		'Courier New', monospace;
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
 	font-size: 0.875rem;
 	background-color: var(--color-surface-200);
 	padding: 0.125rem 0.25rem;
@@ -68,9 +69,7 @@ code {
 
 .select,
 .input,
-.textarea,
-.ig-input,
-.ig-select {
+.textarea {
 	background-color: var(--color-surface-50-950);
 	color: var(--color-surface-950-50);
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
 
 	interface Props {
 		player: Player;
@@ -57,7 +57,7 @@
 							<Icon icon={section.icon} class="{section.colorClass} text-xs" />
 							<span class="text-surface-400">{section.label}:</span>
 						</div>
-						{#each entries as [source, value]}
+						{#each entries as [source, value] (source)}
 							<div class="ml-4 flex items-center gap-2">
 								<button
 									type="button"

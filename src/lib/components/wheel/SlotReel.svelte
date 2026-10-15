@@ -6,7 +6,7 @@
 	import { onDestroy } from 'svelte';
 	import Icon from '../Icon.svelte';
 	import type { SpinWheelItem } from './types';
-	import type { WheelSpinParams } from '$lib/multiplayer/types';
+	import type { WheelSpinParams } from '#lib/multiplayer/types.js';
 	import { shuffle } from './utils';
 
 	interface Props {

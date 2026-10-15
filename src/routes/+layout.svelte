@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import SoundCloudPlayer from '$lib/components/audio/SoundCloudPlayer.svelte';
-	import GlobalGameStats from '$lib/components/game/GlobalGameStats.svelte';
-	import ClassesHelpModal from '$lib/components/help/ClassesHelpModal.svelte';
-	import ConnectionStatus from '$lib/components/multiplayer/ConnectionStatus.svelte';
-	import { quickMode } from '$lib/components/wheel/constants';
-	import { setGameStore } from '$lib/stores/gameStore.svelte';
-	import { setBattleMusicStore } from '$lib/stores/battleMusic.svelte';
-	import { setMovementStore } from '$lib/stores/movementStore.svelte';
-	import { setMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { setSocketStore } from '$lib/multiplayer/socketStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import SoundCloudPlayer from '#lib/components/audio/SoundCloudPlayer.svelte';
+	import GlobalGameStats from '#lib/components/game/GlobalGameStats.svelte';
+	import ClassesHelpModal from '#lib/components/help/ClassesHelpModal.svelte';
+	import ConnectionStatus from '#lib/components/multiplayer/ConnectionStatus.svelte';
+	import { quickMode } from '#lib/components/wheel/constants.js';
+	import { setGameStore } from '#lib/stores/gameStore.svelte.js';
+	import { setBattleMusicStore } from '#lib/stores/battleMusic.svelte.js';
+	import { setMovementStore } from '#lib/stores/movementStore.svelte.js';
+	import { setMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { setSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 	import { Toaster } from 'svelte-sonner';
 	import '../app.css';
 

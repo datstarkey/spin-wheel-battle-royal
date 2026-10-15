@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
-	import type { GMWheelType } from '$lib/multiplayer/types';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import type { GMWheelType } from '#lib/multiplayer/types.js';
 
 	const socket = getSocketStore();
-	import toast from '$lib/stores/toaster.svelte';
+	import toast from '#lib/stores/toaster.svelte.js';
 
 	interface Props {
 		player: Player;

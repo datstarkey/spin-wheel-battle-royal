@@ -1,9 +1,9 @@
 import { createContext } from 'svelte';
 import { io, type Socket } from 'socket.io-client';
-import { Game } from '$lib/game/game.svelte';
-import type { Position } from '$lib/game/board/types';
-import type { ClassType } from '$lib/game/classes/classType';
-import type { AllItems } from '$lib/game/items/itemTypes';
+import { Game } from '#lib/game/game.svelte.js';
+import type { Position } from '#lib/game/board/types.js';
+import type { ClassType } from '#lib/game/classes/classType.js';
+import type { AllItems } from '#lib/game/items/itemTypes.js';
 import type {
 	ActionOf,
 	ActionPayload,
@@ -22,7 +22,7 @@ import { loadSession } from './multiplayerStore.svelte';
 // Store Instance Types (inferred from setter return values)
 // ============================================================================
 
-type GameStoreInstance = ReturnType<typeof import('$lib/stores/gameStore.svelte').setGameStore>;
+type GameStoreInstance = ReturnType<typeof import('#lib/stores/gameStore.svelte.js').setGameStore>;
 type MultiplayerStoreInstance = ReturnType<
 	typeof import('./multiplayerStore.svelte').setMultiplayerStore
 >;

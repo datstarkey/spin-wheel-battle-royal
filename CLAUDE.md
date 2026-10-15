@@ -154,7 +154,7 @@ movementStore.setSocketStore(socket);
 
 **Game logic access** (classes, items, statuses, wheels, tileActions — server-side only):
 
-- `getServerGameContext()` from `$lib/server/serverContext` for GameContext operations (addCustomWheel, getPlayerByName, etc.)
+- `getServerGameContext()` from `#lib/server/serverContext` for GameContext operations (addCustomWheel, getPlayerByName, etc.)
 - `player.game?.addAuditTrail()` via Player's `_game: Game` reference for simple audit trail calls
 
 ### Key Architectural Patterns
@@ -535,7 +535,7 @@ Players auto-added as game players on `room:join` (no GM_ADD_PLAYER action)
 
 ### Known Pre-existing Issues
 
-- `BoardTile.svelte` has a `$lib` import inside a `<style>` block that fails during `pnpm run check` — unrelated to multiplayer
+- `BoardTile.svelte` has a `#lib` import inside a `<style>` block that fails during `pnpm run check` — unrelated to multiplayer
 
 ### Known Technical Debt
 
@@ -568,5 +568,5 @@ State transitions are reactive (driven by `mp.isConnected`, `gs.game?.started`, 
 
 ### Vite Plugin Notes
 
-- `import('./src/lib/...')` does **not** resolve `$lib` aliases — use `server.ssrLoadModule()` instead (see `vite-plugin-socket.ts`)
+- `import('./src/lib/...')` does **not** resolve `#lib` aliases — use `server.ssrLoadModule()` instead (see `vite-plugin-socket.ts`)
 - `{@const}` in Svelte must be inside `{#if}`, `{#each}`, etc. — not inside plain `<div>`. Use `$derived` in script block instead.

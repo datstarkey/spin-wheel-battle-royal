@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import PullOutMenu from '$lib/components/pullOutMenu/PullOutMenu.svelte';
-	import type { AllItems } from '$lib/game/items/itemTypes';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import PullOutMenu from '#lib/components/pullOutMenu/PullOutMenu.svelte';
+	import type { AllItems } from '#lib/game/items/itemTypes.js';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 
 	const gs = getGameStore();
 	const socket = getSocketStore();
@@ -381,7 +381,7 @@
 						</div>
 
 						<!-- Corner accents -->
-						{#each ['top-0 left-0 border-t-2 border-l-2', 'top-0 right-0 border-t-2 border-r-2', 'bottom-0 left-0 border-b-2 border-l-2', 'right-0 bottom-0 border-r-2 border-b-2'] as pos}
+						{#each ['top-0 left-0 border-t-2 border-l-2', 'top-0 right-0 border-t-2 border-r-2', 'bottom-0 left-0 border-b-2 border-l-2', 'right-0 bottom-0 border-r-2 border-b-2'] as pos (pos)}
 							<div
 								class="pointer-events-none absolute h-3 w-3 opacity-30 transition-opacity group-hover:opacity-70 {pos}
 									{canAfford ? (catConfig?.cornerBorder ?? '') : 'border-surface-600'}"

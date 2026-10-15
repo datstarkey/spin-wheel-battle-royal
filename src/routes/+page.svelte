@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Icon from '$lib/components/Icon.svelte';
-	import Players from '$lib/components/game/Players.svelte';
-	import CustomWheels from '$lib/components/wheel/CustomWheels.svelte';
-	import RoomLobby from '$lib/components/multiplayer/RoomLobby.svelte';
-	import LobbyMenu from '$lib/components/multiplayer/LobbyMenu.svelte';
-	import { getMultiplayerStore, loadSession } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import Players from '#lib/components/game/Players.svelte';
+	import CustomWheels from '#lib/components/wheel/CustomWheels.svelte';
+	import RoomLobby from '#lib/components/multiplayer/RoomLobby.svelte';
+	import LobbyMenu from '#lib/components/multiplayer/LobbyMenu.svelte';
+	import { getMultiplayerStore, loadSession } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 
 	const gs = getGameStore();
 	const mp = getMultiplayerStore();

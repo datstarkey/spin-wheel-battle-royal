@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { BOARD_WIDTH, BOARD_HEIGHT, TILES, TREASURE_CHESTS } from '$lib/game/board/boardData';
-	import { gameBoard } from '$lib/game/board/board.svelte';
-	import type { Position, Tile } from '$lib/game/board/types';
-	import { positionsEqual } from '$lib/game/board/types';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
-	import { getMovementStore } from '$lib/stores/movementStore.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import { BOARD_WIDTH, BOARD_HEIGHT, TILES, TREASURE_CHESTS } from '#lib/game/board/boardData.js';
+	import { gameBoard } from '#lib/game/board/board.svelte.js';
+	import type { Position, Tile } from '#lib/game/board/types.js';
+	import { positionsEqual } from '#lib/game/board/types.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
+	import { getMovementStore } from '#lib/stores/movementStore.svelte.js';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 
-	import Icon from '$lib/components/Icon.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import PlayerToken from './PlayerToken.svelte';
 
 	const gs = getGameStore();
@@ -19,6 +19,7 @@
 	let spectatorMoveSet = $derived.by(() => {
 		const moves = mp.spectatorMoves;
 		if (moves.length === 0) return null;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- rebuilt each derivation, never mutated after
 		const set = new Set<string>();
 		for (const m of moves) set.add(`${m.x},${m.y}`);
 		return set;

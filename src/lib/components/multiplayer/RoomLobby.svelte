@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import Button from '$lib/components/Button.svelte';
-	import Icon from '$lib/components/Icon.svelte';
-	import CustomWheels from '$lib/components/wheel/CustomWheels.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
-	import { getSocketStore } from '$lib/multiplayer/socketStore.svelte';
-	import { getGameStore } from '$lib/stores/gameStore.svelte';
+	import Button from '#lib/components/Button.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import CustomWheels from '#lib/components/wheel/CustomWheels.svelte';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 
 	const gs = getGameStore();
 	const mp = getMultiplayerStore();

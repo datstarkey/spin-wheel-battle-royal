@@ -6,47 +6,52 @@
 [data-theme='battle-arena'] {
 	/* Typography - Monospace for tactical feel */
 	--text-scaling: 1;
-	--base-font-color: var(--color-surface-900);
-	--base-font-color-dark: var(--color-surface-100);
-	--base-font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco,
-		Consolas, monospace;
-	--base-font-size: inherit;
-	--base-line-height: inherit;
-	--base-font-weight: normal;
-	--base-font-style: normal;
-	--base-letter-spacing: 0.025em;
+	--typo-base--color-light: var(--color-surface-900);
+	--typo-base--color-dark: var(--color-surface-100);
+	--typo-base--font-family:
+		'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	--typo-base--font-size: inherit;
+	--typo-base--line-height: inherit;
+	--typo-base--font-weight: normal;
+	--typo-base--font-style: normal;
+	--typo-base--letter-spacing: 0.025em;
 
-	--heading-font-color: var(--color-surface-950);
-	--heading-font-color-dark: var(--color-surface-50);
-	--heading-font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
-	--heading-font-weight: 700;
-	--heading-font-style: normal;
-	--heading-letter-spacing: 0.05em;
+	--typo-heading--color-light: var(--color-surface-950);
+	--typo-heading--color-dark: var(--color-surface-50);
+	--typo-heading--font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+	--typo-heading--font-weight: 700;
+	--typo-heading--font-style: normal;
+	--typo-heading--letter-spacing: 0.05em;
 
-	--anchor-font-color: var(--color-primary-600);
-	--anchor-font-color-dark: var(--color-primary-400);
-	--anchor-font-family: inherit;
-	--anchor-font-size: inherit;
-	--anchor-line-height: inherit;
-	--anchor-font-weight: inherit;
-	--anchor-font-style: inherit;
-	--anchor-letter-spacing: inherit;
-	--anchor-text-decoration: none;
-	--anchor-text-decoration-hover: underline;
-	--anchor-text-decoration-active: none;
-	--anchor-text-decoration-focus: none;
+	--typo-anchor--color-light: var(--color-primary-600);
+	--typo-anchor--color-dark: var(--color-primary-400);
+	--typo-anchor--font-family: inherit;
+	--typo-anchor--font-size: inherit;
+	--typo-anchor--line-height: inherit;
+	--typo-anchor--font-weight: inherit;
+	--typo-anchor--font-style: inherit;
+	--typo-anchor--letter-spacing: inherit;
+	--typo-anchor--text-decoration-line: none;
+	--typo-anchor--hover--text-decoration-line: underline;
+	--typo-anchor--active--text-decoration-line: none;
+	--typo-anchor--focus--text-decoration-line: none;
 
 	/* Spacing and Borders - Sharp, minimal */
 	--spacing: 0.25rem;
 	--radius-base: 2px;
 	--radius-container: 4px;
 	--default-border-width: 1px;
-	--default-divide-width: 1px;
 	--default-ring-width: 2px;
 
+	/* Brand - Crimson (v5 default for switches, tabs, steps) */
+	--color-brand-light: var(--color-primary-500);
+	--color-brand-contrast-light: var(--color-primary-contrast-500);
+	--color-brand-dark: var(--color-primary-500);
+	--color-brand-contrast-dark: var(--color-primary-contrast-500);
+
 	/* Body Background */
-	--body-background-color: oklch(96% 0.005 240deg);
-	--body-background-color-dark: oklch(12% 0.01 260deg);
+	--color-root-bg-light: oklch(96% 0.005 240deg);
+	--color-root-bg-dark: oklch(12% 0.01 260deg);
 
 	/* Primary - Crimson Red (Attack/Danger/Active) */
 	--color-primary-50: oklch(97% 0.02 15deg);

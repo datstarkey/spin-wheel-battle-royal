@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import type { Player } from '$lib/game/player/player.svelte';
-	import statusEffects, { type StatusType } from '$lib/game/statuses/statusTypes';
+	import Icon from '#lib/components/Icon.svelte';
+	import type { Player } from '#lib/game/player/player.svelte.js';
+	import statusEffects, { type StatusType } from '#lib/game/statuses/statusTypes.js';
 
 	interface Props {
 		player: Player;

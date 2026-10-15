@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Server as SocketServer, type Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
-import type { ClientToServerEvents, ServerToClientEvents } from '$lib/multiplayer/types';
+import type { ClientToServerEvents, ServerToClientEvents } from '#lib/multiplayer/types.js';
 import { createRoom, getRoom, startCleanupTimer, type GameRoom } from './gameRooms';
 import { handleAction, type ActionResult } from './actionHandler';
 import { toPendingWheelPayload } from './pendingWheelPayload';

@@ -1,7 +1,7 @@
-import type { WheelTheme } from '$lib/components/wheel/types';
-import type { GameContext } from '$lib/game/gameContext';
-import type { Player } from '$lib/game/player/player.svelte';
-import type { WheelBase } from '$lib/game/wheels/wheels';
+import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type { GameContext } from '#lib/game/gameContext.js';
+import type { Player } from '#lib/game/player/player.svelte.js';
+import type { WheelBase } from '#lib/game/wheels/wheels.js';
 import type { GameRoom } from './gameRooms';
 import { generateShuffleOrder } from './wheelUtils';
 

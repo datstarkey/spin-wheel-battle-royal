@@ -1,4 +1,4 @@
-import type { GameContext } from '$lib/game/gameContext';
+import type { GameContext } from '#lib/game/gameContext.js';
 
 /**
  * Module-level server GameContext.

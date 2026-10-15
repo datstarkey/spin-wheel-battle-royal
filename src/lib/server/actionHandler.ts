@@ -1,5 +1,5 @@
-import { setServerGameContext } from '$lib/game/serverContext';
-import { Game } from '$lib/game/game.svelte';
+import { setServerGameContext } from '#lib/game/serverContext.js';
+import { Game } from '#lib/game/game.svelte.js';
 import type {
 	ActionOf,
 	ActionType,
@@ -7,7 +7,7 @@ import type {
 	GameAction,
 	GameStateDelta,
 	PendingWheelPayload
-} from '$lib/multiplayer/types';
+} from '#lib/multiplayer/types.js';
 import {
 	type ActionMutationResult,
 	buildActionSuccessResult,

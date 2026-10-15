@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Icon from '$lib/components/Icon.svelte';
-	import { getMultiplayerStore } from '$lib/multiplayer/multiplayerStore.svelte';
+	import Icon from '#lib/components/Icon.svelte';
+	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 
 	const mp = getMultiplayerStore();
 

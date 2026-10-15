@@ -1,5 +1,5 @@
 # Use buildplatform for faster builds on Apple Silicon
-FROM --platform=$BUILDPLATFORM node:20-slim AS base
+FROM --platform=$BUILDPLATFORM node:24-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -14,7 +14,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build
 
 # Final stage uses target platform (linux/amd64)
-FROM  node:18-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app/build
