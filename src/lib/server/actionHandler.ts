@@ -15,6 +15,9 @@ import {
 	handleCasinoAction,
 	handleAttackResolveAction,
 	handleGMEditAction,
+	handleGMSetGameAction,
+	handleGMSetTurnAction,
+	handleGMSkipTurnAction,
 	handleGMSimplePlayerAction,
 	handleGMStartGameAction,
 	handleMoveAction,
@@ -209,6 +212,27 @@ const actionRegistry = {
 	GM_REMOVE_MODIFIER: defineActionHandler({
 		gmOnly: true,
 		execute: ({ game, action }) => handleGMEditAction(game, action)
+	}),
+	GM_SET_GAME: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSetGameAction(game, action.values)
+	}),
+	GM_SET_TURN: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSetTurnAction(game, action.playerName)
+	}),
+	GM_GAME_COMMAND: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => {
+			if (action.command === 'randomizeShop') game.randomizeShopItems();
+			else if (action.command === 'clearSkippedTurns') game.skippedNextTurns.clear();
+			else return { success: false, error: 'Unknown command' };
+			game.addAuditTrail('The GM adjusted the game settings');
+		}
+	}),
+	GM_SKIP_TURN: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMSkipTurnAction(game, action.playerName, action.skip)
 	}),
 	GM_GIVE_ITEM: defineActionHandler({
 		gmOnly: true,

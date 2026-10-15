@@ -9,8 +9,11 @@ import items, { getItemByType, type AllItems } from '#lib/game/items/itemTypes.j
 import type { Consumables } from '#lib/game/items/itemTypes.js';
 import type { Player } from '#lib/game/player/player.svelte.js';
 import {
+	GM_GAME_FLAGS,
+	GM_GAME_NUMBERS,
 	GM_STATS,
 	type ActionOf,
+	type GMGameValues,
 	type GMStat,
 	type GMWheelType,
 	type Role
@@ -196,6 +199,41 @@ export function assignClassToPlayer(
 		player.assignClass(classType);
 		if (auditMessage) {
 			game.addAuditTrail(auditMessage);
+		}
+	});
+}
+
+export function handleGMSetGameAction(game: Game, values: GMGameValues): ActionMutationResult {
+	if (typeof values !== 'object' || values === null) {
+		return { success: false, error: 'Invalid values' };
+	}
+	for (const [field, value] of Object.entries(values)) {
+		const isNumber = (GM_GAME_NUMBERS as readonly string[]).includes(field);
+		const isFlag = (GM_GAME_FLAGS as readonly string[]).includes(field);
+		const valid = isNumber ? Number.isFinite(value) : isFlag && typeof value === 'boolean';
+		if (!valid) return { success: false, error: `Invalid value for ${field}` };
+	}
+	Object.assign(game, values);
+	game.addAuditTrail('The GM adjusted the game settings');
+}
+
+export function handleGMSetTurnAction(game: Game, playerName: string): ActionMutationResult {
+	const slot = Object.entries(game.playerOrder).find(([, name]) => name === playerName)?.[0];
+	if (slot === undefined) return getPlayerNotFoundResult();
+	game.setTurnTo(Number(slot));
+}
+
+export function handleGMSkipTurnAction(
+	game: Game,
+	playerName: string,
+	skip: boolean
+): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		if (skip) {
+			game.skipNextTurn(player);
+			game.addAuditTrail(`${playerName}'s next turn will be skipped`);
+		} else {
+			game.skippedNextTurns.delete(playerName);
 		}
 	});
 }

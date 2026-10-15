@@ -76,7 +76,9 @@
 					<Icon icon="mdi:fast-forward" class="text-base" />
 					<span>Quick</span>
 				</button>
-				<GlobalGameStats />
+				{#if mp.iAmGM}
+					<GlobalGameStats />
+				{/if}
 			{/if}
 			{#if mp.isConnected}
 				<button

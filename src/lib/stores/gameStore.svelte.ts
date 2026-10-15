@@ -57,19 +57,6 @@ class GameStore {
 	getShopRerollCost(): number {
 		return this._game?.shopRerollCost ?? 2;
 	}
-
-	// -----------------------------------------------------------
-	// Audit Trail
-	// -----------------------------------------------------------
-
-	addAuditTrail(message: string) {
-		try {
-			if (!this._game) return;
-			this._game.addAuditTrail(message);
-		} catch {
-			// Silently ignore during initialization
-		}
-	}
 }
 
 // ============================================================================

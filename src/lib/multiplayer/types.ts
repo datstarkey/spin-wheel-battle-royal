@@ -90,6 +90,19 @@ export const GM_STATS = [
 ] as const;
 export type GMStat = (typeof GM_STATS)[number];
 
+/** Game-wide values the GM can override from the settings panel */
+export const GM_GAME_NUMBERS = [
+	'globalTurnCount',
+	'globalHpReduction',
+	'shopRerollCost',
+	'shopCostModifier',
+	'shopConsumableCostModifier'
+] as const;
+export const GM_GAME_FLAGS = ['hasMoved', 'hasFought', 'hasShopped', 'hasUsedCasino'] as const;
+export type GMGameValues = Partial<
+	Record<(typeof GM_GAME_NUMBERS)[number], number> & Record<(typeof GM_GAME_FLAGS)[number], boolean>
+>;
+
 export type GameAction = ActionBase &
 	(
 		| { type: 'MOVE'; position: Position }
@@ -112,6 +125,10 @@ export type GameAction = ActionBase &
 		| { type: 'GM_ADD_STATUS'; playerName: string; status: StatusType }
 		| { type: 'GM_REMOVE_STATUS'; playerName: string; status: StatusType }
 		| { type: 'GM_REMOVE_MODIFIER'; playerName: string; stat: StatType; source: string }
+		| { type: 'GM_SET_GAME'; values: GMGameValues }
+		| { type: 'GM_SET_TURN'; playerName: string }
+		| { type: 'GM_GAME_COMMAND'; command: 'randomizeShop' | 'clearSkippedTurns' }
+		| { type: 'GM_SKIP_TURN'; playerName: string; skip: boolean }
 		| { type: 'GM_GIVE_ITEM'; playerName: string; item: AllItems }
 		| { type: 'GM_REMOVE_ITEM'; playerName: string; item: AllItems; slot?: string }
 		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: GMWheelType }

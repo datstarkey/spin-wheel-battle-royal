@@ -16,3 +16,6 @@ export type WheelTheme =
 	| 'button'
 	| 'magic'
 	| 'default';
+
+/** Where a wheel is in its spin → result → confirm cycle */
+export type WheelPhase = 'ready' | 'spinning' | 'landed';

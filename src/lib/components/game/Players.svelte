@@ -32,11 +32,12 @@
 	{/if}
 
 	<!-- UI overlay: Player cards float above the board (isolate prevents z-index trapping) -->
-	<div class="pointer-events-none relative flex w-full gap-6">
+	<!-- pb clears the fixed battle log so the bottom of each column can scroll into view -->
+	<div class="pointer-events-none relative flex w-full gap-6 pb-28">
 		<!-- Left side: Current player's full card -->
 		<div class="pointer-events-auto w-80 shrink-0">
 			{#if currentTurnPlayer}
-				<div class="sticky top-4">
+				<div>
 					<div
 						class="text-primary-400 mb-3 flex items-center gap-2 text-xs font-semibold tracking-widest uppercase"
 					>

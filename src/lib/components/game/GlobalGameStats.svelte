@@ -4,10 +4,12 @@
 	import Stepper from '#lib/components/ui/Stepper.svelte';
 	import PullOutMenu from '#lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
-	import toast from '#lib/stores/toaster.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import type { GMGameValues } from '#lib/multiplayer/types.js';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 
 	const gs = getGameStore();
+	const socket = getSocketStore();
 	let game = $derived(gs.game);
 
 	// Get current player name from turn order
@@ -22,30 +24,13 @@
 			: []
 	);
 
-	// Set current turn by player name
-	function setCurrentTurnByPlayer(playerName: string) {
-		if (!game) return;
-		const turnIndex = Object.entries(game.playerOrder).find(([, name]) => name === playerName)?.[0];
-		if (turnIndex !== undefined) {
-			game.currentTurn = Number(turnIndex);
-			gs.addAuditTrail(`Turn manually set to ${playerName}`);
-		}
+	/** Every control here is a server action; the local game copy is only a view */
+	function setGame(values: GMGameValues) {
+		socket.act('GM_SET_GAME', { values });
 	}
 
-	// Add player to skipped turns
-	function addSkippedPlayer(playerName: string) {
-		if (!game) return;
-		if (!game.skippedNextTurns.has(playerName)) {
-			game.skippedNextTurns.add(playerName);
-			gs.addAuditTrail(`${playerName}'s next turn will be skipped`);
-		}
-	}
-
-	// Remove player from skipped turns
-	function removeSkippedPlayer(playerName: string) {
-		if (!game) return;
-		game.skippedNextTurns.delete(playerName);
-		toast.success(`${playerName} removed from skip list`);
+	function setSkip(playerName: string, skip: boolean) {
+		socket.act('GM_SKIP_TURN', { playerName, skip });
 	}
 
 	// Players available to skip (not already in skip list)
@@ -104,7 +89,7 @@
 					<select
 						class="select w-full"
 						value={currentPlayerName ?? ''}
-						onchange={(e) => setCurrentTurnByPlayer(e.currentTarget.value)}
+						onchange={(e) => socket.act('GM_SET_TURN', { playerName: e.currentTarget.value })}
 					>
 						{#each playersInOrder as playerName, index (playerName)}
 							{@const player = gs.getPlayerByName(playerName)}
@@ -123,12 +108,7 @@
 			<div class="grid grid-cols-1 gap-3">
 				<Stepper
 					value={game.globalTurnCount}
-					onChange={(val) => {
-						game.globalTurnCount = val;
-						gs.addAuditTrail(
-							`Global round count set to ${val} (movement bonus: +${game.globalMovementBonus})`
-						);
-					}}
+					onChange={(val) => setGame({ globalTurnCount: val })}
 					icon="mdi:rotate-right"
 					label="Round"
 					colorClass="text-secondary-400"
@@ -149,7 +129,7 @@
 						</div>
 						<Switch
 							checked={game.hasMoved}
-							onCheckedChange={(details) => (game.hasMoved = details.checked)}
+							onCheckedChange={(details) => setGame({ hasMoved: details.checked })}
 						>
 							<Switch.Control class="data-[state=checked]:bg-success-500">
 								<Switch.Thumb />
@@ -166,7 +146,7 @@
 						</div>
 						<Switch
 							checked={game.hasFought}
-							onCheckedChange={(details) => (game.hasFought = details.checked)}
+							onCheckedChange={(details) => setGame({ hasFought: details.checked })}
 						>
 							<Switch.Control class="data-[state=checked]:bg-primary-500">
 								<Switch.Thumb />
@@ -183,7 +163,7 @@
 						</div>
 						<Switch
 							checked={game.hasShopped}
-							onCheckedChange={(details) => (game.hasShopped = details.checked)}
+							onCheckedChange={(details) => setGame({ hasShopped: details.checked })}
 						>
 							<Switch.Control class="data-[state=checked]:bg-warning-500">
 								<Switch.Thumb />
@@ -200,7 +180,7 @@
 						</div>
 						<Switch
 							checked={game.hasUsedCasino}
-							onCheckedChange={(details) => (game.hasUsedCasino = details.checked)}
+							onCheckedChange={(details) => setGame({ hasUsedCasino: details.checked })}
 						>
 							<Switch.Control class="data-[state=checked]:bg-tertiary-500">
 								<Switch.Thumb />
@@ -230,7 +210,7 @@
 								<button
 									type="button"
 									class="text-surface-500 hover:text-error-400 transition-colors"
-									onclick={() => removeSkippedPlayer(playerName)}
+									onclick={() => setSkip(playerName, false)}
 								>
 									<Icon icon="mdi:close" class="text-xs" />
 								</button>
@@ -255,7 +235,7 @@
 						class="text-surface-400 hover:border-warning-500/50 hover:bg-warning-500/20 rounded border border-white/10 bg-black/30 px-3 transition-all hover:text-white disabled:opacity-30"
 						disabled={!selectedPlayerToSkip}
 						onclick={() => {
-							addSkippedPlayer(selectedPlayerToSkip);
+							setSkip(selectedPlayerToSkip, true);
 							selectedPlayerToSkip = '';
 						}}
 					>
@@ -281,10 +261,7 @@
 			<div class="grid grid-cols-1 gap-3">
 				<Stepper
 					value={game.globalHpReduction}
-					onChange={(val) => {
-						game.globalHpReduction = val;
-						gs.addAuditTrail(`Global HP reduction set to ${val}`);
-					}}
+					onChange={(val) => setGame({ globalHpReduction: val })}
 					icon="mdi:heart-broken"
 					label="HP Reduction"
 					colorClass="text-error-400"
@@ -323,11 +300,7 @@
 					<button
 						type="button"
 						class="btn preset-tonal-warning flex items-center gap-1.5 text-xs"
-						onclick={() => {
-							game.randomizeShopItems();
-							gs.addAuditTrail(`Shop items randomized`);
-							toast.success(`Shop items refreshed`);
-						}}
+						onclick={() => socket.act('GM_GAME_COMMAND', { command: 'randomizeShop' })}
 					>
 						<Icon icon="mdi:dice-multiple" />
 						<span>Randomize</span>
@@ -339,10 +312,7 @@
 			<div class="grid grid-cols-1 gap-3">
 				<Stepper
 					value={game.shopRerollCost}
-					onChange={(val) => {
-						game.shopRerollCost = val;
-						gs.addAuditTrail(`Shop reroll cost set to ${val}g`);
-					}}
+					onChange={(val) => setGame({ shopRerollCost: val })}
 					icon="mdi:refresh"
 					label="Reroll Cost"
 					colorClass="text-warning-400"
@@ -357,7 +327,7 @@
 			<div class="grid grid-cols-2 gap-3">
 				<Stepper
 					value={game.shopCostModifier}
-					onChange={(val) => (game.shopCostModifier = val)}
+					onChange={(val) => setGame({ shopCostModifier: val })}
 					icon="mdi:store"
 					label="Item Cost +"
 					colorClass="text-warning-400"
@@ -365,7 +335,7 @@
 				/>
 				<Stepper
 					value={game.shopConsumableCostModifier}
-					onChange={(val) => (game.shopConsumableCostModifier = val)}
+					onChange={(val) => setGame({ shopConsumableCostModifier: val })}
 					icon="iconoir:consumable"
 					label="Consumable +"
 					colorClass="text-success-400"
@@ -391,10 +361,8 @@
 				<button
 					type="button"
 					class="btn preset-tonal-success flex items-center justify-center gap-2 text-xs"
-					onclick={() => {
-						game.resetTurnActions();
-						toast.success('Turn actions reset!');
-					}}
+					onclick={() =>
+						setGame({ hasMoved: false, hasFought: false, hasShopped: false, hasUsedCasino: false })}
 				>
 					<Icon icon="mdi:refresh" />
 					<span>Reset Turn Actions</span>
@@ -403,11 +371,7 @@
 				<button
 					type="button"
 					class="btn preset-tonal-warning flex items-center justify-center gap-2 text-xs"
-					onclick={() => {
-						game.shopCostModifier = 0;
-						game.shopConsumableCostModifier = 0;
-						toast.success('Shop modifiers reset!');
-					}}
+					onclick={() => setGame({ shopCostModifier: 0, shopConsumableCostModifier: 0 })}
 				>
 					<Icon icon="mdi:store-remove" />
 					<span>Reset Shop Costs</span>
@@ -416,10 +380,7 @@
 				<button
 					type="button"
 					class="btn preset-tonal-error flex items-center justify-center gap-2 text-xs"
-					onclick={() => {
-						game.globalHpReduction = 1;
-						toast.success('HP reduction reset to 1!');
-					}}
+					onclick={() => setGame({ globalHpReduction: 1 })}
 				>
 					<Icon icon="mdi:heart" />
 					<span>Reset HP Reduction</span>
@@ -428,10 +389,7 @@
 				<button
 					type="button"
 					class="btn preset-tonal-surface flex items-center justify-center gap-2 text-xs"
-					onclick={() => {
-						game.skippedNextTurns.clear();
-						toast.success('Skipped turns cleared!');
-					}}
+					onclick={() => socket.act('GM_GAME_COMMAND', { command: 'clearSkippedTurns' })}
 				>
 					<Icon icon="mdi:skip-next-outline" />
 					<span>Clear Skipped Turns</span>

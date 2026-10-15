@@ -292,6 +292,15 @@ export class Game {
 		}
 	}
 
+	/** GM override: hand the turn to a slot, starting it fresh */
+	setTurnTo(turnIndex: number, ctx?: GameContext) {
+		this.currentTurn = turnIndex;
+		this.hasTurnStarted = false;
+		this.resetTurnActions();
+		this.addAuditTrail(`Turn manually set to ${this.playerOrder[turnIndex]}`);
+		this.startTurn(ctx);
+	}
+
 	gainAnotherTurn() {
 		this.addAuditTrail(`${this.currentPlayer?.name} gets another turn`);
 		this.hasTurnStarted = true;

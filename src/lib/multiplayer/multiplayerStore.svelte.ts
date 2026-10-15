@@ -182,13 +182,6 @@ class MultiplayerStore {
 		this._pendingWheels = [...this._pendingWheels];
 	}
 
-	setWheelLanded(wheelKey: string) {
-		const wheel = this._pendingWheels.find((w) => w.key === wheelKey);
-		if (!wheel) return;
-		wheel.spinState = 'landed';
-		this._pendingWheels = [...this._pendingWheels];
-	}
-
 	// -----------------------------------------------------------
 	// Combat state
 	// -----------------------------------------------------------

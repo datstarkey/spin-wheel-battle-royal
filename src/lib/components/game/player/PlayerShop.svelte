@@ -72,7 +72,16 @@
 	// Get current shop items (4 random items from all categories)
 	let shopItems = $derived(gs.getShopItems());
 	let rerollCost = $derived(gs.getShopRerollCost());
-	let canAffordReroll = $derived(player.gold >= rerollCost);
+	let hasShopped = $derived(gs.game?.hasShopped ?? false);
+	// One purchase per turn, so rerolling after it is refused by the server: say why
+	let rerollBlocker = $derived(
+		hasShopped
+			? 'You already bought an item this turn'
+			: player.gold < rerollCost
+				? `Not enough gold (need ${rerollCost}g)`
+				: undefined
+	);
+	let canAffordReroll = $derived(!rerollBlocker);
 
 	function handleReroll() {
 		socket.shopReroll();
@@ -225,14 +234,23 @@
 			<div class="flex items-center justify-between py-3">
 				<!-- Current Stock Info -->
 				<div class="flex items-center gap-3">
-					<div class="text-surface-500 text-[0.6rem] font-semibold tracking-[0.2em]">
-						TODAY'S STOCK
-					</div>
-					<span
-						class="bg-surface-700/50 text-surface-300 rounded-sm px-2 py-1 font-mono text-[0.7rem]"
-					>
-						{shopItems.length} items available
-					</span>
+					{#if hasShopped}
+						<span
+							class="border-success-500/40 bg-success-500/10 text-success-300 flex items-center gap-1.5 rounded-sm border px-2 py-1 text-xs"
+						>
+							<Icon icon="mdi:check-circle" />
+							You've bought your item this turn
+						</span>
+					{:else}
+						<div class="text-surface-500 text-[0.6rem] font-semibold tracking-[0.2em]">
+							TODAY'S STOCK
+						</div>
+						<span
+							class="bg-surface-700/50 text-surface-300 rounded-sm px-2 py-1 font-mono text-[0.7rem]"
+						>
+							{shopItems.length} items available
+						</span>
+					{/if}
 				</div>
 
 				<!-- Reroll Button -->
@@ -243,9 +261,7 @@
 						{canAffordReroll
 						? 'border-tertiary-500/50 from-tertiary-600 to-tertiary-700 hover:from-tertiary-500 hover:to-tertiary-600 border bg-gradient-to-r text-white hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]'
 						: 'border-surface-600 bg-surface-800 text-surface-500 cursor-not-allowed border'}"
-					title={canAffordReroll
-						? `Reroll shop inventory for ${rerollCost}g`
-						: `Not enough gold (need ${rerollCost}g)`}
+					title={rerollBlocker ?? `Reroll shop inventory for ${rerollCost}g`}
 				>
 					{#if canAffordReroll}
 						<div
