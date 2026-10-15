@@ -2,6 +2,8 @@ import type { Position } from '#lib/game/board/types.js';
 import type { ClassType } from '#lib/game/classes/classType.js';
 import type { AllItems } from '#lib/game/items/itemTypes.js';
 import type { WheelTheme } from '#lib/components/wheel/types.js';
+import type { StatType } from '#lib/game/serialization.js';
+import type { StatusType } from '#lib/game/statuses/statusTypes.js';
 
 // ============================================================================
 // Roles
@@ -75,6 +77,19 @@ interface ActionBase {
 
 export type GMWheelType = 'loot' | 'button' | 'casino' | 'shadow' | 'gambler';
 
+/** Player stats the GM can set directly */
+export const GM_STATS = [
+	'hp',
+	'gold',
+	'baseAttack',
+	'bonusAttack',
+	'baseDefense',
+	'bonusDefense',
+	'baseMovement',
+	'baseAttackRange'
+] as const;
+export type GMStat = (typeof GM_STATS)[number];
+
 export type GameAction = ActionBase &
 	(
 		| { type: 'MOVE'; position: Position }
@@ -91,10 +106,12 @@ export type GameAction = ActionBase &
 		| { type: 'GM_SET_CLASS'; playerName: string; classType: ClassType }
 		| { type: 'GM_START_GAME' }
 		| { type: 'GM_REMOVE_PLAYER'; playerName: string }
-		| { type: 'GM_SET_HP'; playerName: string; hp: number }
-		| { type: 'GM_SET_GOLD'; playerName: string; gold: number }
-		| { type: 'GM_SET_ATTACK'; playerName: string; attack: number }
-		| { type: 'GM_SET_DEFENSE'; playerName: string; defense: number }
+		| { type: 'GM_SET_STAT'; playerName: string; stat: GMStat; value: number }
+		| { type: 'GM_SET_RESOURCE'; playerName: string; resource: string; value: number }
+		| { type: 'GM_SET_SHADOW_REALM'; playerName: string; inShadowRealm: boolean }
+		| { type: 'GM_ADD_STATUS'; playerName: string; status: StatusType }
+		| { type: 'GM_REMOVE_STATUS'; playerName: string; status: StatusType }
+		| { type: 'GM_REMOVE_MODIFIER'; playerName: string; stat: StatType; source: string }
 		| { type: 'GM_GIVE_ITEM'; playerName: string; item: AllItems }
 		| { type: 'GM_REMOVE_ITEM'; playerName: string; item: AllItems; slot?: string }
 		| { type: 'GM_ADD_WHEEL'; playerName: string; wheelType: GMWheelType }

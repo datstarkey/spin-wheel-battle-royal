@@ -27,8 +27,9 @@ export function createCombatWheel(
 	attacker.onAttackStart(defender, ctx);
 	defender.onDefenseStart(attacker, ctx);
 
-	const attackWeight = attacker.attack;
-	const defenseWeight = defender.defense;
+	// Debuffs can push stats to 0 or below; every fighter keeps at least a sliver of a chance
+	const attackWeight = Math.max(1, attacker.attack);
+	const defenseWeight = Math.max(1, defender.defense);
 
 	const wheel: WheelBase = [
 		{

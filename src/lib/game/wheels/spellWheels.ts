@@ -117,7 +117,7 @@ export function generateMinorSpellWheel(
 		{
 			label: 'Blink - Teleport 3 tiles',
 			onWin: () => {
-				player.bonusMovement += 3;
+				player.statuses.addStatus('Blink');
 				ctx.addAuditTrail(`${player.name} can blink up to 3 extra tiles this turn!`);
 			}
 		},
@@ -234,7 +234,7 @@ export function generateMajorSpellWheel(
 		{
 			label: 'Arcane Shield - +15 def (3 turns)',
 			onWin: () => {
-				player.addStatModifier('Arcane Shield', 'defense', 15);
+				player.statuses.addStatus('ArcaneShield');
 				ctx.addAuditTrail(`${player.name} conjures an Arcane Shield! +15 defense`);
 			}
 		},

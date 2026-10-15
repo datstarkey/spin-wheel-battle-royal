@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 	import {
 		mainhands,
 		offhands,
@@ -29,6 +30,7 @@
 	}
 
 	let { player }: Props = $props();
+	const socket = getSocketStore();
 
 	let selectedItems = $state<EquipmentSelections>({
 		mainhand: '',
@@ -106,7 +108,7 @@
 		const item = selectedItems[type];
 		if (!item) return;
 
-		player.gear.addItem(item);
+		socket.act('GM_GIVE_ITEM', { playerName: player.name, item });
 		selectedItems[type] = '';
 	}
 </script>
@@ -150,8 +152,15 @@
 <!-- Current Equipment -->
 <div class="grid grid-cols-2 gap-2">
 	{#each equipmentSlots as slot (slot.key)}
-		{@render equipmentSlot(slot.icon, slot.label, slot.colorClass, player.gear[slot.gearKey], () =>
-			player.gear.unequipItem(slot.key)
+		{@render equipmentSlot(
+			slot.icon,
+			slot.label,
+			slot.colorClass,
+			player.gear[slot.gearKey],
+			() => {
+				const item = player.gear[slot.gearKey];
+				if (item) socket.act('GM_REMOVE_ITEM', { playerName: player.name, item, slot: slot.key });
+			}
 		)}
 	{/each}
 </div>
@@ -190,14 +199,14 @@
 <!-- Current Consumables -->
 {#if player.gear.consumables.length > 0}
 	<div class="flex flex-wrap gap-1">
-		{#each player.gear.consumables as item, index (index)}
+		{#each player.gear.consumables as item, index (`${index}-${item}`)}
 			<div class="flex items-center gap-1 rounded border border-white/10 bg-black/20 px-2 py-1">
 				<Icon icon="iconoir:consumable" class="text-success-400 text-xs" />
 				<span class="text-surface-200 text-xs">{item}</span>
 				<button
 					type="button"
 					class="text-surface-500 hover:text-error-400 transition-colors"
-					onclick={() => player.gear.deleteItem('consumables', index)}
+					onclick={() => socket.act('GM_REMOVE_ITEM', { playerName: player.name, item })}
 				>
 					<Icon icon="mdi:close" class="text-xs" />
 				</button>

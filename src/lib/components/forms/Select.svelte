@@ -4,12 +4,12 @@
 	type Props = HTMLSelectAttributes & {
 		label: string;
 	};
-	let { value = $bindable(), label, ...props }: Props = $props();
+	let { value = $bindable(), label, children, ...props }: Props = $props();
 </script>
 
 <label class="label">
 	<span>{label}</span>
-	<select class="select" bind:value>
-		{@render props.children?.()}
+	<select class="select" bind:value {...props}>
+		{@render children?.()}
 	</select>
 </label>

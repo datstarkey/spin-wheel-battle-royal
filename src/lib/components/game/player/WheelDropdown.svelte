@@ -33,7 +33,7 @@
 	];
 
 	function addWheel(wheel: (typeof wheels)[0]) {
-		socket.gmAddWheel(player.name, wheel.type);
+		socket.act('GM_ADD_WHEEL', { playerName: player.name, wheelType: wheel.type });
 		toast.success(`${wheel.name} Added`);
 		wheelDropdownOpen = false;
 	}

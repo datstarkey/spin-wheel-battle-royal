@@ -2,7 +2,6 @@ import { createContext } from 'svelte';
 import { io, type Socket } from 'socket.io-client';
 import { Game } from '#lib/game/game.svelte.js';
 import type { Position } from '#lib/game/board/types.js';
-import type { ClassType } from '#lib/game/classes/classType.js';
 import type { AllItems } from '#lib/game/items/itemTypes.js';
 import type {
 	ActionOf,
@@ -10,7 +9,6 @@ import type {
 	ActionType,
 	ClientToServerEvents,
 	GameAction,
-	GMWheelType,
 	Role,
 	ServerToClientEvents,
 	SpectatorHint,
@@ -324,7 +322,7 @@ class SocketStore {
 
 	/** Confirm a landed wheel; the server applies the outcome it chose */
 	confirmWheel(wheelKey: string) {
-		this.dispatchAction('WHEEL_SPIN_RESULT', { wheelKey });
+		this.act('WHEEL_SPIN_RESULT', { wheelKey });
 	}
 
 	private dispatch(action: GameAction) {
@@ -335,7 +333,8 @@ class SocketStore {
 		});
 	}
 
-	private dispatchAction<T extends ActionType>(type: T, payload?: ActionPayload<T>) {
+	/** Send any action; failures are logged (the server is the source of truth) */
+	act<T extends ActionType>(type: T, payload?: ActionPayload<T>) {
 		this.dispatch({ type, ...(payload ?? {}) } as ActionOf<T>);
 	}
 
@@ -344,69 +343,31 @@ class SocketStore {
 	// =================================================================
 
 	move(position: Position) {
-		this.dispatchAction('MOVE', { position });
+		this.act('MOVE', { position });
 	}
 	finishTurn() {
-		this.dispatchAction('FINISH_TURN');
+		this.act('FINISH_TURN');
 	}
 	attackResolve(attackerName: string, defenderName: string) {
-		this.dispatchAction('ATTACK_RESOLVE', { attackerName, defenderName });
+		this.act('ATTACK_RESOLVE', { attackerName, defenderName });
 	}
 	shopBuy(item: AllItems) {
-		this.dispatchAction('SHOP_BUY', { item });
+		this.act('SHOP_BUY', { item });
 	}
 	shopReroll() {
-		this.dispatchAction('SHOP_REROLL');
+		this.act('SHOP_REROLL');
 	}
 	casino() {
-		this.dispatchAction('CASINO');
+		this.act('CASINO');
 	}
 	castSpell(spellLevel: 'minor' | 'major' | 'ultimate', targetName?: string) {
-		this.dispatchAction('SPELL_CAST', { spellLevel, targetName });
+		this.act('SPELL_CAST', { spellLevel, targetName });
 	}
 	useConsumable(item: AllItems) {
-		this.dispatchAction('USE_CONSUMABLE', { item });
+		this.act('USE_CONSUMABLE', { item });
 	}
 	teleport(destination: Position) {
-		this.dispatchAction('TELEPORT', { destination });
-	}
-
-	// =================================================================
-	// GM Actions
-	// =================================================================
-
-	gmStartGame() {
-		this.dispatchAction('GM_START_GAME');
-	}
-	gmRemovePlayer(playerName: string) {
-		this.dispatchAction('GM_REMOVE_PLAYER', { playerName });
-	}
-	gmSetClass(playerName: string, classType: ClassType) {
-		this.dispatchAction('GM_SET_CLASS', { playerName, classType });
-	}
-	gmSetHp(playerName: string, hp: number) {
-		this.dispatchAction('GM_SET_HP', { playerName, hp });
-	}
-	gmSetGold(playerName: string, gold: number) {
-		this.dispatchAction('GM_SET_GOLD', { playerName, gold });
-	}
-	gmSetAttack(playerName: string, attack: number) {
-		this.dispatchAction('GM_SET_ATTACK', { playerName, attack });
-	}
-	gmSetDefense(playerName: string, defense: number) {
-		this.dispatchAction('GM_SET_DEFENSE', { playerName, defense });
-	}
-	gmGiveItem(playerName: string, item: AllItems) {
-		this.dispatchAction('GM_GIVE_ITEM', { playerName, item });
-	}
-	gmKillPlayer(playerName: string) {
-		this.dispatchAction('GM_KILL_PLAYER', { playerName });
-	}
-	gmRevivePlayer(playerName: string) {
-		this.dispatchAction('GM_REVIVE_PLAYER', { playerName });
-	}
-	gmAddWheel(playerName: string, wheelType: GMWheelType) {
-		this.dispatchAction('GM_ADD_WHEEL', { playerName, wheelType });
+		this.act('TELEPORT', { destination });
 	}
 }
 

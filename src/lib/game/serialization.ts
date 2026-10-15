@@ -144,7 +144,6 @@ export interface SerializedGame {
 	customWheels: [string, unknown][];
 	playerOrder: Record<number, string>;
 	_currentTurn: number;
-	_shadowRealm: { name: string }[];
 	itemCostModifiers: [AllItems, number][];
 	auditTrail: string[];
 	shopCostModifier: number;
@@ -325,16 +324,6 @@ export function validateGame(data: unknown): SerializedGame | null {
 		}
 	}
 
-	// Validate shadow realm (stored as name references, not full player data)
-	const shadowRealm: { name: string }[] = [];
-	if (isArray(data._shadowRealm)) {
-		for (const entry of data._shadowRealm) {
-			if (isObject(entry) && isString(entry.name)) {
-				shadowRealm.push({ name: entry.name });
-			}
-		}
-	}
-
 	// Validate item cost modifiers
 	const itemCostModifiers: [AllItems, number][] = [];
 	if (isArray(data.itemCostModifiers)) {
@@ -422,7 +411,6 @@ export function validateGame(data: unknown): SerializedGame | null {
 		customWheels,
 		playerOrder,
 		_currentTurn: isNumber(data._currentTurn) ? data._currentTurn : 0,
-		_shadowRealm: shadowRealm,
 		itemCostModifiers,
 		auditTrail,
 		shopCostModifier: isNumber(data.shopCostModifier) ? data.shopCostModifier : 0,

@@ -9,14 +9,15 @@ export function createStatModifierStatus(
 ): StatusEffect {
 	return {
 		...config,
+		// Adjust rather than set, so stacked instances add up and expire one at a time
 		onApply: (player: Player, _ctx: GameContext) => {
 			for (const { stat, value } of modifiers) {
-				player.addStatModifier(config.name, stat, value);
+				player.adjustStatModifier(config.name, stat, value);
 			}
 		},
 		onRemove: (player: Player, _ctx: GameContext) => {
-			for (const { stat } of modifiers) {
-				player.removeStatModifier(config.name, stat);
+			for (const { stat, value } of modifiers) {
+				player.adjustStatModifier(config.name, stat, -value);
 			}
 		}
 	};

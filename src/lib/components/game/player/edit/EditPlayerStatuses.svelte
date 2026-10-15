@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 	import statusEffects, { type StatusType } from '#lib/game/statuses/statusTypes.js';
 
 	interface Props {
@@ -8,6 +9,7 @@
 	}
 
 	let { player }: Props = $props();
+	const socket = getSocketStore();
 
 	let selectedStatus = $state<StatusType | ''>('');
 
@@ -21,7 +23,7 @@
 
 	function addStatus() {
 		if (selectedStatus && player.statuses.canHaveStatus(selectedStatus)) {
-			player.statuses.addStatus(selectedStatus);
+			socket.act('GM_ADD_STATUS', { playerName: player.name, status: selectedStatus });
 			selectedStatus = '';
 		}
 	}
@@ -54,7 +56,11 @@
 				<button
 					type="button"
 					class="text-surface-500 hover:text-error-400 transition-colors"
-					onclick={() => player.statuses.removeStatusEffect(statusEffect)}
+					onclick={() =>
+						socket.act('GM_REMOVE_STATUS', {
+							playerName: player.name,
+							status: statusEffect.statusName
+						})}
 				>
 					<Icon icon="mdi:close" class="text-xs" />
 				</button>

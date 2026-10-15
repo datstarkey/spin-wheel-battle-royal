@@ -6,6 +6,9 @@
 	import PullOutMenu from '#lib/components/pullOutMenu/PullOutMenu.svelte';
 	import { classMap } from '#lib/game/classes/classType.js';
 	import type { Player } from '#lib/game/player/player.svelte.js';
+	import type { ClassType } from '#lib/game/classes/classType.js';
+	import type { GMStat } from '#lib/multiplayer/types.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 	import { Switch } from '@skeletonlabs/skeleton-svelte';
 	import EditPlayerResources from './edit/EditPlayerResources.svelte';
 	import EditPlayerEquipment from './edit/EditPlayerEquipment.svelte';
@@ -16,6 +19,11 @@
 		player: Player;
 	}
 	let { player }: Props = $props();
+	const socket = getSocketStore();
+
+	function setStat(stat: GMStat) {
+		return (value: number) => socket.act('GM_SET_STAT', { playerName: player.name, stat, value });
+	}
 </script>
 
 {#snippet statStepper(
@@ -138,16 +146,28 @@
 	<div class="space-y-4 overflow-y-auto pr-2">
 		<!-- Class & Shadow Realm Row -->
 		<div class="grid grid-cols-2 gap-3">
-			<Select label="Class" bind:value={player.class}>
-				{#each Object.entries(classMap) as [name, playerClass] (name)}
-					<option value={playerClass}>{name}</option>
+			<Select
+				label="Class"
+				value={player.classType}
+				onchange={(e) =>
+					socket.act('GM_SET_CLASS', {
+						playerName: player.name,
+						classType: e.currentTarget.value as ClassType
+					})}
+			>
+				{#each Object.keys(classMap) as name (name)}
+					<option value={name}>{name}</option>
 				{/each}
 			</Select>
 
 			<div class="flex items-end pb-1">
 				<Switch
 					checked={player.inShadowRealm}
-					onCheckedChange={(details) => (player.inShadowRealm = details.checked)}
+					onCheckedChange={(details) =>
+						socket.act('GM_SET_SHADOW_REALM', {
+							playerName: player.name,
+							inShadowRealm: details.checked
+						})}
 				>
 					<Switch.Control class="data-[state=checked]:bg-tertiary-500">
 						<Switch.Thumb />
@@ -177,7 +197,7 @@
 		<div class="grid grid-cols-2 gap-3">
 			<Stepper
 				value={player.hp}
-				onChange={(val) => (player.hp = val)}
+				onChange={setStat('hp')}
 				icon="mdi:heart"
 				label="HP"
 				colorClass="text-error-400"
@@ -185,7 +205,7 @@
 			/>
 			<Stepper
 				value={player.gold}
-				onChange={(val) => (player.gold = val)}
+				onChange={setStat('gold')}
 				icon="mdi:coin"
 				label="Gold"
 				colorClass="text-warning-400"
@@ -208,8 +228,8 @@
 				player.baseAttack,
 				player.attack,
 				player.rawBonusAttack,
-				(val) => (player.baseAttack = val),
-				(val) => (player.bonusAttack = val),
+				setStat('baseAttack'),
+				setStat('bonusAttack'),
 				'mdi:sword',
 				'Attack',
 				'text-primary-400'
@@ -218,8 +238,8 @@
 				player.baseDefense,
 				player.defense,
 				player.rawBonusDefense,
-				(val) => (player.baseDefense = val),
-				(val) => (player.bonusDefense = val),
+				setStat('baseDefense'),
+				setStat('bonusDefense'),
 				'mdi:shield',
 				'Defense',
 				'text-secondary-400'
@@ -228,7 +248,7 @@
 				player.baseMovement,
 				player.movement,
 				player.bonusMovement,
-				(val) => (player.baseMovement = val),
+				setStat('baseMovement'),
 				null,
 				'ion:footsteps',
 				'Movement',
@@ -238,7 +258,7 @@
 				player.baseAttackRange,
 				player.attackRange,
 				player.bonusAttackRange,
-				(val) => (player.baseAttackRange = val),
+				setStat('baseAttackRange'),
 				null,
 				'material-symbols:social-distance',
 				'Range',

@@ -36,8 +36,7 @@ export class Game {
 		'customWheels',
 		'itemCostModifiers',
 		'shopItems',
-		'lootedTreasures',
-		'_shadowRealm'
+		'lootedTreasures'
 	] as const;
 
 	players: Player[] = $state([]);
@@ -352,32 +351,22 @@ export class Game {
 	 * --------------------------------------------------------------------------
 	 * Shadow Realm
 	 */
-	private _shadowRealm: Player[] = $state([]);
-	public get shadowRealm(): Player[] {
-		return this._shadowRealm;
-	}
-	//Private so it can't be set outside of the class
-	private set shadowRealm(value: Player[]) {
-		this._shadowRealm = value;
+	/** Derived from each player's flag, so there is no second list to fall out of sync */
+	get shadowRealm(): Player[] {
+		return this.players.filter((player) => player.inShadowRealm);
 	}
 
-	isInShadowRealm(player: Player) {
-		return this.shadowRealm.includes(player);
-	}
-
+	/** Shadeweavers are immune: they walk in and out of the realm at will */
 	addPlayerToShadowRealm(player: Player, auditMessage?: string) {
-		if (this.shadowRealm.includes(player)) return;
+		if (player.inShadowRealm || player.classType === 'shadeweaver') return;
 		player.inShadowRealm = true;
-		this.shadowRealm.push(player);
 		this.addAuditTrail(auditMessage ?? `${player.name} has been sent to the Shadow Realm!`);
 	}
 
 	removePlayerFromShadowRealm(player: Player) {
-		if (this._shadowRealm.includes(player)) {
-			player.inShadowRealm = false;
-			this._shadowRealm = this._shadowRealm.filter((p) => p !== player);
-			this.addAuditTrail(`${player.name} has been removed from the Shadow Realm!`);
-		}
+		if (!player.inShadowRealm) return;
+		player.inShadowRealm = false;
+		this.addAuditTrail(`${player.name} has escaped the Shadow Realm!`);
 	}
 
 	/**
@@ -409,8 +398,6 @@ export class Game {
 			customWheels: Array.from(this.customWheels.entries()),
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
-			// Names only: Player holds a back-reference to Game, so the objects can't be stringified
-			_shadowRealm: this._shadowRealm.map((player) => ({ name: player.name })),
 			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
 			auditTrail: this.auditTrail,
 			shopCostModifier: this.shopCostModifier,
@@ -476,10 +463,6 @@ export class Game {
 		}
 
 		this.applySerializedField('lootedTreasures', data.lootedTreasures ?? []);
-
-		this._shadowRealm = data._shadowRealm
-			.map((sr) => this.players.find((p) => p.name === sr.name))
-			.filter((p): p is Player => p !== undefined);
 	}
 
 	static generateDelta(
@@ -500,14 +483,7 @@ export class Game {
 		let hasChanges = false;
 
 		const gameDelta: Record<string, unknown> = {};
-		for (const key of Game.DELTA_SIMPLE_FIELDS) {
-			if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
-				gameDelta[key] = after[key];
-				hasChanges = true;
-			}
-		}
-
-		for (const key of Game.DELTA_COMPLEX_FIELDS) {
+		for (const key of [...Game.DELTA_SIMPLE_FIELDS, ...Game.DELTA_COMPLEX_FIELDS]) {
 			if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
 				gameDelta[key] = after[key];
 				hasChanges = true;
@@ -563,7 +539,6 @@ export class Game {
 		// Apply top-level game field changes
 		if (delta.game) {
 			for (const [key, value] of Object.entries(delta.game)) {
-				if (key === '_shadowRealm') continue; // Handled below after player replacement
 				this.applySerializedField(key, value);
 			}
 		}
@@ -586,22 +561,6 @@ export class Game {
 					updated.setGame(this);
 					this.players[idx] = updated;
 				}
-			}
-		}
-
-		// Resolve shadow realm references (names → Player instances)
-		if (delta.players || delta.game?._shadowRealm) {
-			if (delta.game?._shadowRealm) {
-				// Shadow realm membership changed — resolve from new data
-				const srData = delta.game._shadowRealm as { name: string }[];
-				this._shadowRealm = srData
-					.map((sr) => this.players.find((p) => p.name === sr.name))
-					.filter((p): p is Player => p !== undefined);
-			} else {
-				// Players changed but shadow realm didn't — re-link to new instances
-				this._shadowRealm = this._shadowRealm
-					.map((sr) => this.players.find((p) => p.name === sr.name))
-					.filter((p): p is Player => p !== undefined);
 			}
 		}
 	}

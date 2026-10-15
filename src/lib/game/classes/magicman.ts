@@ -67,6 +67,11 @@ export const Magicman: ClassBase = {
 			}
 		}
 
+		// Out of mana on the Rune of Power: checked before regen, which would otherwise always refill it
+		if (player.statuses.hasStatus('RuneOfPower') && getMana(player) <= 0) {
+			breakRuneOfPower(player, 'fades due to mana exhaustion');
+		}
+
 		// Base mana regeneration
 		let manaRegen = MANA_REGEN_PER_TURN;
 		if (isArchmage) manaRegen *= 2;
@@ -75,15 +80,16 @@ export const Magicman: ClassBase = {
 		player.game?.addAuditTrail(
 			`${player.name} regenerates ${manaRegen} mana (${getMana(player)}/${MAX_MANA})`
 		);
-
-		// Check if ran out of mana while on Rune of Power
-		if (player.statuses.hasStatus('RuneOfPower') && getMana(player) <= 0) {
-			player.statuses.removeStatus('RuneOfPower');
-			resetRuneOfPowerTurns(player);
-			player.game?.addAuditTrail(`${player.name}'s Rune of Power fades due to mana exhaustion!`);
-		}
 	}
 };
+
+/** Leaving the rune (moving) or running dry ends it and resets ascension progress */
+export function breakRuneOfPower(player: Player, reason: string) {
+	if (!player.statuses.hasStatus('RuneOfPower')) return;
+	player.statuses.removeStatus('RuneOfPower');
+	resetRuneOfPowerTurns(player);
+	player.game?.addAuditTrail(`${player.name}'s Rune of Power ${reason}!`);
+}
 
 // Helper to check if player is Archmage (can attack anywhere with line of sight)
 export function isArchmage(player: Player): boolean {

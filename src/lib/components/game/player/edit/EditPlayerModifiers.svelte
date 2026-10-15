@@ -1,12 +1,14 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
 	import type { Player } from '#lib/game/player/player.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
 	interface Props {
 		player: Player;
 	}
 
 	let { player }: Props = $props();
+	const socket = getSocketStore();
 
 	let modifiers = $derived(player.activeModifiers);
 	const modifierSections = [
@@ -62,7 +64,12 @@
 								<button
 									type="button"
 									class="text-error-400 hover:text-error-300 transition-colors"
-									onclick={() => player.removeStatModifier(source, section.key)}
+									onclick={() =>
+										socket.act('GM_REMOVE_MODIFIER', {
+											playerName: player.name,
+											stat: section.key,
+											source
+										})}
 									title="Remove modifier"
 								>
 									<Icon icon="mdi:close-circle" class="text-xs" />

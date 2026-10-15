@@ -15,7 +15,7 @@
 	let starting = $state(false);
 
 	function removePlayer(name: string) {
-		socket.gmRemovePlayer(name);
+		socket.act('GM_REMOVE_PLAYER', { playerName: name });
 	}
 
 	function startGame() {

@@ -2,6 +2,7 @@ import type { ClassType } from '../classes/classType';
 import type { GameContext } from '../gameContext';
 import type { Player } from '../player/player.svelte';
 import { actually } from './actually';
+import { arcaneShield, blink } from './arcaneSpells';
 import { archmage } from './archmage';
 import { emotionalDamage } from './emotionalDamage';
 import { frostShield } from './frostShield';
@@ -47,7 +48,9 @@ const statusEffects = {
 	Overthinking: overthinking,
 	Actually: actually,
 	FrostShield: frostShield,
-	IceStorm: iceStorm
+	IceStorm: iceStorm,
+	ArcaneShield: arcaneShield,
+	Blink: blink
 };
 
 export default statusEffects;

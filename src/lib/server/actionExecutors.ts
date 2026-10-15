@@ -3,12 +3,20 @@ import { getInnerTeleporter, getPathDistance } from '#lib/game/board/board.svelt
 import { positionsEqual } from '#lib/game/board/types.js';
 import { executeTileAction } from '#lib/game/board/tileActions.js';
 import { canAttackTarget, getPlayerValidMoves, isPlayerOnTile } from '#lib/game/rules.js';
-import { grantUnusedMovementMana } from '#lib/game/classes/magicman.js';
+import { breakRuneOfPower, grantUnusedMovementMana } from '#lib/game/classes/magicman.js';
 import { type ClassType } from '#lib/game/classes/classType.js';
 import items, { getItemByType, type AllItems } from '#lib/game/items/itemTypes.js';
 import type { Consumables } from '#lib/game/items/itemTypes.js';
 import type { Player } from '#lib/game/player/player.svelte.js';
-import type { ActionOf, GMWheelType, Role } from '#lib/multiplayer/types.js';
+import {
+	GM_STATS,
+	type ActionOf,
+	type GMStat,
+	type GMWheelType,
+	type Role
+} from '#lib/multiplayer/types.js';
+import { LUCKY_STREAK_RESOURCE, updateLuckyStreakMultipliers } from '#lib/game/classes/gambler.js';
+import statusEffects from '#lib/game/statuses/statusTypes.js';
 import { createCombatWheel } from '#lib/game/combat.js';
 import { generateButtonWheel } from '#lib/game/wheels/buttonWheel.js';
 import { generateCasinoWheel } from '#lib/game/wheels/casinoWheel.js';
@@ -27,9 +35,13 @@ import type { ServerGameContext } from './serverGameContext';
 import { startTurnOrderSetup } from './setupFlow';
 import { generateShuffleOrder, weightedRandomIndex } from './wheelUtils';
 
-type GMNumericAction = Extract<
-	ActionOf<'GM_SET_HP' | 'GM_SET_GOLD' | 'GM_SET_ATTACK' | 'GM_SET_DEFENSE'>,
-	{ type: 'GM_SET_HP' | 'GM_SET_GOLD' | 'GM_SET_ATTACK' | 'GM_SET_DEFENSE' }
+type GMEditAction = ActionOf<
+	| 'GM_SET_STAT'
+	| 'GM_SET_RESOURCE'
+	| 'GM_SET_SHADOW_REALM'
+	| 'GM_ADD_STATUS'
+	| 'GM_REMOVE_STATUS'
+	| 'GM_REMOVE_MODIFIER'
 >;
 type GMSimplePlayerAction = Extract<
 	ActionOf<
@@ -133,10 +145,13 @@ export function buildActionSuccessResult(params: {
 	existingWheels: Set<PendingWheel>;
 }): ActionResult {
 	const { room, game, beforeState, existingWheels } = params;
-	const pendingWheels = collectNewPendingWheels(room, existingWheels);
 
-	room.touch();
 	game.checkForWinner();
+	// A player who died on their own turn forfeits the rest of it once their wheels resolve
+	if (game.currentPlayer?.dead && room.pendingWheels.size === 0) game.finishTurn();
+
+	const pendingWheels = collectNewPendingWheels(room, existingWheels);
+	room.touch();
 
 	const gameState = game.serialize();
 	room.stateVersion++;
@@ -150,7 +165,13 @@ export function buildActionSuccessResult(params: {
 	};
 }
 
-function removeItemFromPlayer(player: Player, item: AllItems): ActionResult | undefined {
+const EQUIPMENT_SLOTS = ['mainhand', 'offHand', 'helm', 'chest'] as const;
+
+function removeItemFromPlayer(
+	player: Player,
+	item: AllItems,
+	slot?: string
+): ActionResult | undefined {
 	const itemDef = getItemByType(item);
 	if (!itemDef) return { success: false, error: 'Invalid item' };
 	if (itemDef.type === 'consumables') {
@@ -160,7 +181,9 @@ function removeItemFromPlayer(player: Player, item: AllItems): ActionResult | un
 		return;
 	}
 
-	player.gear.unequipItem(itemDef.type);
+	// A main-hand item can sit in the off hand, so the caller says which slot to empty
+	const target = EQUIPMENT_SLOTS.find((s) => s === slot) ?? itemDef.type;
+	player.gear.unequipItem(target);
 }
 
 export function assignClassToPlayer(
@@ -177,39 +200,49 @@ export function assignClassToPlayer(
 	});
 }
 
-export function handleGMNumericAction(
-	game: Game,
-	action: GMNumericAction
-): ActionResult | undefined {
-	const player = game.getPlayerByName(action.playerName);
-	if (!player) return getPlayerNotFoundResult();
+/** Bonus stats may go negative (debuffs); everything else is a non-negative amount */
+const SIGNED_GM_STATS: ReadonlySet<GMStat> = new Set(['bonusAttack', 'bonusDefense']);
 
-	switch (action.type) {
-		case 'GM_SET_HP':
-			if (!isValidNonNegativeNumber(action.hp)) {
-				return { success: false, error: 'Invalid HP value' };
+export function handleGMEditAction(game: Game, action: GMEditAction): ActionMutationResult {
+	return withPlayer(game, action.playerName, (player) => {
+		switch (action.type) {
+			case 'GM_SET_STAT': {
+				const valid =
+					GM_STATS.includes(action.stat) &&
+					Number.isFinite(action.value) &&
+					(SIGNED_GM_STATS.has(action.stat) || action.value >= 0);
+				if (!valid) return { success: false, error: 'Invalid stat value' };
+				player[action.stat] = Math.round(action.value);
+				return;
 			}
-			player.hp = action.hp;
-			return;
-		case 'GM_SET_GOLD':
-			if (!isValidNonNegativeNumber(action.gold)) {
-				return { success: false, error: 'Invalid gold value' };
-			}
-			player.gold = action.gold;
-			return;
-		case 'GM_SET_ATTACK':
-			if (!isValidNonNegativeNumber(action.attack)) {
-				return { success: false, error: 'Invalid attack value' };
-			}
-			player.baseAttack = action.attack;
-			return;
-		case 'GM_SET_DEFENSE':
-			if (!isValidNonNegativeNumber(action.defense)) {
-				return { success: false, error: 'Invalid defense value' };
-			}
-			player.baseDefense = action.defense;
-			return;
-	}
+			case 'GM_SET_RESOURCE':
+				if (typeof action.resource !== 'string' || !(action.resource in player.resources)) {
+					return { success: false, error: 'Unknown resource' };
+				}
+				if (!isValidNonNegativeNumber(action.value)) {
+					return { success: false, error: 'Invalid resource value' };
+				}
+				player.resources[action.resource] = Math.round(action.value);
+				if (action.resource === LUCKY_STREAK_RESOURCE) updateLuckyStreakMultipliers(player);
+				return;
+			case 'GM_SET_SHADOW_REALM':
+				if (action.inShadowRealm) game.addPlayerToShadowRealm(player);
+				else game.removePlayerFromShadowRealm(player);
+				return;
+			case 'GM_ADD_STATUS':
+				if (!(action.status in statusEffects) || !player.statuses.canHaveStatus(action.status)) {
+					return { success: false, error: 'Invalid status' };
+				}
+				player.statuses.addStatus(action.status);
+				return;
+			case 'GM_REMOVE_STATUS':
+				player.statuses.removeStatus(action.status);
+				return;
+			case 'GM_REMOVE_MODIFIER':
+				player.removeStatModifier(action.source, action.stat);
+				return;
+		}
+	});
 }
 
 export function handleGMSimplePlayerAction(
@@ -229,11 +262,11 @@ export function handleGMSimplePlayerAction(
 			});
 		case 'GM_REVIVE_PLAYER':
 			return withPlayer(game, action.playerName, (player) => {
-				player.hp = player.maxHp;
+				player.revive();
 			});
 		case 'GM_REMOVE_ITEM':
 			return withPlayer(game, action.playerName, (player) =>
-				removeItemFromPlayer(player, action.item)
+				removeItemFromPlayer(player, action.item, action.slot)
 			);
 	}
 }
@@ -260,6 +293,7 @@ export function handleMoveAction(
 		);
 
 		if (player.classType === 'magicman') {
+			breakRuneOfPower(player, 'breaks as they step off it');
 			const tilesMovedThisTurn = getPathDistance(oldPos, action.position, player.movement);
 			const unusedMovement = player.movement - tilesMovedThisTurn;
 			if (unusedMovement > 0) {

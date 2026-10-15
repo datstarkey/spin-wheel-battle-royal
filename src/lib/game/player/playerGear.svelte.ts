@@ -251,21 +251,12 @@ export class PlayerGear {
 	static deserialize(data: SerializedPlayerGear, player: Player): PlayerGear {
 		const gear = new PlayerGear(player);
 		gear._consumables = data.consumables;
-
-		// Re-equip items to trigger onEquip callbacks
-		if (data.mainHand) {
-			gear.addMainHand(data.mainHand);
-		}
-		if (data.offHand) {
-			gear.addOffHand(data.offHand);
-		}
-		if (data.helm) {
-			gear.addHelm(data.helm);
-		}
-		if (data.chest) {
-			gear.addChest(data.chest);
-		}
-
+		// Restore slots without onEquip: its effects already live in the serialized stat modifiers,
+		// and re-firing it on the client would need the server-only GameContext (and would throw)
+		gear._mainHand = data.mainHand;
+		gear._offHand = data.offHand as OffHands | null;
+		gear._helm = data.helm;
+		gear._chest = data.chest;
 		return gear;
 	}
 }

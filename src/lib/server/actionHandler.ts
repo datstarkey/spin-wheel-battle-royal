@@ -14,7 +14,7 @@ import {
 	gmWheelGenerators,
 	handleCasinoAction,
 	handleAttackResolveAction,
-	handleGMNumericAction,
+	handleGMEditAction,
 	handleGMSimplePlayerAction,
 	handleGMStartGameAction,
 	handleMoveAction,
@@ -186,21 +186,29 @@ const actionRegistry = {
 			room.removeGamePlayer(action.playerName);
 		}
 	}),
-	GM_SET_HP: defineActionHandler({
+	GM_SET_STAT: defineActionHandler({
 		gmOnly: true,
-		execute: ({ game, action }) => handleGMNumericAction(game, action)
+		execute: ({ game, action }) => handleGMEditAction(game, action)
 	}),
-	GM_SET_GOLD: defineActionHandler({
+	GM_SET_RESOURCE: defineActionHandler({
 		gmOnly: true,
-		execute: ({ game, action }) => handleGMNumericAction(game, action)
+		execute: ({ game, action }) => handleGMEditAction(game, action)
 	}),
-	GM_SET_ATTACK: defineActionHandler({
+	GM_SET_SHADOW_REALM: defineActionHandler({
 		gmOnly: true,
-		execute: ({ game, action }) => handleGMNumericAction(game, action)
+		execute: ({ game, action }) => handleGMEditAction(game, action)
 	}),
-	GM_SET_DEFENSE: defineActionHandler({
+	GM_ADD_STATUS: defineActionHandler({
 		gmOnly: true,
-		execute: ({ game, action }) => handleGMNumericAction(game, action)
+		execute: ({ game, action }) => handleGMEditAction(game, action)
+	}),
+	GM_REMOVE_STATUS: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMEditAction(game, action)
+	}),
+	GM_REMOVE_MODIFIER: defineActionHandler({
+		gmOnly: true,
+		execute: ({ game, action }) => handleGMEditAction(game, action)
 	}),
 	GM_GIVE_ITEM: defineActionHandler({
 		gmOnly: true,

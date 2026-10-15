@@ -9,7 +9,7 @@ export const SportsBra: Item = {
 	image: '/Items/ChestEquipables/Sportsbra.svg',
 
 	onDefenseStart(player, playerAttackingYou) {
-		const goldToTake = playerAttackingYou.gold * 0.1;
+		const goldToTake = Math.floor(playerAttackingYou.gold * 0.1);
 		playerAttackingYou.gold -= goldToTake;
 		player.gold += goldToTake;
 	}
