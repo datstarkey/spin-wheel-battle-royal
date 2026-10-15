@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { Attachment } from 'svelte/attachments';
 	import { BOARD_WIDTH, BOARD_HEIGHT, TILES, TREASURE_CHESTS } from '#lib/game/board/boardData.js';
 	import { gameBoard } from '#lib/game/board/board.svelte.js';
 	import type { Position, Tile } from '#lib/game/board/types.js';
@@ -7,6 +8,7 @@
 	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
 	import { getMovementStore } from '#lib/stores/movementStore.svelte.js';
 	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
+	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
 	import Icon from '#lib/components/Icon.svelte';
 	import PlayerToken from './PlayerToken.svelte';
@@ -14,6 +16,11 @@
 	const gs = getGameStore();
 	const movement = getMovementStore();
 	const mp = getMultiplayerStore();
+	const socket = getSocketStore();
+
+	// Teleporters the turn owner can jump to after stepping onto one
+	let teleportTargets = $derived(mp.isMyTurn ? (gs.game?.teleportDestinations ?? []) : []);
+	const isTeleportTarget = (pos: Position) => teleportTargets.some((t) => positionsEqual(t, pos));
 
 	// Spectator movement highlights (from other players' movement mode)
 	let spectatorMoveSet = $derived.by(() => {
@@ -67,7 +74,7 @@
 	const boardHeight = $derived(BOARD_HEIGHT * tileSize);
 
 	// Reference to the container element
-	let containerEl: HTMLDivElement | null = $state(null);
+	let containerEl: HTMLDivElement | null = null;
 
 	// Currently hovered tile for debug info
 	let hoveredTile: Tile | null = $state(null);
@@ -80,6 +87,11 @@
 	}
 
 	function handleTileClick(position: Position) {
+		if (isTeleportTarget(position)) {
+			socket.teleport(position);
+			return;
+		}
+
 		// If in movement mode, try to move the player
 		if (isMovementMode) {
 			movement.moveCurrentPlayerTo(position);
@@ -195,16 +207,14 @@
 		panY = (window.innerHeight - 60 - boardHeight * scale) / 2;
 	});
 
-	// Add wheel listener with passive: false to allow preventDefault
-	$effect(() => {
-		if (!containerEl) return;
+	/** Tracks the board container and zooms on wheel; passive: false so preventDefault works */
+	const boardContainer: Attachment<HTMLDivElement> = (node) => {
+		containerEl = node;
 
 		function onWheel(e: WheelEvent) {
 			e.preventDefault();
 
-			if (!containerEl) return;
-
-			const rect = containerEl.getBoundingClientRect();
+			const rect = node.getBoundingClientRect();
 			const mouseX = e.clientX - rect.left;
 			const mouseY = e.clientY - rect.top;
 
@@ -221,12 +231,9 @@
 			}
 		}
 
-		containerEl.addEventListener('wheel', onWheel, { passive: false });
-
-		return () => {
-			containerEl?.removeEventListener('wheel', onWheel);
-		};
-	});
+		node.addEventListener('wheel', onWheel, { passive: false });
+		return () => node.removeEventListener('wheel', onWheel);
+	};
 </script>
 
 <svelte:window onmouseup={handleMouseUp} onmousemove={handleMouseMove} />
@@ -234,7 +241,7 @@
 <!-- Fullscreen pannable/zoomable board -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	bind:this={containerEl}
+	{@attach boardContainer}
 	class="fixed inset-0 top-[60px] z-0 overflow-hidden bg-black"
 	onmousedown={handleMouseDown}
 	ontouchstart={handleTouchStart}
@@ -275,7 +282,11 @@
 					onmouseenter={() => (hoveredTile = tile)}
 					onmouseleave={() => (hoveredTile = null)}
 				>
-					{#if isHighlighted}
+					{#if isTeleportTarget(tile.position)}
+						<div
+							class="border-tertiary-300 bg-tertiary-500/50 absolute inset-0 animate-pulse border-2 shadow-[0_0_12px_rgba(168,85,247,0.9)]"
+						></div>
+					{:else if isHighlighted}
 						<div
 							class="absolute inset-0 animate-pulse border-2 border-yellow-400/80 bg-yellow-400/40"
 						></div>

@@ -28,16 +28,18 @@ pnpm run format    # Auto-fix formatting issues
 
 ## Architecture Overview
 
-This is a **SvelteKit 5** web-based battle royale game with a spinning wheel mechanic. The codebase uses:
+This is a **SvelteKit 3** (Svelte 5, Vite 8) web-based battle royale game with a spinning wheel mechanic. The codebase uses:
 
 - **Svelte 5 with runes** (`$state`, `$derived`) for reactive state management
 - **TypeScript** for type safety
-- **Tailwind CSS v4** with Skeleton UI v4 design system
+- **Tailwind CSS v4** with Skeleton UI v5 design system
+- SvelteKit config lives in `vite.config.ts` (`sveltekit({ adapter, preprocess })`); there is no `svelte.config.js`
+- Imports use the `#lib/*` subpath alias from `package.json` `imports` (with a `.js` extension), not `$lib`
 - **Vite** as the build tool
 
-### Skeleton Design System (v4)
+### Skeleton Design System (v5)
 
-This project uses the **Skeleton UI v4** design system. When working with UI components:
+This project uses the **Skeleton UI v5** design system. When working with UI components:
 
 - **Documentation**: Always reference https://www.skeleton.dev/llms.txt for component lookup and usage
 - **Components**: Import from `@skeletonlabs/skeleton-svelte`
@@ -116,7 +118,7 @@ class="bg-black/30 border-white/5"
 
 The game uses a **dark, tactical battle arena** visual language inspired by competitive gaming HUDs and card games. The custom theme is defined in `src/themes/battle-arena.css`.
 
-- **Typography**: Monospace fonts (`JetBrains Mono`, `Fira Code`) via `var(--base-font-family)`
+- **Typography**: Monospace fonts (`JetBrains Mono`, `Fira Code`) via `var(--typo-base--font-family)` (Skeleton v5 token); wheel titles and results use the `font-display` (Grenze) face
 
 - **Visual Elements**:
 
@@ -154,7 +156,7 @@ movementStore.setSocketStore(socket);
 
 **Game logic access** (classes, items, statuses, wheels, tileActions — server-side only):
 
-- `getServerGameContext()` from `#lib/server/serverContext` for GameContext operations (addCustomWheel, getPlayerByName, etc.)
+- `getServerGameContext()` from `#lib/game/serverContext.js` for GameContext operations (addCustomWheel, getPlayerByName, etc.)
 - `player.game?.addAuditTrail()` via Player's `_game: Game` reference for simple audit trail calls
 
 ### Key Architectural Patterns
@@ -267,7 +269,7 @@ A banishment mechanic (not death):
 | ----------------- | --: | --: | --: | ----: | ------------------------------------------------------------------------ |
 | **Gambler**       | 100 |  15 |  15 |     1 | HP = Gold. Lucky Streak stacks. Free casino.                             |
 | **Shadeweaver**   | 100 |  20 |  15 |     1 | Shadow Realm immune. Gains Shade on others' shadow spins.                |
-| **SWE**           | 100 |  15 |  15 |     1 | Builds Swenergy (0-10). At 10 → SWE Supreme (+6 DEF).                    |
+| **SWE**           | 100 |  15 |  15 |     1 | Builds Swenergy (0-10). At 10 → SWE Supreme (×1.5 ATK/DEF, +3 MOV).      |
 | **Magic Man**     |  80 |  20 |  10 |     3 | Mana pool (100). Spells cost 25/50/100. Can ascend to Archmage.          |
 | **Giga Chad**     | 100 |  20 |   5 |     1 | +30% of ATK as bonus DEF. +3 ATK on wins.                                |
 | **Absolute Unit** | 100 |   5 |  15 |     1 | +30% of DEF as bonus ATK. +5 DEF on wins.                                |
@@ -317,7 +319,7 @@ Buffs and debuffs with duration tracking:
 | Status               | Effect                             | Duration               |
 | -------------------- | ---------------------------------- | ---------------------- |
 | **Emotional Damage** | -5 ATK, -5 DEF                     | 3 turns (stackable)    |
-| **SWE Supreme**      | +6 DEF                             | While at 10 Swenergy   |
+| **SWE Supreme**      | ×1.5 ATK and DEF, +3 movement      | While at 10 Swenergy   |
 | **Overthinking**     | -5 ATK, -5 DEF                     | While Confidence < 20  |
 | **Actually**         | 20% attack nullification           | While Confidence = 100 |
 | **Archmage**         | 2x mana regen, global attack range | Permanent              |
@@ -373,6 +375,12 @@ interface SpinWheelItem {
 
 - `wheels.ts` - Base types
 - Individual files: `winWheel.ts`, `loseWheel.ts`, `shadowRealm.ts`, `casinoWheel.ts`, `gamblerWheel.ts`, `lootWheel.ts`, `buttonWheel.ts`, `damageTakenWheel.ts`
+
+### Wheel UI (`src/lib/components/wheel/`)
+
+- Every wheel renders inside `WheelStage.svelte`: themed header plus a fixed-size dock (result plate + action button) so Spin → Continue never shifts the layout.
+- Non-battle wheels use the Battlegrounds-style `SlotReel.svelte`; battles use the round `SpinWheel.svelte` (slice sizes show the odds) via `components/game/BattleWheel.svelte`.
+- Both spinners are visual only: they animate to the server's `spinParams` and report the landed label. Themes (title, icon, accent) live in `wheelThemes.ts`.
 
 ---
 
@@ -488,14 +496,20 @@ Server: actionHandler.ts → setServerGameContext(ctx) → executes on Game inst
 
 ### Security & Rate Limiting
 
-- **Wheel permissions**: `WHEEL_SPIN_RESULT` validates `pendingWheel.forPlayerName === playerName` (GM bypass allowed)
+- **Wheel results are server-authoritative**: `wheel:request_spin` picks the winner; `WHEEL_SPIN_RESULT` carries only the wheel key (a client never chooses the outcome). Only `forPlayerName` or the GM may spin/confirm. A landed wheel auto-resolves after 25s so a disconnected spinner can't stall the game.
+- **Turns**: `requiresTurn` actions are turn-owner only, including for the GM (the GM is a player too). The GM's only override is `FINISH_TURN` (skip an AFK player). `FINISH_TURN` is refused while any wheel is pending.
+- **Joining**: `room:join` never grants the GM role; a known name can only come back through `room:rejoin` with its token; once setup starts, late joiners become spectators.
+- **Shared rules**: move/attack/tile checks live in `src/lib/game/rules.ts` and are used by both the UI and the server executors. Add new rules there, never on one side only.
+- **Every socket handler is wrapped** (`on()` in `socketServer.ts`): an exception from a malformed payload must never reach socket.io's emitter, which would crash the process.
 - **Action dedup**: Client sends `actionId` (UUID) per action; `GameRoom.isDuplicateAction()` rejects via ring buffer of last 20 IDs per player
-- **Teleport validation**: `TELEPORT` action validates destination is a teleporter tile (`isOuterTeleporter` or `isInnerTeleporter`)
-- **Rate limiting**: `PerSocketRateLimiter` in `src/lib/server/rateLimiter.ts` — 100ms minimum between actions per socket
+- **Teleport validation**: stepping on an outer teleporter sets `game.teleportDestinations`; `TELEPORT` must target one of them (they clear at turn end)
+- **Rate limiting**: `PerSocketRateLimiter` in `src/lib/server/rateLimiter.ts` — 100ms minimum between actions per socket (spectator hints have their own limiter). Send related GM changes as one action (e.g. `GM_SET_GAME { values }`), not several in a row.
+- **GM panels**: every GM control (Edit Player, Game Settings) sends a `GM_*` action. Never mutate the client's `Game` copy — it is a view and the next update overwrites it.
 
 ### Game Class Private Fields
 
-- `_shadowRealm` has a public getter but **private setter** — write access only from inside the `Game` class
+- `game.shadowRealm` is derived from each player's `inShadowRealm` flag (no separate list to keep in sync). Banish/release through `addPlayerToShadowRealm` / `removePlayerFromShadowRealm`; Shadeweavers are immune.
+- `Game.serialize()` must only contain plain data: a `Player` (it references `Game`) makes `JSON.stringify` throw.
 - Any logic that mutates private Game fields should be a method on `Game` (e.g., `applyDelta()`, `deserialize()`) rather than external code using `as any`
 
 ### Server/Client Boundary
@@ -533,18 +547,13 @@ Players auto-added as game players on `room:join` (no GM_ADD_PLAYER action)
 - `useConsumable()` takes `Consumables` type, not `AllItems`
 - `player.buyItem()` returns **void** — use `player.canBuyItem()` for validation first
 
-### Known Pre-existing Issues
-
-- `BoardTile.svelte` has a `#lib` import inside a `<style>` block that fails during `pnpm run check` — unrelated to multiplayer
-
 ### Known Technical Debt
 
 - **Global `getServerGameContext()` singleton** (`serverContext.ts`): Ambient mutable global. Should pass `ctx: GameContext` explicitly (already done for wheels, not for `player.svelte.ts`, `tileActions.ts`, classes)
-- **Duplicate `wheel:spin_result` socket event**: Separate from `player:action` but wraps the same handler. Should be unified
 - **Double serialization in `actionHandler.ts`**: `generateDelta` diffs two JSON blobs via `JSON.stringify` comparison. Should use structural diffing or dirty flags
 - **Delta field lists** in `generateDelta` are hardcoded separately from `Game.serialize()` — must be kept in sync manually
 - **Turn order display parses audit trail via regex** — should use structured `RoomState` data instead
-- **New wheel detection in `handleAction`**: Uses `wheelKeysBefore = new Set(room.pendingWheels.keys())` to detect new wheels added during an action. Do NOT use count-based tracking — when a wheel is deleted and a new one added in the same action (e.g., turn order → class selection), the count doesn't change and the new wheel gets silently dropped.
+- **New wheel detection in `handleAction`**: compares wheel _objects_ (`new Set(room.pendingWheels.values())`), not keys or counts — a follow-up wheel can reuse its parent's key, and a delete + add leaves the count unchanged. `serverGameContext.addCustomWheel` also suffixes duplicate keys (`#2`) so same-named wheels never overwrite each other.
 
 ### Single-Page Routing
 
@@ -568,5 +577,6 @@ State transitions are reactive (driven by `mp.isConnected`, `gs.game?.started`, 
 
 ### Vite Plugin Notes
 
-- `import('./src/lib/...')` does **not** resolve `#lib` aliases — use `server.ssrLoadModule()` instead (see `vite-plugin-socket.ts`)
+- Load server modules from the Vite plugin with `server.ssrLoadModule()` (see `vite-plugin-socket.ts`) so they share Vite's module graph and transforms (`.svelte.ts` runes)
+- `vite dev` fails in SSR dependency optimisation when run from a worktree nested inside this repo (`.claude/worktrees/...`): rolldown picks up the parent checkout's `tsconfig.json`. Run the dev server from the main checkout or a copy outside it.
 - `{@const}` in Svelte must be inside `{#if}`, `{#each}`, etc. — not inside plain `<div>`. Use `$derived` in script block instead.

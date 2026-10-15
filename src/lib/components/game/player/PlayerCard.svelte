@@ -152,6 +152,15 @@
 				{/if}
 			</div>
 
+			{#if mpCanAct && gs.game?.teleportDestinations.length}
+				<p
+					class="border-tertiary-500/40 bg-tertiary-500/10 text-tertiary-200 mb-3 flex items-center gap-2 rounded-sm border px-3 py-2 text-xs"
+				>
+					<Icon icon="mdi:portal" class="text-tertiary-300 shrink-0 text-base" />
+					Click a glowing teleporter on the board to jump there, or carry on to stay put.
+				</p>
+			{/if}
+
 			<!-- Magic Man Spell Buttons -->
 			{#if player.classType === 'magicman'}
 				{@const hasFought = gs.game?.hasFought === true}

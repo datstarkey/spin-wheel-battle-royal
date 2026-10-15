@@ -2,6 +2,8 @@
 	import type { CombatState } from '#lib/multiplayer/types.js';
 	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
+	import { getBattleMusicStore } from '#lib/stores/battleMusic.svelte.js';
+	import type { Attachment } from 'svelte/attachments';
 	import SpinWheel from '../wheel/SpinWheel.svelte';
 	import WheelStage from '../wheel/WheelStage.svelte';
 	import type { WheelPhase } from '../wheel/types';
@@ -15,6 +17,12 @@
 
 	const mp = getMultiplayerStore();
 	const socket = getSocketStore();
+	const music = getBattleMusicStore();
+
+	const battleMusic: Attachment = () => {
+		music.playBattleMusic();
+		return () => music.endBattleAndResumeBackground();
+	};
 	const ATTACK_COLOR = '#b91c1c';
 	const DEFENSE_COLOR = '#1d4ed8';
 
@@ -83,7 +91,7 @@
 	onSpin={() => socket.requestWheelSpin(combat.wheelKey)}
 	onContinue={() => socket.confirmWheel(combat.wheelKey)}
 >
-	<div class="py-4">
+	<div class="py-4" {@attach battleMusic}>
 		<SpinWheel
 			items={fighters}
 			shuffledOrder={pending?.shuffledOrder}
