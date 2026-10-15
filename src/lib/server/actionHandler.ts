@@ -19,6 +19,7 @@ import {
 	handleGMStartGameAction,
 	handleMoveAction,
 	handleShopBuyAction,
+	handleShopRerollAction,
 	handleSpellCastAction,
 	handleTeleportAction,
 	handleUseConsumableAction,
@@ -59,6 +60,8 @@ interface ActionExecutionContext<T extends ActionType> {
 interface ActionHandlerDefinition<T extends ActionType> {
 	gmOnly?: boolean;
 	requiresTurn?: boolean;
+	/** The GM may perform this turn action on anyone's turn (e.g. skipping an AFK player) */
+	gmOverride?: boolean;
 	allowSpectator?: boolean;
 	execute: (params: ActionExecutionContext<T>) => ActionMutationResult;
 }
@@ -74,7 +77,10 @@ function defineActionHandler<T extends ActionType>(
 function validateActionAccess(
 	room: GameRoom,
 	playerName: string,
-	handler: Pick<ActionHandlerDefinition<ActionType>, 'gmOnly' | 'requiresTurn' | 'allowSpectator'>
+	handler: Pick<
+		ActionHandlerDefinition<ActionType>,
+		'gmOnly' | 'requiresTurn' | 'gmOverride' | 'allowSpectator'
+	>
 ): ActionAccessResult {
 	const role = room.getPlayerRole(playerName);
 	if (!role) {
@@ -98,13 +104,14 @@ function validateActionAccess(
 		};
 	}
 
-	if (role === 'player' && handler.requiresTurn) {
-		const currentPlayer = room.game.currentPlayer;
-		if (!currentPlayer || currentPlayer.name !== playerName) {
-			return {
-				ok: false,
-				result: { success: false, error: 'Not your turn' }
-			};
+	if (handler.requiresTurn) {
+		const { game } = room;
+		if (!game.started || game.winnerName) {
+			return { ok: false, result: { success: false, error: 'Game is not in progress' } };
+		}
+		const isTurnOwner = game.currentPlayer?.name === playerName;
+		if (!isTurnOwner && !(handler.gmOverride && role === 'gm')) {
+			return { ok: false, result: { success: false, error: 'Not your turn' } };
 		}
 	}
 
@@ -118,7 +125,12 @@ const actionRegistry = {
 	}),
 	FINISH_TURN: defineActionHandler({
 		requiresTurn: true,
-		execute: ({ game }) => {
+		gmOverride: true,
+		execute: ({ room, game }) => {
+			// Outstanding wheels belong to this turn; resolving them after it ends hits the wrong player
+			if (room.pendingWheels.size > 0) {
+				return { success: false, error: 'Resolve the pending wheels first' };
+			}
 			game.finishTurn();
 		}
 	}),
@@ -133,14 +145,11 @@ const actionRegistry = {
 	}),
 	SHOP_REROLL: defineActionHandler({
 		requiresTurn: true,
-		execute: ({ game }) => {
-			const success = game.rerollShopItems();
-			if (!success) return { success: false, error: 'Cannot afford reroll' };
-		}
+		execute: ({ game, playerName }) => handleShopRerollAction(game, playerName)
 	}),
 	CASINO: defineActionHandler({
 		requiresTurn: true,
-		execute: ({ playerName, ctx }) => handleCasinoAction(playerName, ctx)
+		execute: ({ game, playerName, ctx }) => handleCasinoAction(game, playerName, ctx)
 	}),
 	SPELL_CAST: defineActionHandler({
 		requiresTurn: true,
@@ -171,6 +180,9 @@ const actionRegistry = {
 	GM_REMOVE_PLAYER: defineActionHandler({
 		gmOnly: true,
 		execute: ({ room, action }) => {
+			if (room.phase !== 'waiting') {
+				return { success: false, error: 'Players can only be removed before the game starts' };
+			}
 			room.removeGamePlayer(action.playerName);
 		}
 	}),
@@ -236,8 +248,8 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 	// Set the active context so Player/tileActions/class code can access it
 	setServerGameContext(ctx);
 
-	// Track wheel keys before action to detect new wheels
-	const wheelKeysBefore = new Set(room.pendingWheels.keys());
+	// Track wheel objects (not keys — a follow-up wheel may reuse its parent's key)
+	const wheelsBefore = new Set(room.pendingWheels.values());
 
 	// Snapshot state before action for delta generation
 	const beforeState = game.serialize();
@@ -258,14 +270,24 @@ export function handleAction(room: GameRoom, playerName: string, action: GameAct
 			return result;
 		}
 	} catch (err) {
+		// The action may have half-mutated the game; still broadcast so clients match the server
+		console.error(`[action] ${action.type} by ${playerName} threw:`, err);
 		const message = err instanceof Error ? err.message : 'Unknown error';
-		return { success: false, error: message };
+		try {
+			return {
+				...buildActionSuccessResult({ room, game, beforeState, existingWheels: wheelsBefore }),
+				success: false,
+				error: message
+			};
+		} catch {
+			return { success: false, error: message };
+		}
 	}
 
 	return buildActionSuccessResult({
 		room,
 		game,
 		beforeState,
-		existingWheelKeys: wheelKeysBefore
+		existingWheels: wheelsBefore
 	});
 }

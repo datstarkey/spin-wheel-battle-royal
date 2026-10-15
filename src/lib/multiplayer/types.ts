@@ -85,7 +85,7 @@ export type GameAction = ActionBase &
 		| { type: 'CASINO' }
 		| { type: 'SPELL_CAST'; spellLevel: 'minor' | 'major' | 'ultimate'; targetName?: string }
 		| { type: 'USE_CONSUMABLE'; item: AllItems }
-		| { type: 'WHEEL_SPIN_RESULT'; wheelKey: string; selectedIndex: number }
+		| { type: 'WHEEL_SPIN_RESULT'; wheelKey: string }
 		| { type: 'TELEPORT'; destination: Position }
 		// GM-only actions
 		| { type: 'GM_SET_CLASS'; playerName: string; classType: ClassType }
@@ -164,6 +164,8 @@ export interface ClientToServerEvents {
 		callback: (response: {
 			success: boolean;
 			role?: Role;
+			/** The name as the server stored it (trimmed) */
+			playerName?: string;
 			rejoinToken?: string;
 			error?: string;
 		}) => void
@@ -193,6 +195,8 @@ export interface StateUpdatePayload {
 	/** Full serialized game state (always included as fallback) */
 	gameState: string;
 	roomState: RoomState;
+	/** Server state version this snapshot corresponds to */
+	version: number;
 	/** Combat state: present = combat started, null = combat ended, undefined = no change */
 	combatState?: CombatState | null;
 	/** Incremental delta (if available — client can apply this instead of full deserialize) */

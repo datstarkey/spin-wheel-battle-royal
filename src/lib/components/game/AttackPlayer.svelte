@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { Player } from '#lib/game/player/player.svelte.js';
 	import { getGameStore } from '#lib/stores/gameStore.svelte.js';
-	import { getMovementStore } from '#lib/stores/movementStore.svelte.js';
+	import { canAttackTarget, isPlayerOnTile } from '#lib/game/rules.js';
 	import { getMultiplayerStore } from '#lib/multiplayer/multiplayerStore.svelte.js';
 	import { getSocketStore } from '#lib/multiplayer/socketStore.svelte.js';
 
 	const gs = getGameStore();
-	const movement = getMovementStore();
 	const mp = getMultiplayerStore();
 	const socket = getSocketStore();
 	import { getCasinoEntryFee } from '#lib/game/wheels/casinoWheel.js';
@@ -60,19 +59,11 @@
 	let battleWinnerIndex = $state<number | undefined>(undefined);
 
 	let availableToAttack = $derived(
-		gs.game?.players.filter((p) => {
-			if (p.name === player.name) return false;
-			if (player.hp <= 0) return false;
-			if (p.dead) return false;
-			if (!movement.isPlayerInAttackRange(p.name)) return false;
-
-			if (player.classType === 'shadeweaver' && p.inShadowRealm) return true;
-			return p.inShadowRealm === player.inShadowRealm;
-		}) || []
+		gs.game?.players.filter((p) => canAttackTarget(player, p)) ?? []
 	);
 
-	let canAccessShop = $derived(movement.isCurrentPlayerOnShop());
-	let canAccessCasino = $derived(movement.isCurrentPlayerOnCasino());
+	let canAccessShop = $derived(isPlayerOnTile(player, 'shop'));
+	let canAccessCasino = $derived(isPlayerOnTile(player, 'casino'));
 
 	let selectedPlayerName = $state<string | null>(null);
 
@@ -147,10 +138,7 @@
 
 	function confirmCombatResult() {
 		if (!combat || battleWinnerIndex === undefined) return;
-		// Map shuffled display index back to original item index
-		const order = combatShuffledOrder;
-		const originalIndex = order ? order[battleWinnerIndex] : battleWinnerIndex;
-		socket.sendWheelSpinResult(combat.wheelKey, originalIndex);
+		socket.confirmWheel(combat.wheelKey);
 		battleWinner = null;
 		battleWinnerIndex = undefined;
 		// Don't locally clear combat — wait for server's state_update with combatState: null

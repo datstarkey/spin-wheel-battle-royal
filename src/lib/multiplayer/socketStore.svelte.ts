@@ -68,6 +68,8 @@ class SocketStore {
 			this.mpStore.setConnectionStatus('connected');
 			const session = loadSession();
 			if (session?.rejoinToken) {
+				// The server resends every live wheel on rejoin; drop ours so dismissed ones don't linger
+				this.mpStore.clearPendingWheels();
 				this.rejoinRoom(session.roomCode, session.playerName, session.rejoinToken);
 			}
 		});
@@ -86,20 +88,15 @@ class SocketStore {
 
 		this.socket.on('room:state_update', (data) => {
 			try {
-				// Try delta update if we have a valid sequential version
-				const canApplyDelta =
-					data.delta && this.gameStore.game && data.delta.version === this.lastStateVersion + 1;
-
-				if (canApplyDelta) {
-					this.gameStore.game!.applyDelta(data.delta!);
-					this.lastStateVersion = data.delta!.version;
-				} else {
-					// Full state replacement (initial load, rejoin, version gap)
+				// Apply the delta only when it directly follows the state we hold
+				const game = this.gameStore.game;
+				if (game && data.delta && data.delta.version === this.lastStateVersion + 1) {
+					game.applyDelta(data.delta);
+				} else if (!game || data.version !== this.lastStateVersion || !data.delta) {
+					// Initial load, rejoin, version gap, or a change the server sent without a delta
 					this.gameStore.game = Game.deserialize(data.gameState);
-					if (data.delta) {
-						this.lastStateVersion = data.delta.version;
-					}
 				}
+				this.lastStateVersion = data.version;
 
 				this.gameStore.syncPlayerPositionsToBoard();
 
@@ -267,7 +264,7 @@ class SocketStore {
 			this.socket!.emit('room:join', { roomCode, playerName, password, role }, (response) => {
 				if (response.success) {
 					this.mpStore.setMyRole(response.role ?? role ?? 'player');
-					this.mpStore.setMyPlayerName(playerName);
+					this.mpStore.setMyPlayerName(response.playerName ?? playerName);
 					this.mpStore.setRoomCode(roomCode);
 					if (response.rejoinToken) this.mpStore.setRejoinToken(response.rejoinToken);
 					this.mpStore.saveSession();
@@ -290,6 +287,8 @@ class SocketStore {
 					this.mpStore.setMyRole(response.role ?? 'player');
 					this.mpStore.setMyPlayerName(playerName);
 					this.mpStore.setRoomCode(roomCode);
+					// Keep the token in the saved session, or the next refresh can't rejoin
+					this.mpStore.setRejoinToken(rejoinToken);
 					this.mpStore.saveSession();
 				} else {
 					this.mpStore.reset();
@@ -323,12 +322,9 @@ class SocketStore {
 		this.socket?.emit('wheel:request_spin', { wheelKey });
 	}
 
-	sendWheelSpinResult(
-		wheelKey: string,
-		selectedIndex: number,
-		callback?: (response: { success: boolean; error?: string }) => void
-	) {
-		this.sendAction({ type: 'WHEEL_SPIN_RESULT', wheelKey, selectedIndex }, callback);
+	/** Confirm a landed wheel; the server applies the outcome it chose */
+	confirmWheel(wheelKey: string) {
+		this.dispatchAction('WHEEL_SPIN_RESULT', { wheelKey });
 	}
 
 	private dispatch(action: GameAction) {

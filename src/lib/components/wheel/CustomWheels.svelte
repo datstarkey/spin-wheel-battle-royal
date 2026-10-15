@@ -10,7 +10,8 @@
 
 	let myName = $derived(mp.myPlayerName);
 	let isGM = $derived(mp.iAmGM);
-	let mpWheels = $derived(mp.pendingWheels);
+	// The combat wheel has its own battle overlay
+	let mpWheels = $derived(mp.pendingWheels.filter((w) => w.key !== mp.combatState?.wheelKey));
 	let showWheel = $derived(mpWheels.length > 0);
 	let amountOfWheels = $derived(mpWheels.length);
 	let activeWheelData = $derived(mpWheels.length > 0 ? mpWheels[0] : undefined);
@@ -44,17 +45,6 @@
 	/** After wheel lands, notify store so other clients see "Waiting for X to continue..." */
 	function handleSpinComplete(key: string) {
 		mp.setWheelLanded(key);
-	}
-
-	/** Confirm wheel result — map shuffled index back to original and send to server */
-	function confirmResult(key: string, selectedIndex?: number) {
-		if (selectedIndex !== undefined) {
-			// Map shuffled display index back to original item index
-			const order = activeWheelData?.shuffledOrder;
-			const originalIndex = order ? order[selectedIndex] : selectedIndex;
-			socket.sendWheelSpinResult(key, originalIndex);
-		}
-		// Don't locally remove — wait for server's room:wheel_dismiss
 	}
 </script>
 
@@ -132,8 +122,7 @@
 						{spinParams}
 						onRequestSpin={() => requestSpin(activeWheel[0])}
 						onSpinComplete={() => handleSpinComplete(activeWheel[0])}
-						onComplete={(selectedIndex) => confirmResult(activeWheel[0], selectedIndex)}
-						onCancel={canSpin ? () => confirmResult(activeWheel[0]) : undefined}
+						onComplete={() => socket.confirmWheel(activeWheel[0])}
 					/>
 				</div>
 

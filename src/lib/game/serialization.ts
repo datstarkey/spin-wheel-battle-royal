@@ -34,6 +34,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isPosition(value: unknown): value is Position {
+	return isObject(value) && isNumber(value.x) && isNumber(value.y);
+}
+
 function isClassType(value: unknown): value is ClassType {
 	return isString(value) && value in classMap;
 }
@@ -154,6 +158,8 @@ export interface SerializedGame {
 	hasShopped: boolean;
 	hasUsedCasino: boolean;
 	lootedTreasures: string[];
+	winnerName: string | null;
+	teleportDestinations: Position[];
 }
 
 // ============================================================================
@@ -267,7 +273,7 @@ export function validatePlayer(data: unknown): SerializedPlayer | null {
 
 	// Validate position
 	let position: Position | null = null;
-	if (isObject(data.position) && isNumber(data.position.x) && isNumber(data.position.y)) {
+	if (isPosition(data.position)) {
 		position = { x: data.position.x, y: data.position.y };
 	}
 
@@ -431,6 +437,10 @@ export function validateGame(data: unknown): SerializedGame | null {
 		hasFought: isBoolean(data.hasFought) ? data.hasFought : false,
 		hasShopped: isBoolean(data.hasShopped) ? data.hasShopped : false,
 		hasUsedCasino: isBoolean(data.hasUsedCasino) ? data.hasUsedCasino : false,
-		lootedTreasures
+		lootedTreasures,
+		winnerName: isString(data.winnerName) ? data.winnerName : null,
+		teleportDestinations: isArray(data.teleportDestinations)
+			? data.teleportDestinations.filter(isPosition).map(({ x, y }) => ({ x, y }))
+			: []
 	};
 }

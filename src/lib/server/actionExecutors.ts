@@ -1,13 +1,8 @@
 import { Game } from '#lib/game/game.svelte.js';
-import {
-	getPathDistance,
-	getValidMoves,
-	getTileAt,
-	isOuterTeleporter,
-	isInnerTeleporter
-} from '#lib/game/board/board.svelte.js';
-import { getManhattanDistance } from '#lib/game/board/types.js';
+import { getInnerTeleporter, getPathDistance } from '#lib/game/board/board.svelte.js';
+import { positionsEqual } from '#lib/game/board/types.js';
 import { executeTileAction } from '#lib/game/board/tileActions.js';
+import { canAttackTarget, getPlayerValidMoves, isPlayerOnTile } from '#lib/game/rules.js';
 import { grantUnusedMovementMana } from '#lib/game/classes/magicman.js';
 import { type ClassType } from '#lib/game/classes/classType.js';
 import items, { getItemByType, type AllItems } from '#lib/game/items/itemTypes.js';
@@ -26,11 +21,11 @@ import {
 	generateUltimateSpellWheel
 } from '#lib/game/wheels/spellWheels.js';
 import type { ActionResult } from './actionHandler';
-import type { GameRoom } from './gameRooms';
+import type { GameRoom, PendingWheel } from './gameRooms';
 import { toPendingWheelPayload } from './pendingWheelPayload';
 import type { ServerGameContext } from './serverGameContext';
 import { startTurnOrderSetup } from './setupFlow';
-import { generateShuffleOrder } from './wheelUtils';
+import { generateShuffleOrder, weightedRandomIndex } from './wheelUtils';
 
 type GMNumericAction = Extract<
 	ActionOf<'GM_SET_HP' | 'GM_SET_GOLD' | 'GM_SET_ATTACK' | 'GM_SET_DEFENSE'>,
@@ -116,10 +111,10 @@ function isValidNonNegativeNumber(value: number): boolean {
 	return typeof value === 'number' && isFinite(value) && value >= 0;
 }
 
-function collectNewPendingWheels(room: GameRoom, existingWheelKeys: Set<string>) {
+function collectNewPendingWheels(room: GameRoom, existingWheels: Set<PendingWheel>) {
 	const newPendingWheels = [];
 	for (const [key, wheel] of room.pendingWheels) {
-		if (existingWheelKeys.has(key)) continue;
+		if (existingWheels.has(wheel)) continue;
 
 		if (!wheel.shuffledOrder) {
 			wheel.shuffledOrder = generateShuffleOrder(wheel.items.length);
@@ -135,12 +130,13 @@ export function buildActionSuccessResult(params: {
 	room: GameRoom;
 	game: Game;
 	beforeState: string;
-	existingWheelKeys: Set<string>;
+	existingWheels: Set<PendingWheel>;
 }): ActionResult {
-	const { room, game, beforeState, existingWheelKeys } = params;
-	const pendingWheels = collectNewPendingWheels(room, existingWheelKeys);
+	const { room, game, beforeState, existingWheels } = params;
+	const pendingWheels = collectNewPendingWheels(room, existingWheels);
 
 	room.touch();
+	game.checkForWinner();
 
 	const gameState = game.serialize();
 	room.stateVersion++;
@@ -252,10 +248,7 @@ export function handleMoveAction(
 		if (game.hasMoved) return { success: false, error: 'Already moved this turn' };
 		if (!player.position) return { success: false, error: 'Player has no position' };
 
-		const validMoves = getValidMoves(player.position, player.movement, !player.inShadowRealm);
-		const isValid = validMoves.some((position) => {
-			return position.x === action.position.x && position.y === action.position.y;
-		});
+		const isValid = getPlayerValidMoves(player).some((p) => positionsEqual(p, action.position));
 		if (!isValid) return { success: false, error: 'Invalid move' };
 
 		const oldPos = player.position;
@@ -274,8 +267,20 @@ export function handleMoveAction(
 			}
 		}
 
-		executeTileAction(player, action.position, ctx);
+		const tileResult = executeTileAction(player, action.position, ctx);
+		if (tileResult.openModal === 'teleporter') {
+			game.teleportDestinations = [
+				...(tileResult.teleporterDestinations ?? []),
+				getInnerTeleporter()
+			];
+		}
 	});
+}
+
+function getShopError(game: Game, player: Player): string | undefined {
+	if (player.inShadowRealm) return 'No shopping in the Shadow Realm';
+	if (!isPlayerOnTile(player, 'shop')) return 'Must be on a shop tile';
+	if (game.hasShopped) return 'Already shopped this turn';
 }
 
 export function handleShopBuyAction(
@@ -284,19 +289,37 @@ export function handleShopBuyAction(
 	action: ActionOf<'SHOP_BUY'>
 ): ActionMutationResult {
 	return withPlayer(game, playerName, (player) => {
-		if (game.hasShopped) return { success: false, error: 'Already shopped this turn' };
+		const error = getShopError(game, player);
+		if (error) return { success: false, error };
+		if (!game.shopItems.some(([key]) => key === action.item)) {
+			return { success: false, error: 'Item is not in the shop' };
+		}
 		if (!player.canBuyItem(action.item)) return { success: false, error: 'Cannot buy this item' };
 		player.buyItem(action.item);
 	});
 }
 
+export function handleShopRerollAction(game: Game, playerName: string): ActionMutationResult {
+	return withPlayer(game, playerName, (player) => {
+		const error = getShopError(game, player);
+		if (error) return { success: false, error };
+		if (!game.rerollShopItems()) return { success: false, error: 'Cannot afford reroll' };
+	});
+}
+
 export function handleCasinoAction(
+	game: Game,
 	playerName: string,
 	ctx: ServerGameContext
 ): ActionMutationResult {
-	if (ctx.getHasUsedCasinoThisTurn())
-		return { success: false, error: 'Already used casino this turn' };
-	generateCasinoWheel(playerName, ctx);
+	return withPlayer(game, playerName, (player) => {
+		if (player.inShadowRealm) return { success: false, error: 'No gambling in the Shadow Realm' };
+		if (!isPlayerOnTile(player, 'casino'))
+			return { success: false, error: 'Must be on a casino tile' };
+		if (ctx.getHasUsedCasinoThisTurn())
+			return { success: false, error: 'Already used casino this turn' };
+		generateCasinoWheel(playerName, ctx);
+	});
 }
 
 export function handleAttackResolveAction(
@@ -313,14 +336,8 @@ export function handleAttackResolveAction(
 
 	return (
 		withPlayers(game, [action.attackerName, action.defenderName], (attacker, defender) => {
-			if (attacker.dead) return { success: false, error: 'Attacker is dead' };
-			if (defender.dead) return { success: false, error: 'Defender is dead' };
-
-			if (attacker.position && defender.position) {
-				const distance = getManhattanDistance(attacker.position, defender.position);
-				if (distance > attacker.attackRange) {
-					return { success: false, error: 'Target out of range' };
-				}
+			if (!canAttackTarget(attacker, defender)) {
+				return { success: false, error: 'Target cannot be attacked' };
 			}
 
 			const combatWheelKey = `combat-${attacker.name}-vs-${defender.name}-${Date.now()}`;
@@ -362,6 +379,7 @@ export function handleSpellCastAction(
 	return withPlayer(game, playerName, (caster) => {
 		if (caster.classType !== 'magicman')
 			return { success: false, error: 'Only Magic Man can cast spells' };
+		if (game.hasFought) return { success: false, error: 'Already fought this turn' };
 
 		const cost = spellManaCosts[action.spellLevel];
 		const mana = caster.resources['Mana'] ?? 0;
@@ -369,6 +387,9 @@ export function handleSpellCastAction(
 			return { success: false, error: `Not enough mana (need ${cost}, have ${mana})` };
 
 		const target = action.targetName ? game.getPlayerByName(action.targetName) : undefined;
+		if (action.targetName && (!target || target.dead)) {
+			return { success: false, error: 'Invalid spell target' };
+		}
 		spellWheelGenerators[action.spellLevel](playerName, ctx, target);
 		game.hasFought = true;
 	});
@@ -398,14 +419,15 @@ export function handleTeleportAction(
 	ctx: ServerGameContext
 ): ActionMutationResult {
 	return withPlayer(game, playerName, (player) => {
-		const destTile = getTileAt(action.destination);
-		if (!destTile) return { success: false, error: 'Invalid teleport destination' };
-		if (!isOuterTeleporter(action.destination) && !isInnerTeleporter(action.destination)) {
-			return { success: false, error: 'Destination is not a teleporter' };
-		}
+		const destination = game.teleportDestinations.find((p) =>
+			positionsEqual(p, action.destination)
+		);
+		if (!destination) return { success: false, error: 'Not a teleport destination' };
 
-		player.position = action.destination;
-		executeTileAction(player, action.destination, ctx);
+		// No tile action on arrival: landing on another outer teleporter must not offer a second jump
+		player.position = { ...destination };
+		game.teleportDestinations = [];
+		ctx.addAuditTrail(`${player.name} teleported to (${destination.x}, ${destination.y})`);
 	});
 }
 
@@ -422,15 +444,12 @@ export function handleWheelSpinResultAction(
 		return { success: false, error: 'Not your wheel to spin' };
 	}
 
-	if (pendingWheel.chosenIndex !== undefined && action.selectedIndex !== pendingWheel.chosenIndex) {
-		return { success: false, error: 'Selected index does not match server-chosen result' };
-	}
+	// The server always decides the outcome; it is only chosen here if nobody requested a spin
+	const index = pendingWheel.chosenIndex ?? weightedRandomIndex(pendingWheel.items);
 
-	const selectedItem = pendingWheel.items[action.selectedIndex];
-	if (!selectedItem) return { success: false, error: 'Invalid wheel index' };
-
-	selectedItem.onWin?.();
+	// Delete first: onWin may queue a follow-up wheel under the same key
 	room.pendingWheels.delete(action.wheelKey);
+	pendingWheel.items[index]?.onWin?.();
 }
 
 export function handleGMStartGameAction(room: GameRoom, game: Game): ActionResult | undefined {

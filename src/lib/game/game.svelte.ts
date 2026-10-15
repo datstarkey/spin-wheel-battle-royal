@@ -1,5 +1,6 @@
 import { shuffle } from '#lib/components/wheel/utils.js';
 import type { GameStateDelta } from '#lib/multiplayer/types.js';
+import type { Position } from './board/types';
 import toast from '#lib/stores/toaster.svelte.js';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import type { GameContext } from './gameContext';
@@ -26,7 +27,9 @@ export class Game {
 		'hasMoved',
 		'hasFought',
 		'hasShopped',
-		'hasUsedCasino'
+		'hasUsedCasino',
+		'winnerName',
+		'teleportDestinations'
 	] as const;
 
 	private static readonly DELTA_COMPLEX_FIELDS = [
@@ -42,7 +45,13 @@ export class Game {
 	alivePlayers = $derived(this.players.filter((player) => !player.dead));
 	started = $state(false);
 
-	winner = $state<Player | undefined>(undefined);
+	winnerName = $state<string | null>(null);
+	get winner(): Player | undefined {
+		return this.winnerName ? this.getPlayerByName(this.winnerName) : undefined;
+	}
+
+	/** Teleporters the current player may jump to (set when they step on an outer teleporter) */
+	teleportDestinations = $state<Position[]>([]);
 
 	globalHpReduction = $state(1);
 
@@ -107,6 +116,7 @@ export class Game {
 		this.hasFought = false;
 		this.hasShopped = false;
 		this.hasUsedCasino = false;
+		this.teleportDestinations = [];
 	}
 
 	shopCostModifier = $state(0);
@@ -244,79 +254,43 @@ export class Game {
 		return this.getPlayerByName(playerName);
 	}
 
-	/** Check and declare a winner if only one player remains alive */
-	private checkForWinner() {
-		if (this.winner) return;
+	/** Declare a winner once only one player remains alive. Called after every server action. */
+	checkForWinner() {
+		if (!this.started || this.winnerName) return;
 		const alivePlayers = this.alivePlayers;
 		if (alivePlayers.length === 1) {
-			this.winner = alivePlayers[0];
+			this.winnerName = alivePlayers[0].name;
 			this.addAuditTrail(`${alivePlayers[0].name} has won the game!`);
 		}
 	}
 
-	/**
-	 * Advances to the next alive player's turn.
-	 * Uses iterative approach to avoid stack overflow from recursive calls.
-	 */
-	private advanceToNextAlivePlayer(): Player | undefined {
-		const totalPlayers = Object.entries(this.playerOrder).length;
-		if (totalPlayers === 0) return undefined;
-
-		// Safety limit to prevent infinite loops
-		for (let attempts = 0; attempts < totalPlayers; attempts++) {
-			this.incrementTurn();
-			const nextPlayer = this.getPlayerByName(this.playerOrder[this.currentTurn]);
-			if (nextPlayer && !nextPlayer.dead) {
-				return nextPlayer;
-			}
-		}
-
-		// All players are dead
-		return undefined;
-	}
-
+	/** Start the current slot's turn, passing over dead players and consuming skipped turns. */
 	startTurn(ctx?: GameContext) {
-		if (this.hasTurnStarted) return;
+		if (this.hasTurnStarted || this.winnerName) return;
 
-		const player = this.currentPlayer;
-		if (!player) return;
+		// Bounded: every slot is visited at most once more, even if everyone is skipped
+		for (let i = 0; i <= this.playerOrderLength; i++) {
+			const player = this.currentPlayer;
+			if (!player) return;
 
-		// Check for winner
-		if (this.winner) {
-			toast.success(`${this.winner.name} has won the game!`);
-			return;
-		}
-
-		// Skip dead players iteratively (not recursively)
-		if (player.dead) {
-			const nextAlive = this.advanceToNextAlivePlayer();
-			if (!nextAlive) {
-				toast.error('No alive players remaining!');
-				return;
+			if (player.dead) {
+				this.incrementTurn();
+				continue;
 			}
-			// Don't recurse - just set up for the alive player and return
-			// The UI should call startTurn again
-			return;
-		}
 
-		// Skip players who have their turn skipped
-		if (this.skippedNextTurns.has(player.name)) {
-			this.skippedNextTurns.delete(player.name);
-			this.addAuditTrail(`${player.name}'s turn was skipped!`);
-			const nextAlive = this.advanceToNextAlivePlayer();
-			if (!nextAlive) {
-				toast.error('No alive players remaining!');
-				return;
+			if (this.skippedNextTurns.has(player.name)) {
+				this.skippedNextTurns.delete(player.name);
+				this.addAuditTrail(`${player.name}'s turn was skipped!`);
+				this.incrementTurn();
+				continue;
 			}
-			// Don't recurse - UI should call startTurn again
+
+			this.randomizeShopItems(true);
+			player.onTurnStart(resolveCtx(ctx));
+			this.addAuditTrail(`${player.name} starts their turn!`);
+			this.hasTurnStarted = true;
 			return;
 		}
-
-		// Actually start the turn
-		this.randomizeShopItems(true);
-		player.onTurnStart(resolveCtx(ctx));
-		this.addAuditTrail(`${player.name} starts their turn!`);
-		this.hasTurnStarted = true;
 	}
 
 	gainAnotherTurn() {
@@ -435,7 +409,8 @@ export class Game {
 			customWheels: Array.from(this.customWheels.entries()),
 			playerOrder: this.playerOrder,
 			_currentTurn: this._currentTurn,
-			_shadowRealm: this._shadowRealm,
+			// Names only: Player holds a back-reference to Game, so the objects can't be stringified
+			_shadowRealm: this._shadowRealm.map((player) => ({ name: player.name })),
 			itemCostModifiers: Array.from(this.itemCostModifiers.entries()),
 			auditTrail: this.auditTrail,
 			shopCostModifier: this.shopCostModifier,
@@ -448,7 +423,9 @@ export class Game {
 			hasFought: this.hasFought,
 			hasShopped: this.hasShopped,
 			hasUsedCasino: this.hasUsedCasino,
-			lootedTreasures: Array.from(this.lootedTreasures)
+			lootedTreasures: Array.from(this.lootedTreasures),
+			winnerName: this.winnerName,
+			teleportDestinations: this.teleportDestinations
 		};
 	}
 
@@ -514,6 +491,11 @@ export class Game {
 
 		const before = JSON.parse(beforeJson) as SerializedGame;
 		const after = JSON.parse(afterJson) as SerializedGame;
+
+		// Deltas only patch existing players in place; roster changes need a full sync
+		const roster = (game: SerializedGame) => game.players.map((p) => p.name).join('\n');
+		if (roster(before) !== roster(after)) return null;
+
 		const delta: GameStateDelta = { version };
 		let hasChanges = false;
 

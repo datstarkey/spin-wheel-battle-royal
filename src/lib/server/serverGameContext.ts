@@ -27,8 +27,12 @@ export function createServerGameContext(room: GameRoom, forPlayerName: string): 
 			theme?: WheelTheme,
 			wheelForPlayer?: string
 		): void {
+			// Generators reuse keys like "Swenergy for X"; never let a second wheel overwrite the first
+			let uniqueKey = key;
+			for (let n = 2; room.pendingWheels.has(uniqueKey); n++) uniqueKey = `${key} #${n}`;
+
 			// Store wheel with closures server-side (NOT in game.customWheels)
-			room.pendingWheels.set(key, {
+			room.pendingWheels.set(uniqueKey, {
 				items: wheel,
 				theme,
 				forPlayerName: wheelForPlayer ?? forPlayerName,

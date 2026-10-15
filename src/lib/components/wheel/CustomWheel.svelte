@@ -18,8 +18,7 @@
 		canSpin?: boolean;
 		/** Name of the player who should spin (shown when canSpin is false) */
 		forPlayerName?: string;
-		onComplete: (selectedIndex?: number) => void;
-		onCancel?: () => void;
+		onComplete: () => void;
 		/** Server-provided spin parameters for synchronized spins */
 		spinParams?: WheelSpinParams;
 		/** Current spin state for UI feedback */
@@ -40,7 +39,6 @@
 		canSpin = true,
 		forPlayerName,
 		onComplete,
-		onCancel,
 		spinParams = undefined,
 		spinState = undefined,
 		onSpinComplete = undefined,
@@ -50,7 +48,6 @@
 
 	let hasWon = $state(false);
 	let winningLabel = $state<string | null>(null);
-	let winningIndex = $state<number | undefined>(undefined);
 	let resultSection = $state<HTMLDivElement | null>(null);
 
 	// Use provided theme or derive from key for backward compatibility
@@ -199,12 +196,6 @@
 
 	let currentTheme = $derived(themes[wheelTheme]);
 
-	// Extract player name from key
-	let playerName = $derived.by(() => {
-		const match = key.match(/(?:for|-)?\s*([A-Za-z0-9_]+)(?:\s*-\s*\d+)?$/);
-		return match ? match[1] : '';
-	});
-
 	// If the wheel is empty, we can just complete the wheel, no need to spin it, happens if there is a bug
 	$effect(() => {
 		if (wheel.length == 0) {
@@ -230,18 +221,6 @@
 		class="pointer-events-none absolute inset-0 animate-pulse bg-[radial-gradient(ellipse_at_top_center,var(--pulse-color)_0%,transparent_60%)]"
 		style="--pulse-color: {currentTheme.pulseColor}"
 	></div>
-
-	<!-- Cancel/Close Button (top right, absolute) -->
-	{#if onCancel}
-		<button
-			onclick={() => onCancel()}
-			class="text-surface-400 hover:border-error-500/50 hover:bg-error-500/20 absolute top-4 right-4 z-50 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/50 transition-all hover:text-white"
-			title="Cancel wheel"
-			aria-label="Cancel wheel"
-		>
-			<iconify-icon icon="mdi:close" width="20"></iconify-icon>
-		</button>
-	{/if}
 
 	<!-- Epic Header Section -->
 	<div class="relative mb-6 px-4 pt-6 text-center">
@@ -278,13 +257,13 @@
 		</p>
 
 		<!-- Player name badge -->
-		{#if playerName}
+		{#if forPlayerName}
 			<div
 				class="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 backdrop-blur-sm"
 			>
 				<iconify-icon icon="mdi:account" class="text-surface-400"></iconify-icon>
 				<span class="font-mono text-sm font-bold tracking-wider text-white uppercase"
-					>{playerName}</span
+					>{forPlayerName}</span
 				>
 			</div>
 		{/if}
@@ -311,10 +290,9 @@
 				{onRequestSpin}
 				{onSpinComplete}
 				{shuffledOrder}
-				onWinner={(item, index) => {
+				onWinner={(item) => {
 					hasWon = true;
 					winningLabel = item.label;
-					winningIndex = index;
 				}}
 			></SlotReel>
 		{:else}
@@ -328,10 +306,9 @@
 				{onRequestSpin}
 				{onSpinComplete}
 				{shuffledOrder}
-				onWinner={(item, index) => {
+				onWinner={(item) => {
 					hasWon = true;
 					winningLabel = item.label;
-					winningIndex = index;
 				}}
 			></SpinWheel>
 		{/if}
@@ -411,7 +388,7 @@
 			{#if canSpin}
 				<!-- Continue button (only for designated spinner) -->
 				<button
-					onclick={() => onComplete(winningIndex)}
+					onclick={() => onComplete()}
 					class="group relative mx-auto flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-lg border-2 {currentTheme.borderColor} from-surface-800 to-surface-900 hover:from-surface-700 hover:to-surface-800 bg-gradient-to-br px-8 py-4 font-mono text-lg font-black tracking-widest text-white uppercase transition-all duration-300 hover:scale-[1.02] {currentTheme.glowColor}"
 				>
 					<!-- Shine effect on hover -->

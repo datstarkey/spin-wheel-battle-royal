@@ -30,6 +30,8 @@ export interface PendingWheel {
 	shuffledOrder: number[];
 	/** Server-chosen winner index (into original items array). Set when wheel:request_spin is processed */
 	chosenIndex?: number;
+	/** Resolves the wheel server-side if the spinner never confirms the result */
+	resolveTimer?: ReturnType<typeof setTimeout>;
 }
 
 export class GameRoom {
@@ -112,10 +114,9 @@ export class GameRoom {
 		this.lastActivity = Date.now();
 	}
 
+	/** Register a new name. Known names (even disconnected ones) can only come back via rejoin. */
 	addPlayer(name: string, socketId: string, role: Role): boolean {
-		if (this.connectedPlayers.has(name) && this.connectedPlayers.get(name) !== socketId) {
-			return false; // Name taken by another socket
-		}
+		if (this.playerRoles.has(name)) return false;
 		this.connectedPlayers.set(name, socketId);
 		this.socketToPlayer.set(socketId, name);
 		this.playerRoles.set(name, role);
@@ -143,10 +144,11 @@ export class GameRoom {
 		return name;
 	}
 
-	/** Remove a game player (GM kick) */
+	/** Remove a game player (GM kick) — they stay in the room as a spectator */
 	removeGamePlayer(name: string) {
 		const idx = this.game.players.findIndex((p) => p.name === name);
 		if (idx >= 0) this.game.players.splice(idx, 1);
+		if (this.playerRoles.get(name) === 'player') this.playerRoles.set(name, 'spectator');
 	}
 
 	rejoinPlayer(name: string, socketId: string): boolean {
